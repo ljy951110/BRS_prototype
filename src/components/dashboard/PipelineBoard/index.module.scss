@@ -1,0 +1,145 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.pipelineBoard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-lg;
+  min-height: 600px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.column {
+  @include Flex(column, flex-start, stretch, 0);
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.columnHeader {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 2px solid;
+
+  &.purple {
+    border-color: $color-accent-purple;
+    background: linear-gradient(180deg, rgba($color-accent-purple, 0.1) 0%, transparent 100%);
+  }
+
+  &.blue {
+    border-color: $color-accent-blue;
+    background: linear-gradient(180deg, rgba($color-accent-blue, 0.1) 0%, transparent 100%);
+  }
+
+  &.green {
+    border-color: $color-accent-green;
+    background: linear-gradient(180deg, rgba($color-accent-green, 0.1) 0%, transparent 100%);
+  }
+}
+
+.headerTop {
+  @include Flex(row, space-between, center);
+}
+
+.headerTitle {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.headerStats {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.cardsList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  flex: 1;
+  padding: $spacing-md;
+  overflow-y: auto;
+  max-height: calc(100vh - 400px);
+}
+
+.customerCard {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  cursor: pointer;
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.cardHeader {
+  @include Flex(row, space-between, flex-start);
+}
+
+.companyInfo {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.hDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $color-accent-cyan;
+}
+
+.cardMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.trustRow {
+  @include Flex(row, space-between, center);
+  padding-top: $spacing-xs;
+  border-top: 1px solid $color-border;
+}
+
+.trustValue {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.trendUp {
+  color: $color-accent-green;
+}
+
+.trendDown {
+  color: $color-accent-red;
+}
+
+.trendNone {
+  color: $color-text-muted;
+}
+
+.revenueRow,
+.dateRow {
+  @include Flex(row, space-between, center);
+}
+
+.progressRow {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border;
+}
+
+.progressDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid $color-border;
+  background: $color-bg-secondary;
+  transition: all $transition-fast;
+
+  &.completed {
+    border-color: $color-accent-green;
+    background: $color-accent-green;
+  }
+}
+
+.emptyState {
+  @include FlexCenter;
+  padding: $spacing-xl;
+}

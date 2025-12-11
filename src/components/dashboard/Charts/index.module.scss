@@ -1,0 +1,47 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.wideChart {
+  grid-column: span 2;
+
+  @media (max-width: 1024px) {
+    grid-column: span 1;
+  }
+}
+
+.chartTitle {
+  margin-bottom: $spacing-sm;
+}
+
+.chartContainer {
+  width: 100%;
+  height: 300px;
+}
+
+.tooltip {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-elevated;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+}
+
+.tooltipEntry {
+  font-size: $font-size-xs;
+  line-height: 1.4;
+}

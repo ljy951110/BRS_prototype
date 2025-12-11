@@ -1,0 +1,649 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.tableCard {
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+}
+
+.th {
+  position: sticky;
+  top: 0;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border;
+  text-align: left;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.sortHeader {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  cursor: pointer;
+  user-select: none;
+  
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.sortActive {
+  color: $color-accent-blue;
+}
+
+.sortIndicator {
+  @include Flex(row, center, center, 2px);
+}
+
+.sortOrder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background: $color-accent-blue;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  color: white;
+}
+
+.tr {
+  border-bottom: 1px solid $color-border;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+
+  &.expanded {
+    background: $color-bg-secondary;
+  }
+}
+
+.td {
+  padding: $spacing-md $spacing-lg;
+  vertical-align: middle;
+}
+
+.expandBtn {
+  @include FlexCenter;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+}
+
+.companyLink {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.trustCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.changeCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: nowrap;
+}
+
+.arrowIcon {
+  color: $color-text-muted;
+  flex-shrink: 0;
+}
+
+.pastBadge {
+  opacity: 0.5;
+}
+
+.pastValue {
+  opacity: 0.5;
+}
+
+.trendUp {
+  color: $color-accent-green;
+}
+
+.trendDown {
+  color: $color-accent-red;
+}
+
+.trendNone {
+  color: $color-text-muted;
+}
+
+// Expanded Row
+.expandedRow {
+  background: $color-bg-tertiary;
+  border-bottom: 1px solid $color-border;
+}
+
+.expandedContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-xl;
+  padding: $spacing-lg;
+}
+
+.detailSection {
+  @include Flex(column, flex-start, flex-start, $spacing-sm);
+}
+
+.interestBadges {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  margin-top: $spacing-xs;
+}
+
+.actionsList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.actionItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm;
+  background: $color-bg-secondary;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+}
+
+// Drawer Content
+.drawerContent {
+  @include Flex(column, flex-start, stretch, $spacing-xl);
+}
+
+.drawerSection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.infoItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+// Trust Info
+.trustInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.trustMain {
+  @include Flex(row, space-between, center);
+}
+
+.trustScore {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.trustChange {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+// Formation Info
+.formationInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.formationHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+// Adoption Info
+.adoptionInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.adoptionHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.revenueInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.progressSteps {
+  @include Flex(row, flex-start, center, $spacing-lg);
+  padding: $spacing-md 0;
+}
+
+.step {
+  @include Flex(column, center, center, $spacing-xs);
+  
+  .stepDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid $color-border;
+    background: $color-bg-secondary;
+    transition: all $transition-fast;
+  }
+
+  &.completed .stepDot {
+    border-color: $color-accent-green;
+    background: $color-accent-green;
+  }
+}
+
+// Timeline
+.actionsTimeline {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.timelineItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  position: relative;
+  padding-bottom: $spacing-md;
+  padding-left: $spacing-lg;
+
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    width: 2px;
+    height: calc(100% - 12px);
+    background: $color-border;
+  }
+}
+
+.timelineIcon {
+  @include FlexCenter;
+  position: absolute;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: $color-bg-tertiary;
+  border: 2px solid $color-border;
+  color: $color-text-secondary;
+}
+
+.timelineContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+// Content List
+.contentList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.contentItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+.contentHeader {
+  @include Flex(row, space-between, center);
+  width: 100%;
+}
+
+// Attendance
+.attendanceList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.attendanceItem {
+  @include Flex(row, space-between, center);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+// Modal Content
+.modalContent {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.tabNav {
+  @include Flex(row, flex-start, center, 0);
+  margin-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.tabButton {
+  @include Flex(row, center, center, $spacing-sm);
+  padding: $spacing-md $spacing-xl;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $color-text-primary;
+    background: $color-bg-hover;
+  }
+
+  &.active {
+    border-bottom-color: $color-accent-blue;
+    color: $color-accent-blue;
+  }
+}
+
+.tabContent {
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.infoTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.modalSection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+// Timeline Tab
+.timelineTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+.periodBadge {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+  text-align: center;
+}
+
+.timelineHeader {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.weekHeader {
+  @include Flex(column, flex-start, center, $spacing-xs);
+  text-align: center;
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  
+  &.mbmWeek {
+    background: rgba($color-accent-blue, 0.1);
+  }
+
+  &.currentWeek {
+    background: rgba($color-accent-green, 0.1);
+    border: 1px solid rgba($color-accent-green, 0.3);
+  }
+}
+
+.mbmBadge {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs;
+  color: $color-accent-blue;
+}
+
+.timelineCells {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-sm;
+  padding: $spacing-md 0;
+}
+
+.timelineCell {
+  @include Flex(column, flex-start, center, $spacing-sm);
+  padding: $spacing-md;
+  min-height: 100px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  
+  &.currentCell {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.05);
+  }
+}
+
+.mbmAttendedBadge {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  background: rgba($color-accent-blue, 0.1);
+  border-radius: $radius-sm;
+  color: $color-accent-blue;
+}
+
+.trustCell {
+  @include Flex(column, center, center, $spacing-xs);
+}
+
+.trustValue {
+  @include Flex(row, center, center, $spacing-xs);
+}
+
+.trustChangeIndicator {
+  @include Flex(row, center, center, $spacing-xs);
+  font-size: $font-size-xs;
+  
+  &.up {
+    color: $color-accent-green;
+  }
+  
+  &.down {
+    color: $color-accent-red;
+  }
+}
+
+.trustChangeButton {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  cursor: default;
+  transition: all $transition-fast;
+  
+  &.up {
+    color: $color-accent-green;
+  }
+  
+  &.down {
+    color: $color-accent-red;
+  }
+  
+  &.clickable {
+    cursor: pointer;
+    background: rgba($color-accent-green, 0.1);
+    
+    &:hover {
+      background: rgba($color-accent-green, 0.2);
+    }
+  }
+  
+  &:disabled:not(.clickable) {
+    opacity: 0.7;
+  }
+}
+
+.cellActions {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  width: 100%;
+}
+
+.cellAction {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  &.call {
+    background: rgba($color-accent-cyan, 0.1);
+    color: $color-accent-cyan;
+    
+    &:hover {
+      background: rgba($color-accent-cyan, 0.2);
+    }
+  }
+  
+  &.meeting {
+    background: rgba($color-accent-purple, 0.1);
+    color: $color-accent-purple;
+    
+    &:hover {
+      background: rgba($color-accent-purple, 0.2);
+    }
+  }
+}
+
+.attendanceSummary {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+// Action Modal
+.actionModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.actionModalHeader {
+  @include Flex(row, space-between, center);
+}
+
+.actionDate {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  color: $color-text-secondary;
+}
+
+.actionModalContent {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.actionModalMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border;
+}
+
+.metaItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+// Content Modal
+.contentModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.contentModalHeader {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.periodBadge {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.contentStats {
+  @include Flex(row, flex-start, center, $spacing-xl);
+}
+
+.statItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.contentModalList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.contentModalItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.contentIcon {
+  @include FlexCenter;
+  width: 32px;
+  height: 32px;
+  background: $color-bg-secondary;
+  border-radius: $radius-sm;
+  color: $color-accent-blue;
+  flex-shrink: 0;
+}
+
+.contentInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.contentMeta {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+}
+
+.emptyContent {
+  @include FlexCenter;
+  padding: $spacing-xl;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
