@@ -42,15 +42,15 @@ const CATEGORY_COLORS: Record<
   string,
   { bg: string; label: string; variant: "info" | "warning" | "success" }
 > = {
-  TOFU: { bg: "cyan", label: "인지 단계 (Top of Funnel)", variant: "info" },
+  TOFU: { bg: "cyan", label: "TOFU", variant: "info" },
   MOFU: {
     bg: "purple",
-    label: "고려 단계 (Middle of Funnel)",
+    label: "MOFU",
     variant: "warning",
   },
   BOFU: {
     bg: "green",
-    label: "결정 단계 (Bottom of Funnel)",
+    label: "BOFU",
     variant: "success",
   },
 };

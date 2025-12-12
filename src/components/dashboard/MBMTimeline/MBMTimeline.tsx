@@ -1456,7 +1456,7 @@ export const MBMTimeline = ({
           <div className={styles.mbmModal}>
             <div className={styles.mbmModalHeader}>
               <div className={styles.mbmMeta}>
-                <Badge variant="accent" size="sm">
+                <Badge variant="default" size="sm">
                   {mbmModalData.event.label}
                 </Badge>
                 <Text variant="body-sm" color="tertiary">
