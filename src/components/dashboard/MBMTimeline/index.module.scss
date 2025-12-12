@@ -140,6 +140,9 @@
 
 .timeline {
   @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: $spacing-sm;
 }
 
 .customerRow {

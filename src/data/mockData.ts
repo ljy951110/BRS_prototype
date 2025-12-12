@@ -1142,7 +1142,7 @@ export const mockData: Customer[] = [
         category: "MOFU",
       },
     ],
-    attendance: { "1107": true },
+    attendance: { "1107": true, "1209": true },
     trustFormation: {
       customerResponse: "상",
       targetDate: "12월말",

@@ -99,6 +99,11 @@
   justify-content: space-between;
   align-items: center;
   gap: $spacing-lg;
+  position: sticky;
+  top: 64px;
+  z-index: $z-sticky;
+  background: $color-bg-primary;
+  padding: $spacing-sm 0;
 }
 
 // Filter Section
@@ -109,6 +114,9 @@
   background: $color-bg-secondary;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
+  position: sticky;
+  top: 118px;
+  z-index: $z-sticky;
 }
 
 .filters {

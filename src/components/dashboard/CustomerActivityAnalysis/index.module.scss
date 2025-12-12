@@ -7,6 +7,11 @@
 
 .header {
   @include Flex(row, space-between, center);
+  position: sticky;
+  top: 118px;
+  z-index: $z-sticky;
+  background: $color-bg-primary;
+  padding: $spacing-sm 0;
 }
 
 .headerLeft {
@@ -238,6 +243,8 @@
 
 .tableWrapper {
   overflow-x: auto;
+  max-height: 640px;
+  overflow-y: auto;
   border-radius: $radius-md;
   background: $color-bg-secondary;
 }

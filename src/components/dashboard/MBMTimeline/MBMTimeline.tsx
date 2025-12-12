@@ -59,6 +59,15 @@ type MBMEvent = {
   description: string;
 };
 
+type Week = {
+  key: string;
+  label: string;
+  range: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+};
+
 // MBM 이벤트 목록 (attendance 키와 매핑)
 const MBM_EVENTS: Record<string, MBMEvent> = {
   "1107": {
@@ -73,6 +82,12 @@ const MBM_EVENTS: Record<string, MBMEvent> = {
     label: "12/18 MBM",
     topic: "영상면접 고도화 & 리텐션 전략",
     description: "영상면접 큐레이터 고도화 기능 소개와 리텐션/재계약 사례 공유",
+  },
+  "1209": {
+    date: "2024-12-12",
+    label: "12/12 MBM",
+    topic: "AI 면접 신뢰도 개선",
+    description: "현재 주간 라이브 MBM 세션",
   },
   "0112": {
     date: "2025-01-12",
@@ -90,7 +105,7 @@ const MBM_EVENTS: Record<string, MBMEvent> = {
 };
 
 // 주간 타임라인 정보 (월요일 기준)
-const WEEKS = [
+const ALL_WEEKS: Week[] = [
   {
     key: "1104",
     label: "11월 1주",
@@ -157,7 +172,24 @@ const WEEKS = [
   },
 ] as const;
 
-type WeekKey = (typeof WEEKS)[number]["key"];
+type WeekKey = Week["key"];
+
+const WEEK_COUNT_BY_PERIOD: Record<TimePeriod, number> = {
+  "1w": 1,
+  "1m": 4,
+  "6m": 26,
+  "1y": 52,
+};
+
+const getWeeksForPeriod = (timePeriod: TimePeriod): Week[] => {
+  const count = WEEK_COUNT_BY_PERIOD[timePeriod] ?? ALL_WEEKS.length;
+  const currentIndex =
+    ALL_WEEKS.findIndex((w) => w.isCurrent) !== -1
+      ? ALL_WEEKS.findIndex((w) => w.isCurrent)
+      : ALL_WEEKS.length - 1;
+  const startIndex = Math.max(0, currentIndex - (count - 1));
+  return ALL_WEEKS.slice(startIndex, currentIndex + 1);
+};
 
 // 특정 주에 MBM 이벤트가 있는지 확인
 const getMBMForWeek = (
@@ -175,28 +207,6 @@ const getMBMForWeek = (
     }
   }
   return null;
-};
-
-// 액션 날짜가 어느 주에 속하는지 찾기
-const findWeekForAction = (dateStr: string): WeekKey | null => {
-  const actionDate = new Date(dateStr);
-
-  for (const week of WEEKS) {
-    const start = new Date(week.startDate);
-    const end = new Date(week.endDate);
-    end.setHours(23, 59, 59); // 해당 주 끝까지 포함
-
-    if (actionDate >= start && actionDate <= end) {
-      return week.key;
-    }
-  }
-
-  // 범위 밖인 경우
-  const firstWeekStart = new Date(WEEKS[0].startDate);
-  if (actionDate < firstWeekStart) {
-    return WEEKS[0].key;
-  }
-  return WEEKS[WEEKS.length - 1].key;
 };
 
 // 신뢰레벨에 따른 색상
@@ -252,10 +262,11 @@ interface ActionModalData {
 
 export const MBMTimeline = ({
   data,
-  timePeriod: _timePeriod,
+  timePeriod,
   filters,
 }: MBMTimelineProps) => {
-  void _timePeriod; // 향후 사용 예정
+  const weeks = useMemo(() => getWeeksForPeriod(timePeriod), [timePeriod]);
+  const timelineMaxWidth = weeks.length <= 2 ? 640 : undefined;
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
   const [modalData, setModalData] = useState<ContentModalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -305,7 +316,7 @@ export const MBMTimeline = ({
   // 모달 열기
   const openContentModal = (
     customer: Customer,
-    week: (typeof WEEKS)[number],
+    week: Week,
     trustChange: number
   ) => {
     setModalData({
@@ -402,6 +413,29 @@ export const MBMTimeline = ({
     return data.filter((customer) => customer.hDot && customer.trustHistory);
   }, [data]);
 
+  // 액션 날짜가 어느 주에 속하는지 찾기 (현재 기간의 주 범위 사용)
+  const findWeekForAction = (dateStr: string): WeekKey | null => {
+    if (weeks.length === 0) return null;
+    const actionDate = new Date(dateStr);
+
+    for (const week of weeks) {
+      const start = new Date(week.startDate);
+      const end = new Date(week.endDate);
+      end.setHours(23, 59, 59); // 해당 주 끝까지 포함
+
+      if (actionDate >= start && actionDate <= end) {
+        return week.key;
+      }
+    }
+
+    // 범위 밖인 경우 가장 가까운 주 반환
+    const firstWeekStart = new Date(weeks[0].startDate);
+    if (actionDate < firstWeekStart) {
+      return weeks[0].key;
+    }
+    return weeks[weeks.length - 1].key;
+  };
+
   // 각 고객의 주간별 액션 매핑
   const getActionsForWeek = (customer: Customer, weekKey: WeekKey) => {
     if (!customer.salesActions) return [];
@@ -419,9 +453,10 @@ export const MBMTimeline = ({
     index: number
   ) => {
     if (!customer.trustHistory || index === 0) return null;
+    if (!weeks[index - 1]) return null;
 
     const currentData = customer.trustHistory[weekKey];
-    const prevKey = WEEKS[index - 1].key;
+    const prevKey = weeks[index - 1].key;
     const prevData = customer.trustHistory[prevKey];
 
     if (!currentData || !prevData) return null;
@@ -434,7 +469,7 @@ export const MBMTimeline = ({
   const getLastAttendedMBMWeekIndex = (customer: Customer): number => {
     let lastIndex = -1;
 
-    WEEKS.forEach((week, index) => {
+    weeks.forEach((week, index) => {
       const mbmEvent = getMBMForWeek(week.startDate, week.endDate);
       if (
         mbmEvent &&
@@ -452,9 +487,12 @@ export const MBMTimeline = ({
     const lastMBMIndex = getLastAttendedMBMWeekIndex(customer);
     if (lastMBMIndex === -1 || !customer.trustHistory) return null;
 
-    const mbmWeekKey = WEEKS[lastMBMIndex].key;
-    const currentWeekIndex = WEEKS.findIndex((w) => w.isCurrent);
-    const currentWeekKey = WEEKS[currentWeekIndex].key;
+    const mbmWeekKey = weeks[lastMBMIndex]?.key;
+    const currentWeekIndex = weeks.findIndex((w) => w.isCurrent);
+    const currentWeekKey =
+      currentWeekIndex >= 0 ? weeks[currentWeekIndex].key : undefined;
+
+    if (!mbmWeekKey || !currentWeekKey) return null;
 
     const mbmTrust = customer.trustHistory[mbmWeekKey];
     const currentTrust = customer.trustHistory[currentWeekKey];
@@ -466,23 +504,23 @@ export const MBMTimeline = ({
 
   // MBM 이후 액션이 있는지 확인
   const hasActionAfterMBM = (customer: Customer): boolean => {
-    const lastMBMIndex = getLastAttendedMBMWeekIndex(customer);
-    if (lastMBMIndex === -1) return true;
+    const lastMBM = getLastAttendedMBMEvent(customer);
+    if (!lastMBM) return true;
+    if (!customer.salesActions || customer.salesActions.length === 0)
+      return false;
 
-    const currentWeekIndex = WEEKS.findIndex((w) => w.isCurrent);
-
-    for (let i = lastMBMIndex + 1; i <= currentWeekIndex; i++) {
-      const actions = getActionsForWeek(customer, WEEKS[i].key);
-      if (actions.length > 0) return true;
-    }
-
-    return false;
+    const mbmDate = new Date(lastMBM.date);
+    return customer.salesActions.some(
+      (action) => new Date(action.date) >= mbmDate
+    );
   };
 
-  const getLastAttendedMBMEvent = (customer: Customer) => {
+  const getLastAttendedMBMEvent = (
+    customer: Customer
+  ): { key: string; label: string; date: string } | null => {
     let last: { key: string; label: string; date: string } | null = null;
 
-    WEEKS.forEach((week) => {
+    weeks.forEach((week) => {
       const mbmEvent = getMBMForWeek(week.startDate, week.endDate);
       if (
         mbmEvent &&
@@ -614,8 +652,11 @@ export const MBMTimeline = ({
             기업명
           </Text>
         </div>
-        <div className={styles.timelineHeader}>
-          {WEEKS.map((week) => {
+        <div
+          className={styles.timelineHeader}
+          style={{ maxWidth: timelineMaxWidth }}
+        >
+          {weeks.map((week) => {
             const mbmEvent = getMBMForWeek(week.startDate, week.endDate);
             const hasMBM = !!mbmEvent;
 
@@ -747,8 +788,11 @@ export const MBMTimeline = ({
               </div>
 
               {/* 주간 타임라인 셀 */}
-              <div className={styles.timelineCells}>
-                {WEEKS.map((week, index) => {
+              <div
+                className={styles.timelineCells}
+                style={{ maxWidth: timelineMaxWidth }}
+              >
+                {weeks.map((week, index) => {
                   const trustData = customer.trustHistory?.[week.key];
                   const actions = getActionsForWeek(customer, week.key);
                   const trustChange = getTrustChange(customer, week.key, index);
