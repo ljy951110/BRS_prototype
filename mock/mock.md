@@ -30,17 +30,50 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 영상면접 큐레이터 관심 표명",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "추가 정보 요청 대응",
-        "date": "2024-11-18"
+        "date": "2024-11-18",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "채용 예산 확인 요청, 1월 중 확정 후 연락 예정",
-        "date": "2024-12-05"
+        "date": "2024-12-05",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
+      },
+      {
+        "type": "meeting",
+        "content": "품의 진행 확정, 내부 승인 프로세스 시작",
+        "date": "2024-12-09",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": true,
+        "approval": true,
+        "contract": false
       }
     ],
     "contentEngagements": [
@@ -124,22 +157,62 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 영상면접 큐레이터 도입 적극 관심",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "견적서 요청 확인, 내년 공채 때 활용 예정",
-        "date": "2024-11-15"
+        "date": "2024-11-15",
+        "possibility": "40%",
+        "customerResponse": "상",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "meeting",
         "content": "영상면접 큐레이터 데모 시연 및 견적 논의",
-        "date": "2024-11-28"
+        "date": "2024-11-28",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "견적서 발송 완료, 내부 검토 후 회신 예정",
-        "date": "2024-12-03"
+        "date": "2024-12-03",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": true,
+        "approval": true,
+        "contract": false
+      },
+      {
+        "type": "meeting",
+        "content": "계약서 서명 완료! 1월 도입 확정",
+        "date": "2024-12-09",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 5000000,
+        "test": true,
+        "quote": true,
+        "approval": true,
+        "contract": true
       }
     ],
     "contentEngagements": [
@@ -218,22 +291,50 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 큐레이터 관심 높음. 조기재계약 논의 시작",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "40%",
+        "customerResponse": "상",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "meeting",
         "content": "조기재계약 미팅, 2년 5,800만원 조건 논의",
-        "date": "2024-11-14"
+        "date": "2024-11-14",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 58000000,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "견적서 발송 후 내부 검토 현황 확인",
-        "date": "2024-11-25"
+        "date": "2024-11-25",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 58000000,
+        "test": true,
+        "quote": true,
+        "approval": true,
+        "contract": false
       },
       {
         "type": "call",
         "content": "내부 검토 진행 상황 확인",
-        "date": "2024-12-05"
+        "date": "2024-12-05",
+        "possibility": "90%",
+        "customerResponse": "상",
+        "targetRevenue": 58000000,
+        "test": true,
+        "quote": true,
+        "approval": true,
+        "contract": false
       }
     ],
     "contentEngagements": [
@@ -332,17 +433,38 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 뉴로우 온보딩 프로세스 관리 도구로 관심 표명",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "0%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "뉴로우 기능 관련 추가 문의",
-        "date": "2024-11-19"
+        "date": "2024-11-19",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": true,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "도입 검토 진행 상황 확인",
-        "date": "2024-12-02"
+        "date": "2024-12-02",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": true,
+        "quote": false,
+        "approval": false,
+        "contract": false
       }
     ],
     "contentEngagements": [
@@ -416,22 +538,50 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 역검 SR + 큐레이터 사용 중",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "40%",
+        "customerResponse": "상",
+        "targetRevenue": null,
+        "test": true,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "meeting",
         "content": "팀장 미팅, AI 도입 희망하나 팀장 망설임",
-        "date": "2024-11-12"
+        "date": "2024-11-12",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "AI 도입 관련 추가 자료 요청",
-        "date": "2024-11-22"
+        "date": "2024-11-22",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "AI 도입 관련 팀장 설득 진행 상황 확인",
-        "date": "2024-12-10"
+        "date": "2024-12-10",
+        "possibility": "40%",
+        "customerResponse": "중",
+        "targetRevenue": null,
+        "test": true,
+        "quote": true,
+        "approval": false,
+        "contract": false
       }
     ],
     "contentEngagements": [
@@ -535,17 +685,38 @@
       {
         "type": "meeting",
         "content": "MBM 세미나 참석, 역검 사용 만족도 확인",
-        "date": "2024-11-07"
+        "date": "2024-11-07",
+        "possibility": "0%",
+        "customerResponse": "하",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "call",
         "content": "12월 재계약 관련 사전 연락",
-        "date": "2024-11-20"
+        "date": "2024-11-20",
+        "possibility": "0%",
+        "customerResponse": "하",
+        "targetRevenue": null,
+        "test": false,
+        "quote": false,
+        "approval": false,
+        "contract": false
       },
       {
         "type": "meeting",
         "content": "재계약 논의 미팅, 임원 설득 필요",
-        "date": "2024-12-05"
+        "date": "2024-12-05",
+        "possibility": "0%",
+        "customerResponse": "하",
+        "targetRevenue": null,
+        "test": false,
+        "quote": true,
+        "approval": false,
+        "contract": false
       }
     ],
     "contentEngagements": [
@@ -555,36 +726,4 @@
         "category": "TOFU"
       }
     ],
-    "trustFormation": {
-      "customerResponse": "하",
-      "targetDate": null,
-      "targetRevenueMin": null,
-      "targetRevenueMax": null,
-      "detail": "12월 재계약 대상, 소통은 하고 있음, 역검 잘 쓰고 있으나, 인사임원이 채용에 돈을 안쓰는 방향으로 미팅을하면서 임원 설득 필요",
-      "interestFunction": "역검"
-    },
-    "valueRecognition": {
-      "customerResponse": "하",
-      "possibility": "0%",
-      "targetDate": null,
-      "targetRevenue": null,
-      "test": false,
-      "quote": false,
-      "approval": false,
-      "contract": false,
-      "simulation": null
-    },
-    "adoptionDecision": {
-      "customerResponse": "하",
-      "possibility": "0%",
-      "targetDate": null,
-      "targetRevenue": null,
-      "test": false,
-      "quote": false,
-      "approval": false,
-      "contract": false,
-      "simulation": null
-    }
-  }
-]
 ```

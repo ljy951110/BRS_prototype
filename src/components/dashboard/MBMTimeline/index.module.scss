@@ -545,6 +545,72 @@
   @include Flex(column, flex-start, flex-start, $spacing-xs);
 }
 
+.possibilityChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+// 진행 상태 체크리스트
+.progressChecklist {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.checklistItems {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.checkItem {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  color: $color-text-tertiary;
+  background: $color-bg-secondary;
+
+  &.checked {
+    color: $color-accent-green;
+    background: $color-accent-green-subtle;
+  }
+
+  &.newlyChecked {
+    position: relative;
+    border: 1px solid $color-accent-green;
+    animation: pulse 1s ease-in-out infinite;
+
+    &::after {
+      content: "N";
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: $color-accent-green;
+      @include FontStyle(caption);
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba($color-accent-green, 0);
+  }
+}
+
 // 기업 상세 드로어
 .companyDrawer {
   @include Flex(column, flex-start, stretch, $spacing-xl);

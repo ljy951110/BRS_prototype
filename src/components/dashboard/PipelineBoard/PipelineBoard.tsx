@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { TrendingUp, TrendingDown, Minus, Target, Zap, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, FlaskConical, FileText, ThumbsUp, FileCheck, ArrowRight } from 'lucide-react';
 import { Text, Card, Badge } from '@/components/common/atoms';
-import { Customer, PipelineStage } from '@/types/customer';
+import { Customer } from '@/types/customer';
 import { formatCompactCurrency } from '@/data/mockData';
 import type { TimePeriod } from '@/App';
 import styles from './index.module.scss';
@@ -11,10 +11,14 @@ interface PipelineBoardProps {
   timePeriod: TimePeriod;
 }
 
-const STAGE_CONFIG: Record<PipelineStage, { title: string; icon: React.ElementType; color: string }> = {
-  trustFormation: { title: '신뢰형성', icon: Target, color: 'purple' },
-  valueRecognition: { title: '가치인식', icon: Zap, color: 'blue' },
-  adoptionDecision: { title: '도입결정', icon: CheckCircle2, color: 'green' },
+// 진행 상태 기준 단계
+type DealStage = 'test' | 'quote' | 'approval' | 'contract';
+
+const STAGE_CONFIG: Record<DealStage, { title: string; icon: React.ElementType; color: string; description: string }> = {
+  test: { title: '테스트', icon: FlaskConical, color: 'purple', description: '파일럿 테스트 진행 중' },
+  quote: { title: '견적', icon: FileText, color: 'blue', description: '견적서 발송/검토 중' },
+  approval: { title: '승인', icon: ThumbsUp, color: 'orange', description: '내부 승인 대기 중' },
+  contract: { title: '계약', icon: FileCheck, color: 'green', description: '계약 체결 완료' },
 };
 
 const TrendIcon = ({ direction }: { direction: Customer['changeDirection'] }) => {
@@ -23,34 +27,54 @@ const TrendIcon = ({ direction }: { direction: Customer['changeDirection'] }) =>
   return <Minus size={12} className={styles.trendNone} />;
 };
 
-export const PipelineBoard = ({ data, timePeriod: _timePeriod }: PipelineBoardProps) => {
-  void _timePeriod; // 향후 사용 예정
-  // 단계별로 고객 분류
+const getCategoryVariant = (category: string) => {
+  switch (category) {
+    case "채용":
+      return "info";
+    case "공공":
+      return "purple";
+    case "성과":
+      return "cyan";
+    default:
+      return "default";
+  }
+};
+
+export const PipelineBoard = ({ data, timePeriod }: PipelineBoardProps) => {
+  void timePeriod; // 기간 필터 (데이터는 이미 App에서 처리됨)
+  
+  // 진행 상태별로 고객 분류
   const stageData = useMemo(() => {
-    const stages: Record<PipelineStage, Customer[]> = {
-      trustFormation: [],
-      valueRecognition: [],
-      adoptionDecision: [],
+    const stages: Record<DealStage, Customer[]> = {
+      test: [],
+      quote: [],
+      approval: [],
+      contract: [],
     };
 
     data.forEach(customer => {
-      // 도입결정 가능성이 90%면 adoptionDecision 단계
-      if (customer.adoptionDecision.possibility === '90%') {
-        stages.adoptionDecision.push(customer);
+      const ad = customer.adoptionDecision;
+      
+      // 가장 최신 진행 상태 기준으로 분류 (역순으로 체크)
+      if (ad.contract) {
+        stages.contract.push(customer);
+      } else if (ad.approval) {
+        stages.approval.push(customer);
+      } else if (ad.quote) {
+        stages.quote.push(customer);
+      } else if (ad.test) {
+        stages.test.push(customer);
       }
-      // 가치인식 가능성이 90%이거나 40%면 valueRecognition 단계
-      else if (customer.valueRecognition.possibility === '90%' || customer.valueRecognition.possibility === '40%') {
-        stages.valueRecognition.push(customer);
-      }
-      // 나머지는 trustFormation 단계
-      else {
-        stages.trustFormation.push(customer);
-      }
+      // test도 false인 경우는 표시하지 않음 (아직 파이프라인에 없음)
     });
 
-    // 각 단계 내에서 신뢰지수로 정렬
+    // 각 단계 내에서 예상매출로 정렬 (높은 순)
     Object.keys(stages).forEach(key => {
-      stages[key as PipelineStage].sort((a, b) => (b.trustIndex || 0) - (a.trustIndex || 0));
+      stages[key as DealStage].sort((a, b) => {
+        const aRev = (a.adoptionDecision.targetRevenue || 0) * (parseFloat(a.adoptionDecision.possibility) / 100);
+        const bRev = (b.adoptionDecision.targetRevenue || 0) * (parseFloat(b.adoptionDecision.possibility) / 100);
+        return bRev - aRev;
+      });
     });
 
     return stages;
@@ -58,22 +82,23 @@ export const PipelineBoard = ({ data, timePeriod: _timePeriod }: PipelineBoardPr
 
   // 단계별 통계
   const stageStats = useMemo(() => {
-    const stats: Record<PipelineStage, { count: number; revenue: number }> = {
-      trustFormation: { count: 0, revenue: 0 },
-      valueRecognition: { count: 0, revenue: 0 },
-      adoptionDecision: { count: 0, revenue: 0 },
+    const stats: Record<DealStage, { count: number; revenue: number }> = {
+      test: { count: 0, revenue: 0 },
+      quote: { count: 0, revenue: 0 },
+      approval: { count: 0, revenue: 0 },
+      contract: { count: 0, revenue: 0 },
     };
 
     Object.entries(stageData).forEach(([stage, customers]) => {
-      stats[stage as PipelineStage] = {
+      const possibilityMultiplier = stage === 'contract' ? 1 : 
+        stage === 'approval' ? 0.9 : 
+        stage === 'quote' ? 0.4 : 0.2;
+      
+      stats[stage as DealStage] = {
         count: customers.length,
         revenue: customers.reduce((sum, c) => {
-          const stageObj = c[stage as PipelineStage];
-          // adoptionDecision에만 targetRevenue가 있음
-          const targetRev = stage === 'adoptionDecision' 
-            ? (stageObj as Customer['adoptionDecision'])?.targetRevenue 
-            : null;
-          return sum + (targetRev || c.contractAmount || 0);
+          const targetRev = c.adoptionDecision?.targetRevenue || c.contractAmount || 0;
+          return sum + (targetRev * possibilityMultiplier);
         }, 0),
       };
     });
@@ -90,18 +115,18 @@ export const PipelineBoard = ({ data, timePeriod: _timePeriod }: PipelineBoardPr
     }
   };
 
-  const getResponseVariant = (response: string) => {
-    switch (response) {
-      case '상': return 'success';
-      case '중': return 'warning';
-      case '하': return 'error';
+  const getPossibilityVariant = (possibility: string) => {
+    switch (possibility) {
+      case '90%': return 'success';
+      case '40%': return 'warning';
+      case '0%': return 'error';
       default: return 'default';
     }
   };
 
   return (
     <div className={styles.pipelineBoard}>
-      {(Object.keys(STAGE_CONFIG) as PipelineStage[]).map(stage => {
+      {(Object.keys(STAGE_CONFIG) as DealStage[]).map(stage => {
         const config = STAGE_CONFIG[stage];
         const customers = stageData[stage];
         const stats = stageStats[stage];
@@ -127,59 +152,117 @@ export const PipelineBoard = ({ data, timePeriod: _timePeriod }: PipelineBoardPr
             {/* Cards List */}
             <div className={styles.cardsList}>
               {customers.map(customer => {
-                const stageInfo = customer[stage];
+                const ad = customer.adoptionDecision;
+                const periodData = customer._periodData;
+                const currentExpectedRevenue = periodData?.currentExpectedRevenue || 
+                  (ad.targetRevenue || 0) * (parseFloat(ad.possibility) / 100);
+                const pastExpectedRevenue = periodData?.pastExpectedRevenue;
+                const pastPossibility = periodData?.pastPossibility;
+                const pastTrustIndex = periodData?.pastTrustIndex;
+                
+                const hasExpectedRevenueChange = pastExpectedRevenue !== undefined && 
+                  pastExpectedRevenue !== currentExpectedRevenue;
+                const hasPossibilityChange = pastPossibility !== undefined && 
+                  pastPossibility !== ad.possibility;
+                const hasTrustChange = pastTrustIndex !== undefined && 
+                  pastTrustIndex !== customer.trustIndex;
                 
                 return (
                   <Card key={customer.no} className={styles.customerCard} padding="md">
                     <div className={styles.cardHeader}>
                       <div className={styles.companyInfo}>
                         <Text variant="body-sm" weight="medium">{customer.companyName}</Text>
-                        {customer.hDot && <span className={styles.hDot} />}
+                      </div>
+                      {/* 가능성: 과거 → 현재 */}
+                      <div className={styles.possibilityValue}>
+                        {hasPossibilityChange && pastPossibility && (
+                          <>
+                            <Badge variant={getPossibilityVariant(pastPossibility)} size="sm" className={styles.pastBadge}>
+                              {pastPossibility}
+                            </Badge>
+                            <ArrowRight size={10} className={styles.arrowIcon} />
+                          </>
+                        )}
+                        <Badge variant={getPossibilityVariant(ad.possibility)} size="sm">
+                          {ad.possibility}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className={styles.cardMeta}>
+                      <Badge variant={getCategoryVariant(customer.category)} size="sm">
+                        {customer.category}
+                      </Badge>
+                      <Text variant="caption" color="secondary">{customer.manager}</Text>
+                    </div>
+
+                    {/* 예상매출: 과거 → 현재 */}
+                    <div className={styles.revenueRow}>
+                      <Text variant="caption" color="tertiary">예상매출</Text>
+                      <div className={styles.valueChange}>
+                        {hasExpectedRevenueChange && pastExpectedRevenue !== undefined && (
+                          <>
+                            <Text variant="caption" mono className={styles.pastValue}>
+                              {formatCompactCurrency(pastExpectedRevenue)}
+                            </Text>
+                            <ArrowRight size={10} className={styles.arrowIcon} />
+                          </>
+                        )}
+                        <Text 
+                          variant="body-sm" 
+                          mono 
+                          weight="semibold"
+                          color={hasExpectedRevenueChange ? 
+                            (currentExpectedRevenue > (pastExpectedRevenue || 0) ? 'success' : 'error') : 
+                            'primary'}
+                        >
+                          {formatCompactCurrency(currentExpectedRevenue)}
+                        </Text>
+                        {hasExpectedRevenueChange && (
+                          <TrendIcon direction={currentExpectedRevenue > (pastExpectedRevenue || 0) ? 'up' : 'down'} />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 신뢰지수: 과거 → 현재 */}
+                    <div className={styles.trustRow}>
+                      <div className={styles.trustValue}>
+                        <Text variant="caption" color="tertiary">신뢰</Text>
+                        <div className={styles.valueChange}>
+                          {hasTrustChange && pastTrustIndex !== undefined && (
+                            <>
+                              <Text variant="caption" mono className={styles.pastValue}>
+                                {pastTrustIndex}
+                              </Text>
+                              <ArrowRight size={10} className={styles.arrowIcon} />
+                            </>
+                          )}
+                          <Text 
+                            variant="body-sm" 
+                            mono
+                            color={hasTrustChange ? 
+                              ((customer.trustIndex || 0) > (pastTrustIndex || 0) ? 'success' : 'error') : 
+                              'primary'}
+                          >
+                            {customer.trustIndex}
+                          </Text>
+                          {hasTrustChange && (
+                            <TrendIcon direction={customer.changeDirection} />
+                          )}
+                        </div>
                       </div>
                       <Badge variant={getTrustLevelVariant(customer.trustLevel)} size="sm">
                         {customer.trustLevel}
                       </Badge>
                     </div>
 
-                    <div className={styles.cardMeta}>
-                      <Text variant="caption" color="tertiary">{customer.manager}</Text>
-                      <Text variant="caption" color="tertiary">·</Text>
-                      <Text variant="caption" color="tertiary">{customer.category}</Text>
+                    {/* Progress indicators */}
+                    <div className={styles.progressRow}>
+                      <span className={`${styles.progressDot} ${ad.test ? styles.completed : ''}`} title="테스트" />
+                      <span className={`${styles.progressDot} ${ad.quote ? styles.completed : ''}`} title="견적" />
+                      <span className={`${styles.progressDot} ${ad.approval ? styles.completed : ''}`} title="승인" />
+                      <span className={`${styles.progressDot} ${ad.contract ? styles.completed : ''}`} title="계약" />
                     </div>
-
-                    <div className={styles.trustRow}>
-                      <div className={styles.trustValue}>
-                        <Text variant="body-sm" mono weight="semibold">{customer.trustIndex}</Text>
-                        <TrendIcon direction={customer.changeDirection} />
-                      </div>
-                      <Badge variant={getResponseVariant(stageInfo.customerResponse)} size="sm">
-                        {stageInfo.customerResponse}
-                      </Badge>
-                    </div>
-
-                    {stage === 'adoptionDecision' && 'targetRevenue' in stageInfo && stageInfo.targetRevenue && (
-                      <div className={styles.revenueRow}>
-                        <Text variant="caption" color="tertiary">목표매출</Text>
-                        <Text variant="body-sm" mono>{formatCompactCurrency(stageInfo.targetRevenue)}</Text>
-                      </div>
-                    )}
-
-                    {stageInfo.targetDate && (
-                      <div className={styles.dateRow}>
-                        <Text variant="caption" color="tertiary">목표일</Text>
-                        <Text variant="caption">{stageInfo.targetDate}</Text>
-                      </div>
-                    )}
-
-                    {/* Progress indicators for adoptionDecision */}
-                    {stage === 'adoptionDecision' && (
-                      <div className={styles.progressRow}>
-                        <span className={`${styles.progressDot} ${customer.adoptionDecision.test ? styles.completed : ''}`} title="테스트" />
-                        <span className={`${styles.progressDot} ${customer.adoptionDecision.quote ? styles.completed : ''}`} title="견적" />
-                        <span className={`${styles.progressDot} ${customer.adoptionDecision.approval ? styles.completed : ''}`} title="승인" />
-                        <span className={`${styles.progressDot} ${customer.adoptionDecision.contract ? styles.completed : ''}`} title="계약" />
-                      </div>
-                    )}
                   </Card>
                 );
               })}

@@ -1,10 +1,19 @@
 import { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Users, Target, DollarSign, Percent, ArrowRight, Phone, Users as UsersIcon, Calendar, ChevronLeft, BookOpen } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Target, DollarSign, ArrowRight, Phone, Users as UsersIcon, ChevronLeft, BookOpen, Eye } from 'lucide-react';
 import { Text, Card, Modal, Badge } from '@/components/common/atoms';
-import { Customer, SalesAction, ContentEngagement } from '@/types/customer';
+import { SalesActionHistory } from '@/components/dashboard/SalesActionHistory';
+import { CompanyInfoCard } from '@/components/dashboard/CompanyInfoCard';
+import { Customer, SalesAction, ContentEngagement, ViewerDetail } from '@/types/customer';
 import { formatCompactCurrency, getDataWithPeriodChange } from '@/data/mockData';
 import type { TimePeriod } from '@/App';
 import styles from './index.module.scss';
+
+// 콘텐츠 카테고리 색상
+const CATEGORY_COLORS: Record<string, { variant: 'cyan' | 'purple' | 'success'; label: string }> = {
+  'TOFU': { variant: 'cyan', label: '인지단계' },
+  'MOFU': { variant: 'purple', label: '고려단계' },
+  'BOFU': { variant: 'success', label: '결정단계' },
+};
 
 // 기간에 따른 일수
 const PERIOD_DAYS: Record<TimePeriod, number> = {
@@ -76,9 +85,21 @@ const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
 
 type ModalType = 'revenue' | 'trust' | 'possibility' | null;
 
+// 콘텐츠 상세 정보 타입
+interface ContentDetailData {
+  title: string;
+  category: 'TOFU' | 'MOFU' | 'BOFU';
+  currentViews: number;
+  pastViews: number;
+  periodViews: number;
+  viewers: ViewerDetail[];
+}
+
 export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedCompany, setSelectedCompany] = useState<Customer | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentDetailData | null>(null);
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   
   // 기간에 맞게 변화량 재계산
   const periodData = useMemo(() => getDataWithPeriodChange(data, timePeriod), [data, timePeriod]);
@@ -156,6 +177,66 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
 
   const closeCompanyDetail = () => {
     setSelectedCompany(null);
+  };
+
+  // 콘텐츠 상세 모달 열기
+  const openContentDetail = (content: ContentEngagement) => {
+    const now = new Date('2024-12-10');
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
+
+    // 해당 콘텐츠를 조회한 모든 기업 찾기
+    const viewers: ViewerDetail[] = [];
+    let totalViews = 0;
+    let pastViews = 0;
+
+    data.forEach(customer => {
+      if (!customer.contentEngagements) return;
+      
+      customer.contentEngagements.forEach(engagement => {
+        if (engagement.title === content.title && engagement.category === content.category) {
+          totalViews++;
+          const engagementDate = new Date(engagement.date);
+          
+          if (engagementDate < periodStart) {
+            pastViews++;
+          }
+          
+          // 기간 내 조회만 viewers에 추가
+          if (engagementDate >= periodStart && engagementDate <= now) {
+            viewers.push({
+              companyName: customer.companyName,
+              date: engagement.date,
+              category: customer.category,
+              companySize: customer.companySize,
+              manager: customer.manager,
+              contractAmount: customer.contractAmount ?? 0,
+              targetRevenue: customer.adoptionDecision?.targetRevenue ?? 0,
+              possibility: customer.adoptionDecision?.possibility ?? '0%',
+              test: customer.adoptionDecision?.test ?? false,
+              quote: customer.adoptionDecision?.quote ?? false,
+              approval: customer.adoptionDecision?.approval ?? false,
+              contract: customer.adoptionDecision?.contract ?? false,
+            });
+          }
+        }
+      });
+    });
+
+    setSelectedContent({
+      title: content.title,
+      category: content.category as 'TOFU' | 'MOFU' | 'BOFU',
+      currentViews: totalViews,
+      pastViews: pastViews,
+      periodViews: viewers.length,
+      viewers: viewers.sort((a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime()),
+    });
+    setIsContentModalOpen(true);
+  };
+
+  const closeContentDetail = () => {
+    setSelectedContent(null);
+    setIsContentModalOpen(false);
   };
 
   // 모달 제목
@@ -260,22 +341,6 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
           </div>
         </Card>
 
-        {/* 가능성 변동 */}
-        <Card className={`${styles.card} ${styles.clickable}`} padding="lg" onClick={() => openModal('possibility')}>
-          <div className={styles.cardHeader}>
-            <Text variant="body-sm" color="secondary">가능성 변동</Text>
-            <div className={`${styles.iconWrapper} ${styles.orange}`}>
-              <Percent size={18} />
-            </div>
-          </div>
-          <div className={styles.cardBody}>
-            <div className={styles.valueRow}>
-              <Text variant="h2" weight="bold" color="success">+{stats.possibilityTrend.up}</Text>
-              <Text variant="h3" color="error" className={styles.secondaryValue}>-{stats.possibilityTrend.down}</Text>
-            </div>
-            <Text variant="caption" color="tertiary">최근 {TIME_PERIOD_LABELS[timePeriod]} · 클릭하여 상세 보기</Text>
-          </div>
-        </Card>
       </div>
 
       {/* 상세 모달 */}
@@ -292,6 +357,24 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
             <div className={styles.companyList}>
               {getModalData().up.map((customer) => {
                 const recentAction = getRecentAction(customer);
+                
+                // 신뢰지수 변동의 경우 CompanyInfoCard 사용
+                if (modalType === 'trust') {
+                  return (
+                    <CompanyInfoCard 
+                      key={customer.no}
+                      customer={customer}
+                      trustChange={{
+                        pastValue: customer._periodData?.pastTrustIndex ?? null,
+                        currentValue: customer.trustIndex,
+                        changeAmount: customer.changeAmount,
+                        direction: 'up'
+                      }}
+                      onClick={() => openCompanyDetail(customer)}
+                    />
+                  );
+                }
+                
                 return (
                   <button 
                     key={customer.no} 
@@ -334,18 +417,6 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
                           )}
                         </>
                       )}
-                      {modalType === 'trust' && (
-                        <div className={styles.changeRow}>
-                          <Text variant="caption" color="tertiary" mono>
-                            {customer._periodData?.pastTrustIndex ?? '-'}
-                          </Text>
-                          <ArrowRight size={10} />
-                          <Text variant="body-sm" weight="medium" color="success" mono>
-                            {customer.trustIndex}
-                          </Text>
-                          <Badge variant="success" size="sm">+{customer.changeAmount}</Badge>
-                        </div>
-                      )}
                       {modalType === 'possibility' && customer._periodData && (
                         <>
                           <div className={styles.changeRow}>
@@ -384,6 +455,24 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
             <div className={styles.companyList}>
               {getModalData().down.map((customer) => {
                 const recentAction = getRecentAction(customer);
+                
+                // 신뢰지수 변동의 경우 CompanyInfoCard 사용
+                if (modalType === 'trust') {
+                  return (
+                    <CompanyInfoCard 
+                      key={customer.no}
+                      customer={customer}
+                      trustChange={{
+                        pastValue: customer._periodData?.pastTrustIndex ?? null,
+                        currentValue: customer.trustIndex,
+                        changeAmount: customer.changeAmount,
+                        direction: 'down'
+                      }}
+                      onClick={() => openCompanyDetail(customer)}
+                    />
+                  );
+                }
+                
                 return (
                   <button 
                     key={customer.no} 
@@ -425,18 +514,6 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
                             </div>
                           )}
                         </>
-                      )}
-                      {modalType === 'trust' && (
-                        <div className={styles.changeRow}>
-                          <Text variant="caption" color="tertiary" mono>
-                            {customer._periodData?.pastTrustIndex ?? '-'}
-                          </Text>
-                          <ArrowRight size={10} />
-                          <Text variant="body-sm" weight="medium" color="error" mono>
-                            {customer.trustIndex}
-                          </Text>
-                          <Badge variant="error" size="sm">-{customer.changeAmount}</Badge>
-                        </div>
                       )}
                       {modalType === 'possibility' && customer._periodData && (
                         <>
@@ -601,7 +678,11 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
                     </Text>
                     <div className={styles.actionsList}>
                       {contentsInPeriod.map((content, idx) => (
-                        <div key={idx} className={styles.actionItem}>
+                        <button 
+                          key={idx} 
+                          className={styles.contentActionItem}
+                          onClick={() => openContentDetail(content)}
+                        >
                           <div className={styles.actionDate}>
                             <Text variant="caption" weight="medium">{content.date}</Text>
                           </div>
@@ -618,7 +699,7 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
                             </div>
                             <Text variant="body-sm">{content.title}</Text>
                           </div>
-                        </div>
+                        </button>
                       ))}
                       {contentsInPeriod.length === 0 && (
                         <div className={styles.emptyActions}>
@@ -632,60 +713,77 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
 
               {/* 예상 매출/가능성 변동: 영업 액션 히스토리 */}
               {(modalType === 'revenue' || modalType === 'possibility') && (
-                <div className={styles.actionsHistory}>
-                  <div className={styles.actionsHeader}>
-                    <Calendar size={16} />
-                    <Text variant="body-md" weight="semibold">영업 액션 히스토리</Text>
-                    <Badge variant="default" size="sm">{actionsInPeriod.length}건</Badge>
-                  </div>
-                  <Text variant="caption" color="tertiary" className={styles.historyDesc}>
-                    영업 액션(콜/미팅)에 따라 가능성과 고객반응이 변경됩니다.
-                  </Text>
-                  <div className={styles.actionsList}>
-                    {actionsInPeriod.map((action, idx) => (
-                      <div key={idx} className={styles.actionItem}>
-                        <div className={styles.actionDate}>
-                          <Text variant="caption" weight="medium">{action.date}</Text>
-                        </div>
-                        <div className={styles.actionContent}>
-                          <div className={styles.actionType}>
-                            {action.type === 'call' ? <Phone size={14} /> : <UsersIcon size={14} />}
-                            <Badge variant={action.type === 'call' ? 'cyan' : 'purple'} size="sm">
-                              {action.type === 'call' ? '콜' : '미팅'}
-                            </Badge>
-                          </div>
-                          <Text variant="body-sm">{action.content}</Text>
-                          {action.possibility && action.customerResponse && (
-                            <div className={styles.actionResult}>
-                              <Text variant="caption" color="tertiary">결과:</Text>
-                              <Badge 
-                                variant={action.possibility === '90%' ? 'success' : action.possibility === '40%' ? 'warning' : 'error'} 
-                                size="sm"
-                              >
-                                가능성 {action.possibility}
-                              </Badge>
-                              <Badge 
-                                variant={action.customerResponse === '상' ? 'success' : action.customerResponse === '중' ? 'warning' : 'error'} 
-                                size="sm"
-                              >
-                                고객반응 {action.customerResponse}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {actionsInPeriod.length === 0 && (
-                      <div className={styles.emptyActions}>
-                        <Text variant="body-sm" color="tertiary">해당 기간 내 영업 액션이 없습니다.</Text>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <SalesActionHistory 
+                  actions={actionsInPeriod} 
+                  customer={selectedCompany}
+                />
               )}
     </div>
           );
         })()}
+      </Modal>
+
+      {/* 콘텐츠 상세 모달 */}
+      <Modal 
+        isOpen={isContentModalOpen} 
+        onClose={closeContentDetail} 
+        title={selectedContent?.title || ''}
+        size="lg"
+      >
+        {selectedContent && (
+          <div className={styles.contentDetailModal}>
+            <div className={styles.contentDetailHeader}>
+              <Badge variant={CATEGORY_COLORS[selectedContent.category].variant}>
+                {selectedContent.category}
+              </Badge>
+              <Text variant="caption" color="tertiary">
+                {CATEGORY_COLORS[selectedContent.category].label}
+              </Text>
+            </div>
+
+            <div className={styles.contentDetailStats}>
+              <div className={styles.contentStatItem}>
+                <Eye size={18} />
+                {selectedContent.periodViews > 0 ? (
+                  <div className={styles.valueChange}>
+                    <Text variant="h3" weight="bold" color="tertiary" mono>{selectedContent.pastViews}</Text>
+                    <ArrowRight size={14} className={styles.arrowIcon} />
+                    <Text variant="h3" weight="bold" mono color="success">
+                      {selectedContent.currentViews}
+                    </Text>
+                  </div>
+                ) : (
+                  <Text variant="h3" weight="bold" mono>{selectedContent.currentViews}</Text>
+                )}
+                <Text variant="caption" color="secondary">총 조회수</Text>
+              </div>
+              <div className={styles.contentStatItem}>
+                <Users size={18} />
+                <Text variant="h3" weight="bold">{selectedContent.viewers.length}</Text>
+                <Text variant="caption" color="secondary">조회 기업</Text>
+              </div>
+            </div>
+
+            <div className={styles.contentViewerList}>
+              <Text variant="body-md" weight="semibold">조회 기업 목록 ({selectedContent.viewers.length}개사)</Text>
+              <div className={styles.contentViewers}>
+                {selectedContent.viewers.length === 0 ? (
+                  <div className={styles.emptyViewers}>
+                    <Text variant="body-sm" color="tertiary">해당 기간에 조회한 기업이 없습니다.</Text>
+                  </div>
+                ) : (
+                  selectedContent.viewers.map((viewer, idx) => (
+                    <CompanyInfoCard 
+                      key={idx}
+                      viewer={viewer}
+                      showDate={true}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </>
   );

@@ -1,0 +1,207 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+// 히스토리 컨테이너
+.historyContainer {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.historyHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.historyDesc {
+  margin-bottom: $spacing-xs;
+}
+
+// 타임라인 리스트
+.actionsList {
+  @include Flex(column, flex-start, stretch);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.actionItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  position: relative;
+  padding-bottom: $spacing-md;
+  padding-left: $spacing-xl;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  // 연결선
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    width: 2px;
+    height: calc(100% - 14px);
+    background: $color-border;
+  }
+
+  &:hover {
+    background: $color-bg-hover;
+    border-radius: $radius-sm;
+  }
+}
+
+.actionIcon {
+  @include FlexCenter;
+  position: absolute;
+  left: 0;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: $color-bg-tertiary;
+  border: 2px solid $color-border;
+  color: $color-text-secondary;
+}
+
+.actionContent {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.actionHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+}
+
+.progressDots {
+  @include Flex(row, flex-start, center, 2px);
+  margin-left: $spacing-xs;
+}
+
+.progressDot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background: $color-bg-secondary;
+  font-size: 9px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+
+  &.active {
+    background: $color-accent-blue;
+    color: $color-text-primary;
+  }
+}
+
+.emptyActions {
+  padding: $spacing-xl;
+  text-align: center;
+}
+
+// 액션 상세 모달
+.actionModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.actionModalHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.actionDate {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  color: $color-text-secondary;
+}
+
+.actionModalContent {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.actionModalMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.metaItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.possibilityChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+.pastValue {
+  opacity: 0.5;
+}
+
+// 진행 상태 체크리스트
+.progressChecklist {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.checklistItems {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+}
+
+.checkItem {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+  color: $color-text-tertiary;
+
+  &.checked {
+    background: rgba($color-accent-green, 0.1);
+    color: $color-accent-green;
+  }
+
+  &.newlyChecked {
+    position: relative;
+    border: 1px solid $color-accent-green;
+    animation: pulse 2s infinite;
+
+    &::after {
+      content: 'N';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 14px;
+      height: 14px;
+      border-radius: $radius-full;
+      background: $color-accent-green;
+      font-size: 8px;
+      font-weight: $font-weight-bold;
+      color: $color-bg-primary;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba($color-accent-green, 0);
+  }
+}

@@ -3,11 +3,15 @@
 
 .pipelineBoard {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-lg;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
   min-height: 600px;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 }
@@ -38,6 +42,11 @@
   &.green {
     border-color: $color-accent-green;
     background: linear-gradient(180deg, rgba($color-accent-green, 0.1) 0%, transparent 100%);
+  }
+
+  &.orange {
+    border-color: $color-accent-yellow;
+    background: linear-gradient(180deg, rgba($color-accent-yellow, 0.1) 0%, transparent 100%);
   }
 }
 
@@ -80,12 +89,12 @@
   @include Flex(row, flex-start, center, $spacing-sm);
 }
 
-.hDot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: $color-accent-cyan;
+.possibilityValue {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.pastBadge {
+  opacity: 0.5;
 }
 
 .cardMeta {
@@ -117,6 +126,19 @@
 .revenueRow,
 .dateRow {
   @include Flex(row, space-between, center);
+}
+
+.valueChange {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+.pastValue {
+  color: $color-text-primary;
+  opacity: 0.5;
 }
 
 .progressRow {

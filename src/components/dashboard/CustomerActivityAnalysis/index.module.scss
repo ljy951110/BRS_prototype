@@ -1,0 +1,608 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.container {
+  @include Flex(column, flex-start, stretch, $spacing-xl);
+}
+
+.header {
+  @include Flex(row, space-between, center);
+}
+
+.headerTitle {
+  @include Flex(row, flex-start, center, $spacing-md);
+  color: $color-text-primary;
+}
+
+.headerRight {
+  @include Flex(row, flex-end, center, $spacing-lg);
+}
+
+.tabs {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.tab {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.activeTab {
+    background: $color-bg-primary;
+    color: $color-text-primary;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// 요약 카드
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-lg;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summaryCard {
+  @include Flex(column, center, center, $spacing-sm);
+  text-align: center;
+
+  &.cyan {
+    border-left: 3px solid $color-accent-cyan;
+  }
+
+  &.purple {
+    border-left: 3px solid $color-accent-purple;
+  }
+
+  &.green {
+    border-left: 3px solid $color-accent-green;
+  }
+}
+
+.cardIcon {
+  @include FlexCenter;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+}
+
+// 인기 콘텐츠
+.topContents {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.topContentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.topContentCard {
+  @include Flex(column, flex-start, flex-start, $spacing-sm);
+  min-height: 120px;
+  transition: all $transition-fast;
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-accent-blue;
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+  }
+}
+
+.contentTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.contentStats {
+  @include Flex(row, flex-start, center, $spacing-md);
+  margin-top: auto;
+}
+
+.statItem {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  color: $color-text-secondary;
+}
+
+.trendUp {
+  color: $color-accent-green;
+}
+
+// 콘텐츠 목록 테이블
+.contentList {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: $spacing-md;
+  border-bottom: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-align: left;
+  color: $color-text-secondary;
+
+  &.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $color-bg-hover;
+      color: $color-text-primary;
+    }
+  }
+
+  &.progressTh {
+    width: 48px;
+    padding: $spacing-sm;
+    text-align: center;
+
+    &.sortActive {
+      background: $color-bg-hover;
+    }
+  }
+}
+
+.progressThContent {
+  @include Flex(row, center, center, 2px);
+}
+
+.thContent {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.sortActive {
+  color: $color-accent-blue;
+}
+
+.tr {
+  border-bottom: 1px solid $color-border;
+  transition: background $transition-fast;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.clickableRow {
+  cursor: pointer;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.td {
+  padding: $spacing-md;
+  font-size: $font-size-sm;
+
+  &.progressTd {
+    width: 40px;
+    padding: $spacing-sm;
+    text-align: center;
+  }
+}
+
+.emptyRow {
+  padding: $spacing-xl;
+  text-align: center;
+}
+
+// 상세 모달
+.contentDetail {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.detailHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.detailStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.detailStatItem {
+  @include Flex(column, center, center, $spacing-xs);
+  text-align: center;
+}
+
+.viewerList {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.viewers {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.viewerItem {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.viewerHeader {
+  @include Flex(row, space-between, center);
+}
+
+.viewerName {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.viewerDetails {
+  @include Flex(row, space-between, center);
+}
+
+.viewerMeta {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.viewerProgress {
+  @include Flex(row, flex-end, center, $spacing-sm);
+}
+
+.progressDots {
+  @include Flex(row, flex-start, center, 4px);
+}
+
+.dot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: $radius-full;
+  background: $color-bg-secondary;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+
+  &.dotActive {
+    background: $color-accent-blue;
+    color: $color-text-primary;
+  }
+}
+
+.emptyViewers {
+  padding: $spacing-xl;
+  text-align: center;
+}
+
+.viewerInfo {
+  @include Flex(column, flex-start, flex-start, 2px);
+}
+
+// 값 변화 표시 (과거 → 현재)
+.valueChange {
+  @include Flex(row, center, center, $spacing-xs);
+}
+
+.pastValueText {
+  color: $color-text-primary;
+  opacity: 0.5;
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+.trendUp {
+  color: $color-accent-green;
+}
+
+.viewsChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  margin-top: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+}
+
+.viewsChangeCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.contractCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+// 진행상태별 콘텐츠 분석
+.progressAnalysis {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+  margin-top: $spacing-lg;
+}
+
+.progressGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.progressCard {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+}
+
+.progressHeader {
+  @include Flex(row, space-between, center);
+}
+
+.progressTitle {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.progressContents {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.progressContentItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+.progressContentInfo {
+  @include Flex(column, flex-start, flex-start, 2px);
+  flex: 1;
+  min-width: 0;
+}
+
+.progressCustomers {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border;
+}
+
+.customerTags {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+}
+
+// 진행상태별 기업 목록
+.progressCustomerList {
+  @include Flex(column, flex-start, stretch, 0);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.progressCustomerItem {
+  @include Flex(row, space-between, center);
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-bottom: 1px solid $color-border;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.customerName {
+  flex: 1;
+  min-width: 0;
+}
+
+.customerActivity {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.emptyCustomers {
+  @include FlexCenter;
+  padding: $spacing-xl;
+}
+
+// 진행상태별 기업 상세 모달
+.progressCustomerDetail {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.customerBasicInfo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.infoRow {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.progressDotsLarge {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.progressDotLarge {
+  @include FlexCenter;
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-full;
+  background: $color-bg-secondary;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+
+  &.active {
+    background: $color-accent-green;
+    color: white;
+  }
+}
+
+.activitySection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.mbmAttendanceList {
+  @include Flex(column, flex-start, stretch, 0);
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.mbmAttendanceItem {
+  @include Flex(row, space-between, center);
+  padding: $spacing-md;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.attended {
+    background: rgba($color-accent-green, 0.05);
+  }
+}
+
+.mbmEventInfo {
+  @include Flex(column, flex-start, flex-start, 2px);
+}
+
+.contentEngagementList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.contentEngagementItem {
+  @include Flex(row, flex-start, center, $spacing-md);
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+.contentEngagementInfo {
+  @include Flex(column, flex-start, flex-start, 2px);
+  flex: 1;
+  min-width: 0;
+}
+
+// 클릭 가능한 카드
+.clickableCard {
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// 카테고리 상세 모달
+.categoryModalContent {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.categoryStats {
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border;
+}
+
+.categoryContentList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.categoryContentItem {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.categoryContentHeader {
+  @include Flex(row, space-between, center);
+}
+
+.categoryContentTitle {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.categoryContentViews {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.categoryContentMeta {
+  @include Flex(row, space-between, center);
+}
+

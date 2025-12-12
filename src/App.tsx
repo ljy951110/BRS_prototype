@@ -6,6 +6,7 @@ import {
   Table as TableIcon,
   BarChart3,
   Calendar,
+  Activity,
 } from "lucide-react";
 import { Text, Card } from "@/components/common/atoms";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
@@ -13,12 +14,41 @@ import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { Charts } from "@/components/dashboard/Charts";
 import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
+import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
 import { mockData } from "@/data/mockData";
-import { Customer, Category, Possibility } from "@/types/customer";
+import { Customer } from "@/types/customer";
 import styles from "./App.module.scss";
 
-type ViewMode = "table" | "pipeline" | "chart" | "timeline";
+type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
 export type TimePeriod = "1w" | "1m" | "6m" | "1y";
+
+// 진행상태 필터 타입
+type ProgressStatus =
+  | "all"
+  | "test"
+  | "quote"
+  | "approval"
+  | "contract"
+  | "none";
+
+// 탭별 필터 상태 타입
+interface TabFilters {
+  searchQuery: string;
+  selectedManager: string;
+  selectedCategory: string;
+  selectedPossibility: string;
+  selectedProgress: ProgressStatus;
+}
+
+type TabFilterState = Record<ViewMode, TabFilters>;
+
+const DEFAULT_FILTERS: TabFilters = {
+  searchQuery: "",
+  selectedManager: "all",
+  selectedCategory: "all",
+  selectedPossibility: "all",
+  selectedProgress: "all",
+};
 
 const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
   { value: "1w", label: "최근 1주일" },
@@ -28,16 +58,28 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
 ];
 
 function App() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedManager, setSelectedManager] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
-    "all"
-  );
-  const [selectedPossibility, setSelectedPossibility] = useState<
-    Possibility | "all"
-  >("all");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("1w");
+
+  // 탭별 독립적인 필터 상태
+  const [tabFilters, setTabFilters] = useState<TabFilterState>({
+    table: { ...DEFAULT_FILTERS },
+    pipeline: { ...DEFAULT_FILTERS },
+    timeline: { ...DEFAULT_FILTERS },
+    activity: { ...DEFAULT_FILTERS },
+    chart: { ...DEFAULT_FILTERS },
+  });
+
+  // 현재 탭의 필터 접근
+  const currentFilters = tabFilters[viewMode];
+
+  // 현재 탭의 필터 업데이트 헬퍼
+  const updateCurrentFilter = (key: keyof TabFilters, value: string) => {
+    setTabFilters((prev) => ({
+      ...prev,
+      [viewMode]: { ...prev[viewMode], [key]: value },
+    }));
+  };
 
   // 고유 담당자 목록
   const managers = useMemo(
@@ -45,8 +87,16 @@ function App() {
     []
   );
 
-  // 필터링된 데이터
+  // 필터링된 데이터 (현재 탭의 필터 사용)
   const filteredData = useMemo(() => {
+    const {
+      searchQuery,
+      selectedManager,
+      selectedCategory,
+      selectedPossibility,
+      selectedProgress,
+    } = currentFilters;
+
     return mockData.filter((customer: Customer) => {
       // 검색어 필터
       if (
@@ -73,9 +123,27 @@ function App() {
       ) {
         return false;
       }
+      // 진행상태 필터
+      if (selectedProgress !== "all") {
+        const ad = customer.adoptionDecision;
+        if (selectedProgress === "none") {
+          // 아무 진행 상태도 없는 경우
+          if (ad.test || ad.quote || ad.approval || ad.contract) {
+            return false;
+          }
+        } else if (selectedProgress === "contract") {
+          if (!ad.contract) return false;
+        } else if (selectedProgress === "approval") {
+          if (!ad.approval || ad.contract) return false;
+        } else if (selectedProgress === "quote") {
+          if (!ad.quote || ad.approval) return false;
+        } else if (selectedProgress === "test") {
+          if (!ad.test || ad.quote) return false;
+        }
+      }
       return true;
     });
-  }, [searchQuery, selectedManager, selectedCategory, selectedPossibility]);
+  }, [currentFilters]);
 
   return (
     <div className={styles.app}>
@@ -125,8 +193,10 @@ function App() {
               <input
                 type="text"
                 placeholder="기업명 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={currentFilters.searchQuery}
+                onChange={(e) =>
+                  updateCurrentFilter("searchQuery", e.target.value)
+                }
                 className={styles.searchInput}
               />
             </div>
@@ -134,8 +204,10 @@ function App() {
             <div className={styles.filterGroup}>
               <Filter size={16} />
               <select
-                value={selectedManager}
-                onChange={(e) => setSelectedManager(e.target.value)}
+                value={currentFilters.selectedManager}
+                onChange={(e) =>
+                  updateCurrentFilter("selectedManager", e.target.value)
+                }
                 className={styles.select}
               >
                 <option value="all">전체 담당자</option>
@@ -147,9 +219,9 @@ function App() {
               </select>
 
               <select
-                value={selectedCategory}
+                value={currentFilters.selectedCategory}
                 onChange={(e) =>
-                  setSelectedCategory(e.target.value as Category | "all")
+                  updateCurrentFilter("selectedCategory", e.target.value)
                 }
                 className={styles.select}
               >
@@ -160,16 +232,21 @@ function App() {
               </select>
 
               <select
-                value={selectedPossibility}
+                value={currentFilters.selectedProgress}
                 onChange={(e) =>
-                  setSelectedPossibility(e.target.value as Possibility | "all")
+                  updateCurrentFilter(
+                    "selectedProgress",
+                    e.target.value as ProgressStatus
+                  )
                 }
                 className={styles.select}
               >
-                <option value="all">전체 가능성</option>
-                <option value="90%">90% (높음)</option>
-                <option value="40%">40% (중간)</option>
-                <option value="0%">0% (낮음)</option>
+                <option value="all">전체 진행상태</option>
+                <option value="contract">계약 완료</option>
+                <option value="approval">승인 단계</option>
+                <option value="quote">견적 단계</option>
+                <option value="test">테스트 단계</option>
+                <option value="none">미진행</option>
               </select>
             </div>
           </div>
@@ -186,12 +263,30 @@ function App() {
             </button>
             <button
               className={`${styles.viewBtn} ${
+                viewMode === "timeline" ? styles.active : ""
+              }`}
+              onClick={() => setViewMode("timeline")}
+            >
+              <Calendar size={18} />
+              <span>액션 타임라인</span>
+            </button>
+            <button
+              className={`${styles.viewBtn} ${
+                viewMode === "activity" ? styles.active : ""
+              }`}
+              onClick={() => setViewMode("activity")}
+            >
+              <Activity size={18} />
+              <span>고객 활동 분석</span>
+            </button>
+            <button
+              className={`${styles.viewBtn} ${
                 viewMode === "pipeline" ? styles.active : ""
               }`}
               onClick={() => setViewMode("pipeline")}
             >
               <LayoutGrid size={18} />
-              <span>파이프라인</span>
+              <span>딜</span>
             </button>
             <button
               className={`${styles.viewBtn} ${
@@ -201,15 +296,6 @@ function App() {
             >
               <BarChart3 size={18} />
               <span>차트</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "timeline" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("timeline")}
-            >
-              <Calendar size={18} />
-              <span>MBM 타임라인</span>
             </button>
           </div>
         </section>
@@ -228,6 +314,12 @@ function App() {
           {viewMode === "timeline" && (
             <MBMTimeline data={filteredData} timePeriod={timePeriod} />
           )}
+          {viewMode === "activity" && (
+            <CustomerActivityAnalysis
+              data={filteredData}
+              timePeriod={timePeriod}
+            />
+          )}
         </section>
 
         {/* Footer Stats */}
@@ -238,10 +330,12 @@ function App() {
               {filteredData.length}
             </Text>
             개 고객 표시 중
-            {selectedManager !== "all" && ` · 담당자: ${selectedManager}`}
-            {selectedCategory !== "all" && ` · ${selectedCategory}`}
-            {selectedPossibility !== "all" &&
-              ` · ${selectedPossibility} 가능성`}
+            {currentFilters.selectedManager !== "all" &&
+              ` · 담당자: ${currentFilters.selectedManager}`}
+            {currentFilters.selectedCategory !== "all" &&
+              ` · ${currentFilters.selectedCategory}`}
+            {currentFilters.selectedPossibility !== "all" &&
+              ` · ${currentFilters.selectedPossibility} 가능성`}
           </Text>
         </Card>
       </main>

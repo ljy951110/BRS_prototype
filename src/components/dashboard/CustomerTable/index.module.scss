@@ -69,6 +69,18 @@
   &.expanded {
     background: $color-bg-secondary;
   }
+
+  &.clickableRow {
+    cursor: pointer;
+    
+    &:hover {
+      background: $color-bg-hover;
+    }
+    
+    &:active {
+      background: $color-bg-tertiary;
+    }
+  }
 }
 
 .td {
@@ -126,6 +138,60 @@
 
 .pastValue {
   opacity: 0.5;
+}
+
+// 진행상태 (T Q A C)
+.progressStatus {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.statusDot {
+  position: relative;
+  @include FlexCenter;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  transition: all $transition-fast;
+
+  &.active {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.15);
+    color: $color-accent-green;
+  }
+
+  &.newlyActive {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.25);
+    color: $color-accent-green;
+    animation: pulse 1.5s ease-in-out infinite;
+
+    &::after {
+      content: 'N';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: $color-accent-green;
+      font-size: 6px;
+      font-weight: $font-weight-bold;
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4); }
+  50% { box-shadow: 0 0 0 3px rgba($color-accent-green, 0); }
 }
 
 .trendUp {
@@ -390,6 +456,50 @@
 .timelineTab {
   @include Flex(column, flex-start, stretch, $spacing-lg);
 }
+
+.activityTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.activityList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activityItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.activityBadge {
+  flex-shrink: 0;
+}
+
+.activityInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.activitySummary {
+  @include Flex(row, space-around, center, $spacing-md);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+}
+
+.summaryItem {
+  @include Flex(column, center, center, $spacing-xs);
+  text-align: center;
+}
+
 .periodBadge {
   padding: $spacing-xs $spacing-sm;
   border-radius: $radius-sm;
@@ -399,7 +509,7 @@
 
 .timelineHeader {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: $spacing-sm;
   padding: $spacing-md;
   background: $color-bg-tertiary;
@@ -410,6 +520,7 @@
   @include Flex(column, flex-start, center, $spacing-xs);
   text-align: center;
   padding: $spacing-sm;
+  min-height: 80px;
   border-radius: $radius-sm;
   
   &.mbmWeek {
@@ -430,15 +541,16 @@
 
 .timelineCells {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: $spacing-sm;
   padding: $spacing-md 0;
 }
 
 .timelineCell {
   @include Flex(column, flex-start, center, $spacing-sm);
+  align-items: stretch;
   padding: $spacing-md;
-  min-height: 100px;
+  min-height: 120px;
   background: $color-bg-secondary;
   border: 1px solid $color-border;
   border-radius: $radius-md;
@@ -551,6 +663,44 @@
   border-top: 1px solid $color-border;
 }
 
+// 영업활동 히스토리
+.salesHistorySection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+.salesHistoryList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.salesHistoryItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.salesHistoryLeft {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  min-width: 80px;
+}
+
+.salesHistoryContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+}
+
+.salesHistoryMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
 // Action Modal
 .actionModal {
   @include Flex(column, flex-start, stretch, $spacing-lg);
@@ -582,6 +732,72 @@
 
 .metaItem {
   @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.possibilityChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+// 진행 상태 체크리스트
+.progressChecklist {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.checklistItems {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.checkItem {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  color: $color-text-tertiary;
+  background: $color-bg-secondary;
+
+  &.checked {
+    color: $color-accent-green;
+    background: $color-accent-green-subtle;
+  }
+
+  &.newlyChecked {
+    position: relative;
+    border: 1px solid $color-accent-green;
+    animation: pulse 1s ease-in-out infinite;
+
+    &::after {
+      content: "N";
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: $color-accent-green;
+      @include FontStyle(caption);
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba($color-accent-green, 0);
+  }
 }
 
 // Content Modal
@@ -646,4 +862,124 @@
   padding: $spacing-xl;
   background: $color-bg-tertiary;
   border-radius: $radius-md;
+}
+
+// 타임라인 하단 상세 정보
+.timelineDetails {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+.detailSection {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.timelineItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-sm 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.timelineIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+}
+
+.timelineContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.timelineItemHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+}
+
+.progressDots {
+  @include Flex(row, flex-start, center, 2px);
+  margin-left: $spacing-xs;
+}
+
+.progressDot {
+  @include FlexCenter;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background: $color-bg-tertiary;
+  font-size: 9px;
+  font-weight: $font-weight-medium;
+  color: $color-text-tertiary;
+
+  &.active {
+    background: $color-accent-green;
+    color: white;
+  }
+}
+
+.mbmList {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.mbmItem {
+  @include Flex(row, flex-start, center, $spacing-md);
+  padding: $spacing-sm 0;
+}
+
+.mbmIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-yellow, 0.15);
+  color: $color-accent-yellow;
+}
+
+.mbmContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.summarySection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding: $spacing-lg;
+  background: $color-bg-tertiary;
+  border-radius: $radius-lg;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+.summaryItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-sm;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+}
+
+.trustScoreSummary {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.changeIndicator {
+  @include Flex(row, flex-start, center, $spacing-xs);
 }

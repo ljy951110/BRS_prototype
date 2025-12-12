@@ -152,6 +152,21 @@
   }
 }
 
+.trustCompanyItem {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  position: relative;
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+}
+
+.trustChangeIndicator {
+  @include Flex(row, flex-end, center, $spacing-sm);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+}
+
 .companyInfo {
   @include Flex(column, flex-start, flex-start, 2px);
   flex-shrink: 0;
@@ -264,6 +279,23 @@
   background: $color-bg-tertiary;
 }
 
+.contentActionItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  width: 100%;
+  padding: $spacing-md;
+  border: none;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  text-align: left;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    transform: translateX(4px);
+  }
+}
+
 .actionDate {
   flex-shrink: 0;
   width: 80px;
@@ -291,4 +323,45 @@
 .emptyActions {
   padding: $spacing-xl;
   text-align: center;
+}
+
+// 콘텐츠 상세 모달
+.contentDetailModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.contentDetailHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.contentDetailStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.contentStatItem {
+  @include Flex(column, center, center, $spacing-sm);
+  padding: $spacing-lg;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.valueChange {
+  @include Flex(row, center, center, $spacing-sm);
+}
+
+.contentViewerList {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.contentViewers {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.emptyViewers {
+  @include FlexCenter;
+  padding: $spacing-xl;
 }
