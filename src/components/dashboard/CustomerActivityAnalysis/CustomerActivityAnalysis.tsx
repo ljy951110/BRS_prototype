@@ -58,6 +58,14 @@ const CATEGORY_COLORS: Record<
 // 카테고리 정렬 순서
 const CATEGORY_ORDER: Record<string, number> = { TOFU: 1, MOFU: 2, BOFU: 3 };
 
+const TRUST_HISTORY_YEAR = "2024";
+const MBM_TRUST_POINTS = 3;
+const CONTENT_TRUST_POINTS: Record<string, number> = {
+  TOFU: 1,
+  MOFU: 2,
+  BOFU: 3,
+};
+
 // MBM 이벤트 정의 (액션 타임라인과 동일)
 const MBM_EVENTS: Record<string, { date: string; label: string }> = {
   "1107": { date: "2024-11-07", label: "11/7 MBM 세미나" },
@@ -146,6 +154,12 @@ type SortField =
   | "contract";
 type SortDirection = "asc" | "desc" | null;
 
+const getDateFromWeekKey = (key: string) => {
+  const month = key.slice(0, 2);
+  const day = key.slice(2);
+  return new Date(`${TRUST_HISTORY_YEAR}-${month}-${day}`);
+};
+
 export const CustomerActivityAnalysis = ({
   data,
   timePeriod,
@@ -163,6 +177,125 @@ export const CustomerActivityAnalysis = ({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [trustModalCompany, setTrustModalCompany] = useState<{
+    companyName: string;
+    change: number;
+    startTrust: number;
+    endTrust: number;
+    events: {
+      type: "mbm" | "content";
+      label: string;
+      date: string;
+      points: number;
+      category?: string;
+    }[];
+  } | null>(null);
+
+  const trustGainCompanies = useMemo(() => {
+    const now = new Date("2024-12-10");
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
+
+    return data
+      .map((customer) => {
+        if (!customer.trustHistory) return null;
+
+        // 시간순 정렬된 신뢰 이력
+        const entries = Object.entries(customer.trustHistory)
+          .map(([key, value]) => ({
+            date: getDateFromWeekKey(key),
+            value: value?.trustIndex ?? null,
+          }))
+          .filter((entry) => entry.value !== null)
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        if (entries.length === 0) return null;
+
+        // 기간 내 마지막 포인트
+        const lastInPeriod = [...entries].reverse().find(
+          (entry) => entry.date >= periodStart && entry.date <= now
+        );
+        if (!lastInPeriod) return null;
+
+        // 기간 내 직전 포인트 (기간 밖이어도 직전 값 사용)
+        const previousIndex = entries.findIndex(
+          (entry) => entry.date.getTime() === lastInPeriod.date.getTime()
+        );
+        const prevEntry =
+          previousIndex > 0 ? entries[previousIndex - 1] : undefined;
+
+        // 이전 값이 없으면 변화 계산 불가
+        if (!prevEntry) return null;
+
+        const start = prevEntry.value ?? 0;
+        const end = lastInPeriod.value ?? 0;
+        const change = (end || 0) - (start || 0);
+        if (change <= 0) return null;
+
+        return {
+          companyName: customer.companyName,
+          manager: customer.manager,
+          category: customer.category,
+          companySize: customer.companySize ?? "-",
+          startTrust: start,
+          endTrust: end,
+          change,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => !!item)
+      .sort((a, b) => b.change - a.change)
+      .slice(0, 5);
+  }, [data, timePeriod]);
+
+  const buildTrustGainEvents = (customerName: string) => {
+    const now = new Date("2024-12-10");
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
+
+    const customer = data.find((c) => c.companyName === customerName);
+    if (!customer) return [];
+
+    const events: {
+      type: "mbm" | "content";
+      label: string;
+      date: string;
+      points: number;
+      category?: string;
+    }[] = [];
+
+    // MBM 참석
+    Object.entries(customer.attendance || {}).forEach(([key, attended]) => {
+      if (!attended) return;
+      const event = MBM_EVENTS[key];
+      if (!event) return;
+      const eventDate = new Date(event.date);
+      if (eventDate < periodStart || eventDate > now) return;
+      events.push({
+        type: "mbm",
+        label: event.label,
+        date: event.date,
+        points: MBM_TRUST_POINTS,
+      });
+    });
+
+    // 콘텐츠 조회
+    (customer.contentEngagements || []).forEach((engagement) => {
+      const date = new Date(engagement.date);
+      if (date < periodStart || date > now) return;
+      const points = CONTENT_TRUST_POINTS[engagement.category] ?? 1;
+      events.push({
+        type: "content",
+        label: engagement.title,
+        date: engagement.date,
+        points,
+        category: engagement.category,
+      });
+    });
+
+    return events.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  };
 
   // 기간 내 콘텐츠 통계 계산
   const contentStats = useMemo(() => {
@@ -527,6 +660,148 @@ export const CustomerActivityAnalysis = ({
           </div>
         </div>
       </div>
+
+      {/* 신뢰지수 상승 기업 */}
+      <div className={styles.trustGainSection}>
+        <div className={styles.trustGainHeader}>
+          <Text variant="h4" weight="semibold">
+            기간 내 신뢰지수 상승 TOP {trustGainCompanies.length || 0}
+          </Text>
+          <Badge variant={trustGainCompanies.length > 0 ? "success" : "default"} size="sm">
+            {trustGainCompanies.length > 0
+              ? `+${trustGainCompanies.reduce((sum, c) => sum + c.change, 0)}`
+              : "상승 기업 없음"}
+          </Badge>
+        </div>
+        {trustGainCompanies.length > 0 ? (
+          <div className={styles.trustGainList}>
+            {trustGainCompanies.map((company) => (
+              <Card
+                key={company.companyName}
+                className={styles.trustGainItem}
+                padding="md"
+                onClick={() =>
+                  setTrustModalCompany({
+                    companyName: company.companyName,
+                    change: company.change,
+                    startTrust: company.startTrust,
+                    endTrust: company.endTrust,
+                    events: buildTrustGainEvents(company.companyName),
+                  })
+                }
+              >
+                <div className={styles.trustGainMain}>
+                  <Text variant="body-md" weight="semibold">
+                    {company.companyName}
+                  </Text>
+                  <Text variant="caption" color="tertiary">
+                    {company.manager} · {company.category} · {company.companySize}
+                  </Text>
+                </div>
+                <div className={styles.trustGainChange}>
+                  <Text variant="caption" color="tertiary" mono>
+                    {company.startTrust}
+                  </Text>
+                  <ArrowRight size={12} className={styles.arrowIcon} />
+                  <Text variant="body-md" weight="bold" mono color="success">
+                    {company.endTrust}
+                  </Text>
+                  <Badge variant="success" size="sm">+{company.change}</Badge>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.trustGainEmpty}>
+            <Text variant="body-sm" color="tertiary">
+              선택한 기간에 신뢰지수가 상승한 기업이 없습니다.
+            </Text>
+          </div>
+        )}
+      </div>
+
+      {/* 신뢰 상승 상세 모달 */}
+      <Modal
+        isOpen={!!trustModalCompany}
+        onClose={() => setTrustModalCompany(null)}
+        title={trustModalCompany?.companyName || ""}
+        size="md"
+      >
+        {trustModalCompany && (
+          <div className={styles.trustModal}>
+            <div className={styles.trustModalHeader}>
+              <div>
+                <Text variant="body-sm" color="tertiary">
+                  신뢰지수 변화
+                </Text>
+                <div className={styles.trustGainChange}>
+                  <Text variant="caption" color="tertiary" mono>
+                    {trustModalCompany.startTrust}
+                  </Text>
+                  <ArrowRight size={12} className={styles.arrowIcon} />
+                  <Text
+                    variant="body-md"
+                    weight="bold"
+                    mono
+                    color="success"
+                  >
+                    {trustModalCompany.endTrust}
+                  </Text>
+                  <Badge variant="success" size="sm">
+                    +{trustModalCompany.change}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.trustModalBody}>
+              <Text variant="body-md" weight="semibold">
+                상승 요인
+              </Text>
+              {trustModalCompany.events.length > 0 ? (
+                <div className={styles.trustEventList}>
+                  {trustModalCompany.events.map((event, idx) => (
+                    <div key={idx} className={styles.trustEventItem}>
+                      <div className={styles.trustEventMeta}>
+                        <Badge
+                          variant={event.type === "mbm" ? "success" : "cyan"}
+                          size="sm"
+                        >
+                          {event.type === "mbm" ? "MBM" : "콘텐츠"}
+                        </Badge>
+                        <Text variant="caption" color="tertiary">
+                          {event.date}
+                        </Text>
+                      </div>
+                      <div className={styles.trustEventContent}>
+                        <Text variant="body-sm" weight="medium">
+                          {event.label}
+                        </Text>
+                        <div className={styles.trustEventPoints}>
+                          {event.category && (
+                            <Badge variant="default" size="sm">
+                              {event.category}
+                            </Badge>
+                          )}
+                          <Badge variant="success" size="sm">
+                            +{event.points}p
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.trustGainEmpty}>
+                  <Text variant="body-sm" color="tertiary">
+                    기간 내 상승 요인을 찾지 못했습니다.
+                  </Text>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* 콘텐츠 조회 탭 */}
       {activeTab === "content" && (

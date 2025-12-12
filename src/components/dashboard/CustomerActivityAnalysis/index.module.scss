@@ -27,6 +27,87 @@
   @include Flex(row, flex-start, center, $spacing-md);
 }
 
+.trustGainSection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding: $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-secondary;
+}
+
+.trustGainHeader {
+  @include Flex(row, space-between, center);
+}
+
+.trustGainList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trustGainItem {
+  @include Flex(row, space-between, center, $spacing-md);
+}
+
+.trustGainMain {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.trustGainChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-shrink: 0;
+}
+
+.trustGainEmpty {
+  padding: $spacing-lg;
+  text-align: center;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  border: 1px dashed $color-border;
+}
+
+.trustModal {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.trustModalHeader {
+  @include Flex(row, space-between, center);
+}
+
+.trustModalBody {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.trustEventList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.trustEventItem {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.trustEventMeta {
+  @include Flex(row, space-between, center);
+}
+
+.trustEventContent {
+  @include Flex(row, space-between, center);
+  gap: $spacing-md;
+}
+
+.trustEventPoints {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-shrink: 0;
+}
+
 .tabFilters {
   width: 100%;
   margin-top: $spacing-md;
