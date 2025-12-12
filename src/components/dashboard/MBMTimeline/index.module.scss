@@ -19,6 +19,19 @@
   border-right: 1px solid $color-border;
 }
 
+.filterControls {
+  @include Flex(row, space-between, center, $spacing-md);
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.externalFilters {
+  @include Flex(row, flex-start, center, $spacing-md);
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 260px;
+}
+
 .filterButtons {
   @include Flex(row, flex-start, center, $spacing-sm);
 }
@@ -205,14 +218,20 @@
 
 .contactBadge {
   @include nudgeBadge($color-accent-green, $color-accent-green-subtle);
+  border: none;
+  cursor: pointer;
 }
 
 .interestBadge {
   @include nudgeBadge($color-accent-blue, $color-accent-blue-subtle);
+  border: none;
+  cursor: pointer;
 }
 
 .actionBadge {
   @include nudgeBadge($color-accent-orange, $color-accent-orange-subtle);
+  border: none;
+  cursor: pointer;
 }
 
 @keyframes pulse {
@@ -227,6 +246,38 @@
 .currentTrust {
   @include Flex(column, center, flex-end, 2px);
   text-align: right;
+}
+
+.nudgeModal {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  gap: $spacing-md;
+}
+
+.nudgeBadgeRow {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.nudgeReasons {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.nudgeReasonList {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.nudgeReasonItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  color: $color-text-primary;
+}
+
+.nudgeMeta {
+  @include Flex(row, space-between, center, $spacing-md);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
 }
 
 .timelineCells {
@@ -270,13 +321,24 @@
   }
 }
 
-.mbmAttended {
-  @include Flex(row, flex-start, center, 4px);
+.mbmAction {
+  @include Flex(row, flex-start, center, 6px);
   padding: 4px 8px;
-  margin-bottom: $spacing-xs;
-  background: $color-accent-blue;
   border-radius: $radius-sm;
-  color: white;
+  background: $color-accent-blue-subtle;
+  color: $color-accent-blue;
+  font-weight: $font-weight-semibold;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.16);
+  }
+}
+
+.mbmActionText {
+  @include Flex(column, flex-start, flex-start, 2px);
 }
 
 .trustInfo {

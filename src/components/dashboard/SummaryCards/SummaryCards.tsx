@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Users, Target, DollarSign, ArrowRight, Phone, Users as UsersIcon, ChevronLeft, BookOpen, Eye } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Target, DollarSign, ArrowRight, Phone, Users as UsersIcon, ChevronLeft, BookOpen, Eye, Calendar } from 'lucide-react';
 import { Text, Card, Modal, Badge } from '@/components/common/atoms';
 import { SalesActionHistory } from '@/components/dashboard/SalesActionHistory';
 import { CompanyInfoCard } from '@/components/dashboard/CompanyInfoCard';
@@ -28,6 +28,14 @@ const CONTENT_TRUST_POINTS: Record<string, number> = {
   'TOFU': 1,
   'MOFU': 2,
   'BOFU': 3,
+};
+const MBM_TRUST_POINTS = 3;
+
+const MBM_EVENTS: Record<string, { date: string; label: string }> = {
+  "1107": { date: "2024-11-07", label: "11/7 MBM" },
+  "1218": { date: "2024-12-18", label: "12/18 MBM" },
+  "0112": { date: "2025-01-12", label: "1/12 MBM" },
+  "0116": { date: "2025-01-16", label: "1/16 MBM" },
 };
 
 // 기간 내 영업 액션 가져오기
@@ -59,6 +67,27 @@ const getContentsInPeriod = (customer: Customer, period: TimePeriod): ContentEng
       const contentDate = new Date(content.date);
       return contentDate >= periodStart && contentDate <= now;
     })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+// 기간 내 MBM 참석 이력 가져오기
+const getMBMAttendanceInPeriod = (
+  customer: Customer,
+  period: TimePeriod
+): { key: string; label: string; date: string }[] => {
+  const now = new Date("2024-12-10");
+  const periodStart = new Date(now);
+  periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[period]);
+
+  return Object.entries(customer.attendance || {})
+    .filter(([key, attended]) => {
+      if (!attended) return false;
+      const event = MBM_EVENTS[key];
+      if (!event) return false;
+      const eventDate = new Date(event.date);
+      return eventDate >= periodStart && eventDate <= now;
+    })
+    .map(([key]) => ({ key, ...MBM_EVENTS[key] }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
@@ -666,8 +695,40 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
               {/* 신뢰지수 변동: 콘텐츠 소비 히스토리 */}
               {modalType === 'trust' && (() => {
                 const contentsInPeriod = getContentsInPeriod(selectedCompany, timePeriod);
+                const mbmAttendances = getMBMAttendanceInPeriod(selectedCompany, timePeriod);
                 return (
                   <div className={styles.actionsHistory}>
+                    <div className={styles.actionsHeader}>
+                      <Calendar size={16} />
+                      <Text variant="body-md" weight="semibold">MBM 참석 이력</Text>
+                      <Badge variant="default" size="sm">{mbmAttendances.length}건</Badge>
+                    </div>
+                    <Text variant="caption" color="tertiary" className={styles.historyDesc}>
+                      MBM 참석 시 신뢰지수가 +{MBM_TRUST_POINTS}p 상승합니다.
+                    </Text>
+                    <div className={styles.actionsList}>
+                      {mbmAttendances.map((mbm) => (
+                        <div key={mbm.key} className={styles.actionItem}>
+                          <div className={styles.actionDate}>
+                            <Text variant="caption" weight="medium">{mbm.date}</Text>
+                          </div>
+                          <div className={styles.actionContent}>
+                            <div className={styles.actionType}>
+                              <Calendar size={14} />
+                              <Badge variant="success" size="sm">MBM 참석</Badge>
+                              <Badge variant="success" size="sm">+{MBM_TRUST_POINTS}p</Badge>
+                            </div>
+                            <Text variant="body-sm">{mbm.label}</Text>
+                          </div>
+                        </div>
+                      ))}
+                      {mbmAttendances.length === 0 && (
+                        <div className={styles.emptyActions}>
+                          <Text variant="body-sm" color="tertiary">해당 기간 내 참석한 MBM이 없습니다.</Text>
+                        </div>
+                      )}
+                    </div>
+
                     <div className={styles.actionsHeader}>
                       <BookOpen size={16} />
                       <Text variant="body-md" weight="semibold">콘텐츠 소비 히스토리</Text>

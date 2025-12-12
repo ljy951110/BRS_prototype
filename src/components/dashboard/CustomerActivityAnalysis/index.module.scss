@@ -9,6 +9,10 @@
   @include Flex(row, space-between, center);
 }
 
+.headerLeft {
+  flex: 1;
+}
+
 .headerTitle {
   @include Flex(row, flex-start, center, $spacing-md);
   color: $color-text-primary;
@@ -16,6 +20,16 @@
 
 .headerRight {
   @include Flex(row, flex-end, center, $spacing-lg);
+}
+
+.headerFilters {
+  width: 100%;
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.tabFilters {
+  width: 100%;
+  margin-top: $spacing-md;
 }
 
 .tabs {
@@ -605,4 +619,3 @@
 .categoryContentMeta {
   @include Flex(row, space-between, center);
 }
-

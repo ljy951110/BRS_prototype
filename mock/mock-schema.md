@@ -194,10 +194,10 @@
 
 MBM(Monthly Business Meeting) 세미나 이벤트 참석 여부를 기록합니다. 특정 날짜에 진행되는 이벤트입니다.
 
-| 필드명 | 타입    | 설명                      | 해당 주차  | 날짜       |
-| ------ | ------- | ------------------------- | ---------- | ---------- |
-| `1107` | boolean | 11월 MBM 세미나 참석 여부 | 11월 1주차 | 2024-11-07 |
-| `1218` | boolean | 12월 후속 미팅 참석 여부  | 12월 3주차 | 2024-12-18 |
+| 필드명 | 타입    | 설명                      | 해당 주차  | 날짜       | 주제                                |
+| ------ | ------- | ------------------------- | ---------- | ---------- | ----------------------------------- |
+| `1107` | boolean | 11월 MBM 세미나 참석 여부 | 11월 1주차 | 2024-11-07 | HR Tech 트렌드와 채용 자동화        |
+| `1218` | boolean | 12월 후속 미팅 참석 여부  | 12월 3주차 | 2024-12-18 | 영상면접 고도화 & 리텐션 전략       |
 
 #### MBM 이벤트 목록
 
@@ -205,9 +205,26 @@ MBM 이벤트는 앱 내 상수로 정의되어 있습니다:
 
 ```typescript
 // 컴포넌트 내 상수 (MBMTimeline.tsx, CustomerTable.tsx)
-const MBM_EVENTS: Record<string, { date: string; label: string }> = {
-  "1107": { date: "2024-11-07", label: "11/7 MBM" },
-  "1218": { date: "2024-12-18", label: "12/18 MBM" },
+type MBMEvent = {
+  date: string;
+  label: string;
+  topic: string;        // 세션 주제
+  description: string;  // 간단한 내용/소개
+};
+
+const MBM_EVENTS: Record<string, MBMEvent> = {
+  "1107": {
+    date: "2024-11-07",
+    label: "11/7 MBM",
+    topic: "HR Tech 트렌드와 채용 자동화",
+    description: "최신 HR Tech 동향과 영상면접 큐레이터/역검 활용 사례 공유",
+  },
+  "1218": {
+    date: "2024-12-18",
+    label: "12/18 MBM",
+    topic: "영상면접 고도화 & 리텐션 전략",
+    description: "영상면접 큐레이터 고도화 기능 소개와 리텐션/재계약 사례 공유",
+  },
 };
 ```
 

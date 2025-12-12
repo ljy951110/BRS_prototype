@@ -13,6 +13,7 @@ import {
   ArrowRight,
   CheckCircle2,
   XCircle,
+  Eye,
 } from "lucide-react";
 import { Text, Card, Badge, Modal } from "@/components/common/atoms";
 import { SalesActionHistory } from "@/components/dashboard/SalesActionHistory";
@@ -54,6 +55,24 @@ const CONTENT_CATEGORY_LABELS: Record<
   TOFU: { label: "인지 단계", color: "blue" },
   MOFU: { label: "고려 단계", color: "purple" },
   BOFU: { label: "결정 단계", color: "green" },
+};
+
+// 콘텐츠 카테고리별 색상/라벨 (콘텐츠 상세 모달용)
+const CONTENT_CATEGORY_META: Record<
+  ContentEngagement["category"],
+  { variant: "cyan" | "purple" | "success"; label: string }
+> = {
+  TOFU: { variant: "cyan", label: "인지단계" },
+  MOFU: { variant: "purple", label: "고려단계" },
+  BOFU: { variant: "success", label: "결정단계" },
+};
+
+// 기간에 따른 일수 (콘텐츠 상세 집계용)
+const PERIOD_DAYS: Record<TimePeriod, number> = {
+  "1w": 7,
+  "1m": 30,
+  "6m": 180,
+  "1y": 365,
 };
 
 type SortField =
@@ -261,6 +280,27 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
   const [contentModalData, setContentModalData] =
     useState<ContentModalData | null>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [selectedContentDetail, setSelectedContentDetail] = useState<{
+    title: string;
+    category: ContentEngagement["category"];
+    currentViews: number;
+    pastViews: number;
+    periodViews: number;
+    viewers: {
+      companyName: string;
+      date?: string;
+      category: string;
+      companySize?: string | null;
+      manager: string;
+      contractAmount: number;
+      targetRevenue: number;
+      possibility: string;
+      test: boolean;
+      quote: boolean;
+      approval: boolean;
+      contract: boolean;
+    }[];
+  } | null>(null);
 
   // 기간에 맞게 변화량 재계산
   const periodData = useMemo(
@@ -428,6 +468,75 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
   const closeContentModal = () => {
     setIsContentModalOpen(false);
     setContentModalData(null);
+    setSelectedContentDetail(null);
+  };
+
+  // 콘텐츠 상세 모달 열기 (SummaryCards와 동일한 뷰어 리스트)
+  const openContentDetail = (content: ContentEngagement) => {
+    const now = new Date("2024-12-10");
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
+
+    const viewers: {
+      companyName: string;
+      date?: string;
+      category: string;
+      companySize?: string | null;
+      manager: string;
+      contractAmount: number;
+      targetRevenue: number;
+      possibility: string;
+      test: boolean;
+      quote: boolean;
+      approval: boolean;
+      contract: boolean;
+    }[] = [];
+    let totalViews = 0;
+    let pastViews = 0;
+
+    data.forEach((customer) => {
+      if (!customer.contentEngagements) return;
+      customer.contentEngagements.forEach((engagement) => {
+        if (
+          engagement.title === content.title &&
+          engagement.category === content.category
+        ) {
+          totalViews++;
+          const engagementDate = new Date(engagement.date);
+          if (engagementDate < periodStart) {
+            pastViews++;
+          }
+          if (engagementDate >= periodStart && engagementDate <= now) {
+            viewers.push({
+              companyName: customer.companyName,
+              date: engagement.date,
+              category: customer.category,
+              companySize: customer.companySize,
+              manager: customer.manager,
+              contractAmount: customer.contractAmount ?? 0,
+              targetRevenue: customer.adoptionDecision?.targetRevenue ?? 0,
+              possibility: customer.adoptionDecision?.possibility ?? "0%",
+              test: customer.adoptionDecision?.test ?? false,
+              quote: customer.adoptionDecision?.quote ?? false,
+              approval: customer.adoptionDecision?.approval ?? false,
+              contract: customer.adoptionDecision?.contract ?? false,
+            });
+          }
+        }
+      });
+    });
+
+    setSelectedContentDetail({
+      title: content.title,
+      category: content.category,
+      currentViews: totalViews,
+      pastViews,
+      periodViews: viewers.length,
+      viewers: viewers.sort(
+        (a, b) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime()
+      ),
+    });
+    setIsContentModalOpen(true);
   };
 
   // 해당 기간의 컨텐츠 필터링
@@ -1273,7 +1382,12 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               .slice()
                               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                               .map((content, i) => (
-                                <div key={i} className={styles.contentItem}>
+                                <button 
+                                  key={i} 
+                                  className={styles.contentItem}
+                                  onClick={() => openContentDetail(content)}
+                                  title="클릭하여 상세 보기"
+                                >
                                   <div className={styles.contentHeader}>
                                     <ContentCategoryBadge category={content.category} />
                                     <Text variant="caption" color="tertiary">
@@ -1281,7 +1395,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                     </Text>
                                   </div>
                                   <Text variant="body-sm">{content.title}</Text>
-                                </div>
+                                </button>
                               ))}
                           </div>
                         </section>
@@ -1508,9 +1622,92 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         }
         size="md"
       >
-        {contentModalData &&
-          selectedCustomer &&
-          (() => {
+        {(() => {
+          // 1) 콘텐츠 상세 모달 (SummaryCards와 동일한 뷰어 리스트)
+          if (selectedContentDetail) {
+            const categoryMeta = CONTENT_CATEGORY_META[selectedContentDetail.category];
+            return (
+              <div className={styles.contentDetailModal}>
+                <div className={styles.contentDetailHeader}>
+                  <Badge variant={categoryMeta.variant}>
+                    {selectedContentDetail.category}
+                  </Badge>
+                  <Text variant="caption" color="tertiary">
+                    {categoryMeta.label}
+                  </Text>
+                </div>
+
+                <div className={styles.contentDetailStats}>
+                  <div className={styles.contentStatItem}>
+                    <Eye size={18} />
+                    <Text variant="h3" weight="bold" mono>
+                      {selectedContentDetail.currentViews}
+                    </Text>
+                    <Text variant="caption" color="secondary">
+                      총 조회수
+                    </Text>
+                  </div>
+                  <div className={styles.contentStatItem}>
+                    <BookOpen size={18} />
+                    <Text variant="h3" weight="bold" mono color="success">
+                      {selectedContentDetail.periodViews}
+                    </Text>
+                    <Text variant="caption" color="secondary">
+                      기간 내 조회
+                    </Text>
+                  </div>
+                  <div className={styles.contentStatItem}>
+                    <Text variant="body-md" weight="bold" mono>
+                      {selectedContentDetail.pastViews}
+                    </Text>
+                    <Text variant="caption" color="secondary">
+                      과거 조회
+                    </Text>
+                  </div>
+                </div>
+
+                <Text variant="body-sm" weight="semibold">
+                  조회한 기업 ({selectedContentDetail.viewers.length}개사)
+                </Text>
+                <div className={styles.viewerList}>
+                  {selectedContentDetail.viewers.map((viewer, idx) => (
+                    <div key={idx} className={styles.viewerItem}>
+                      <div className={styles.viewerMain}>
+                        <Text variant="body-sm" weight="semibold">
+                          {viewer.companyName}
+                        </Text>
+                        <Text variant="caption" color="tertiary">
+                          {viewer.date}
+                        </Text>
+                      </div>
+                      <div className={styles.viewerMeta}>
+                        <Badge variant="default" size="sm">
+                          {viewer.category}
+                        </Badge>
+                        <Badge variant="default" size="sm">
+                          {viewer.companySize || "-"}
+                        </Badge>
+                        <Badge variant="info" size="sm">
+                          {viewer.possibility}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+
+                  {selectedContentDetail.viewers.length === 0 && (
+                    <div className={styles.emptyContent}>
+                      <Text variant="body-sm" color="tertiary">
+                        기간 내 조회 기업이 없습니다.
+                      </Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // 2) 기존 주간 컨텐츠 모달 (신뢰지수 변화용)
+          if (contentModalData && selectedCustomer) {
             const filteredContents = getContentsForPeriod(
               selectedCustomer,
               contentModalData.startDate,
@@ -1552,9 +1749,11 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
                 <div className={styles.contentModalList}>
                   {filteredContents.map((content, idx) => {
-                    const categoryInfo = CONTENT_CATEGORY_LABELS[
-                      content.category
-                    ] || { label: content.category, color: "default" };
+                    const categoryInfo =
+                      CONTENT_CATEGORY_LABELS[content.category] || {
+                        label: content.category,
+                        color: "default",
+                      };
                     return (
                       <div key={idx} className={styles.contentModalItem}>
                         <div className={styles.contentIcon}>
@@ -1596,7 +1795,9 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                 </div>
               </div>
             );
-          })()}
+          }
+          return null;
+        })()}
       </Modal>
     </>
   );

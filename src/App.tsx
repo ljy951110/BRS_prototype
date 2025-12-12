@@ -36,6 +36,7 @@ interface TabFilters {
   searchQuery: string;
   selectedManager: string;
   selectedCategory: string;
+  selectedCompanySize: string;
   selectedPossibility: string;
   selectedProgress: ProgressStatus;
 }
@@ -46,6 +47,7 @@ const DEFAULT_FILTERS: TabFilters = {
   searchQuery: "",
   selectedManager: "all",
   selectedCategory: "all",
+  selectedCompanySize: "all",
   selectedPossibility: "all",
   selectedProgress: "all",
 };
@@ -56,6 +58,23 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
   { value: "6m", label: "최근 반기" },
   { value: "1y", label: "최근 1년" },
 ];
+
+const TAB_FILTER_UI: Record<
+  ViewMode,
+  {
+    showSearch: boolean;
+    showManager: boolean;
+    showCompanySize: boolean;
+    showCategory: boolean;
+    showProgress: boolean;
+  }
+> = {
+  table: { showSearch: true, showManager: true, showCompanySize: true, showCategory: true, showProgress: true },
+  timeline: { showSearch: true, showManager: true, showCompanySize: true, showCategory: true, showProgress: false },
+  activity: { showSearch: true, showManager: false, showCompanySize: true, showCategory: true, showProgress: false },
+  pipeline: { showSearch: true, showManager: true, showCompanySize: true, showCategory: false, showProgress: true },
+  chart: { showSearch: false, showManager: false, showCompanySize: true, showCategory: true, showProgress: true },
+};
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -87,12 +106,23 @@ function App() {
     []
   );
 
+  const categories = useMemo(
+    () => [...new Set(mockData.map((c) => c.category))].sort(),
+    []
+  );
+
+  const companySizes = useMemo(
+    () => [...new Set(mockData.map((c) => c.companySize || "미정"))].sort(),
+    []
+  );
+
   // 필터링된 데이터 (현재 탭의 필터 사용)
   const filteredData = useMemo(() => {
     const {
       searchQuery,
       selectedManager,
       selectedCategory,
+      selectedCompanySize,
       selectedPossibility,
       selectedProgress,
     } = currentFilters;
@@ -113,6 +143,13 @@ function App() {
       if (
         selectedCategory !== "all" &&
         customer.category !== selectedCategory
+      ) {
+        return false;
+      }
+      // 기업 규모 필터
+      if (
+        selectedCompanySize !== "all" &&
+        (customer.companySize || "미정") !== selectedCompanySize
       ) {
         return false;
       }
@@ -145,6 +182,103 @@ function App() {
     });
   }, [currentFilters]);
 
+  const filterControls = (
+    <>
+      {TAB_FILTER_UI[viewMode].showSearch && (
+        <div className={styles.searchBox}>
+          <Search size={18} className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="기업명 검색..."
+            value={currentFilters.searchQuery}
+            onChange={(e) => updateCurrentFilter("searchQuery", e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+      )}
+
+      {(TAB_FILTER_UI[viewMode].showManager ||
+        TAB_FILTER_UI[viewMode].showCompanySize ||
+        TAB_FILTER_UI[viewMode].showCategory ||
+        TAB_FILTER_UI[viewMode].showProgress) && (
+        <div className={styles.filterGroup}>
+          {viewMode !== "timeline" && <Filter size={16} />}
+
+          {TAB_FILTER_UI[viewMode].showManager && (
+            <select
+              value={currentFilters.selectedManager}
+              onChange={(e) =>
+                updateCurrentFilter("selectedManager", e.target.value)
+              }
+              className={styles.select}
+            >
+              <option value="all">전체 담당자</option>
+              {managers.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {TAB_FILTER_UI[viewMode].showCompanySize && (
+            <select
+              value={currentFilters.selectedCompanySize}
+              onChange={(e) =>
+                updateCurrentFilter("selectedCompanySize", e.target.value)
+              }
+              className={styles.select}
+            >
+              <option value="all">전체 기업 규모</option>
+              {companySizes.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {TAB_FILTER_UI[viewMode].showCategory && (
+            <select
+              value={currentFilters.selectedCategory}
+              onChange={(e) =>
+                updateCurrentFilter("selectedCategory", e.target.value)
+              }
+              className={styles.select}
+            >
+              <option value="all">조직 구분</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {TAB_FILTER_UI[viewMode].showProgress && (
+            <select
+              value={currentFilters.selectedProgress}
+              onChange={(e) =>
+                updateCurrentFilter(
+                  "selectedProgress",
+                  e.target.value as ProgressStatus
+                )
+              }
+              className={styles.select}
+            >
+              <option value="all">전체 진행상태</option>
+              <option value="contract">계약 완료</option>
+              <option value="approval">승인 단계</option>
+              <option value="quote">견적 단계</option>
+              <option value="test">테스트 단계</option>
+              <option value="none">미진행</option>
+            </select>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className={styles.app}>
       {/* Header */}
@@ -158,6 +292,16 @@ function App() {
           </div>
         </div>
         <div className={styles.headerRight}>
+          <Text variant="body-sm" color="tertiary">
+            마지막 업데이트: 2025.12.09
+          </Text>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className={styles.main}>
+        {/* 기간 필터 + View Toggle */}
+        <section className={styles.viewToggleSection}>
           <div className={styles.periodFilter}>
             <Calendar size={16} />
             <select
@@ -172,85 +316,6 @@ function App() {
               ))}
             </select>
           </div>
-          <Text variant="body-sm" color="tertiary">
-            마지막 업데이트: 2025.12.09
-          </Text>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className={styles.main}>
-        {/* Summary Cards */}
-        <section className={styles.section}>
-          <SummaryCards data={filteredData} timePeriod={timePeriod} />
-        </section>
-
-        {/* Filters & View Toggle */}
-        <section className={styles.filterSection}>
-          <div className={styles.filters}>
-            <div className={styles.searchBox}>
-              <Search size={18} className={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="기업명 검색..."
-                value={currentFilters.searchQuery}
-                onChange={(e) =>
-                  updateCurrentFilter("searchQuery", e.target.value)
-                }
-                className={styles.searchInput}
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <Filter size={16} />
-              <select
-                value={currentFilters.selectedManager}
-                onChange={(e) =>
-                  updateCurrentFilter("selectedManager", e.target.value)
-                }
-                className={styles.select}
-              >
-                <option value="all">전체 담당자</option>
-                {managers.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={currentFilters.selectedCategory}
-                onChange={(e) =>
-                  updateCurrentFilter("selectedCategory", e.target.value)
-                }
-                className={styles.select}
-              >
-                <option value="all">전체 카테고리</option>
-                <option value="채용">채용</option>
-                <option value="공공">공공</option>
-                <option value="성과">성과</option>
-              </select>
-
-              <select
-                value={currentFilters.selectedProgress}
-                onChange={(e) =>
-                  updateCurrentFilter(
-                    "selectedProgress",
-                    e.target.value as ProgressStatus
-                  )
-                }
-                className={styles.select}
-              >
-                <option value="all">전체 진행상태</option>
-                <option value="contract">계약 완료</option>
-                <option value="approval">승인 단계</option>
-                <option value="quote">견적 단계</option>
-                <option value="test">테스트 단계</option>
-                <option value="none">미진행</option>
-              </select>
-            </div>
-          </div>
-
           <div className={styles.viewToggle}>
             <button
               className={`${styles.viewBtn} ${
@@ -300,6 +365,22 @@ function App() {
           </div>
         </section>
 
+        {/* Filters (below tabs, above dashboard) */}
+        {viewMode !== "timeline" && viewMode !== "activity" && (
+          <section className={styles.filterSection}>
+            <div className={styles.filters}>
+              {filterControls}
+            </div>
+          </section>
+        )}
+
+        {/* Summary Cards - only on table tab */}
+        {viewMode === "table" && (
+          <section className={styles.section}>
+            <SummaryCards data={filteredData} timePeriod={timePeriod} />
+          </section>
+        )}
+
         {/* Content Area */}
         <section className={styles.contentSection}>
           {viewMode === "table" && (
@@ -312,12 +393,17 @@ function App() {
             <Charts data={filteredData} timePeriod={timePeriod} />
           )}
           {viewMode === "timeline" && (
-            <MBMTimeline data={filteredData} timePeriod={timePeriod} />
+            <MBMTimeline
+              data={filteredData}
+              timePeriod={timePeriod}
+              filters={filterControls}
+            />
           )}
           {viewMode === "activity" && (
             <CustomerActivityAnalysis
               data={filteredData}
               timePeriod={timePeriod}
+              filters={filterControls}
             />
           )}
         </section>

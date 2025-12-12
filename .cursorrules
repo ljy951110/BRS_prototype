@@ -72,6 +72,7 @@ Customer (고객)
 │   │   └── category: "TOFU"(+1) | "MOFU"(+2) | "BOFU"(+3)
 │   └── attendance (MBM 참석 여부 → 신뢰지수 영향)
 │       └── { "1107": true, "1218": false } (날짜키: 참석여부)
+│       └── MBM_EVENTS: { key: { date, label, topic, description } }
 │
 └── 파이프라인 단계:
     ├── trustFormation (신뢰형성)
@@ -98,9 +99,20 @@ MBM 참석 여부는 `attendance` 필드로 관리됩니다.
 
 ```typescript
 // MBM 이벤트 정의 (컴포넌트 내 상수)
-const MBM_EVENTS: Record<string, { date: string; label: string }> = {
-  "1107": { date: "2024-11-07", label: "11/7 MBM" },
-  "1218": { date: "2024-12-18", label: "12/18 MBM" },
+type MBMEvent = { date: string; label: string; topic: string; description: string };
+const MBM_EVENTS: Record<string, MBMEvent> = {
+  "1107": {
+    date: "2024-11-07",
+    label: "11/7 MBM",
+    topic: "HR Tech 트렌드와 채용 자동화",
+    description: "최신 HR Tech 동향과 영상면접 큐레이터/역검 활용 사례",
+  },
+  "1218": {
+    date: "2024-12-18",
+    label: "12/18 MBM",
+    topic: "영상면접 고도화 & 리텐션 전략",
+    description: "영상면접 큐레이터 고도화 기능 소개 및 리텐션/재계약 사례",
+  },
 };
 
 // 고객별 참석 여부 (mockData)

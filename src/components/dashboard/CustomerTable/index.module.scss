@@ -864,6 +864,57 @@
   border-radius: $radius-md;
 }
 
+// 콘텐츠 상세 모달 (SummaryCards 스타일)
+.contentDetailModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.contentDetailHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.contentDetailStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+}
+
+.contentStatItem {
+  @include Flex(column, flex-start, center, $spacing-xs);
+  padding: $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  text-align: center;
+
+  svg {
+    color: $color-accent-blue;
+  }
+}
+
+.viewerList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.viewerItem {
+  @include Flex(row, space-between, center, $spacing-sm);
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.viewerMain {
+  @include Flex(column, flex-start, flex-start, 2px);
+}
+
+.viewerMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+}
+
 // 타임라인 하단 상세 정보
 .timelineDetails {
   @include Flex(column, flex-start, stretch, $spacing-lg);

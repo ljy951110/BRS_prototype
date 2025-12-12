@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
   Phone,
   Users,
@@ -35,6 +36,7 @@ import styles from "./index.module.scss";
 interface MBMTimelineProps {
   data: Customer[];
   timePeriod: TimePeriod;
+  filters?: ReactNode;
 }
 
 // 넛지 타입 정의
@@ -50,12 +52,41 @@ const FILTER_OPTIONS = [
 
 type FilterValue = (typeof FILTER_OPTIONS)[number]["value"];
 
+type MBMEvent = {
+  date: string;
+  label: string;
+  topic: string;
+  description: string;
+};
+
 // MBM 이벤트 목록 (attendance 키와 매핑)
-const MBM_EVENTS: Record<string, { date: string; label: string }> = {
-  "1107": { date: "2024-11-07", label: "11/7 MBM" },
-  "1218": { date: "2024-12-18", label: "12/18 MBM" },
-  "0112": { date: "2025-01-12", label: "1/12 MBM" },
-  "0116": { date: "2025-01-16", label: "1/16 MBM" },
+const MBM_EVENTS: Record<string, MBMEvent> = {
+  "1107": {
+    date: "2024-11-07",
+    label: "11/7 MBM",
+    topic: "HR Tech 트렌드와 채용 자동화",
+    description:
+      "최신 HR Tech 동향과 영상면접 큐레이터/역검 활용 사례를 공유하는 분기 세미나",
+  },
+  "1218": {
+    date: "2024-12-18",
+    label: "12/18 MBM",
+    topic: "영상면접 고도화 & 리텐션 전략",
+    description: "영상면접 큐레이터 고도화 기능 소개와 리텐션/재계약 사례 공유",
+  },
+  "0112": {
+    date: "2025-01-12",
+    label: "1/12 MBM",
+    topic: "공공/교육 시장 사례 집중 공유",
+    description: "공공·교육 고객의 평가 표준화 및 보안 요구 대응 사례",
+  },
+  "0116": {
+    date: "2025-01-16",
+    label: "1/16 MBM",
+    topic: "AI 면접 신뢰도와 평가 자동화",
+    description:
+      "AI 면접의 신뢰도 개선 로드맵과 평가 자동화 워크플로우 데모 세션",
+  },
 };
 
 // 주간 타임라인 정보 (월요일 기준)
@@ -222,6 +253,7 @@ interface ActionModalData {
 export const MBMTimeline = ({
   data,
   timePeriod: _timePeriod,
+  filters,
 }: MBMTimelineProps) => {
   void _timePeriod; // 향후 사용 예정
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
@@ -232,6 +264,25 @@ export const MBMTimeline = ({
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Customer | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNudgeModalOpen, setIsNudgeModalOpen] = useState(false);
+  const [nudgeModalData, setNudgeModalData] = useState<{
+    customer: Customer;
+    nudgeType: Exclude<NudgeType, null>;
+    trustChange: number | null;
+    hasActionAfterMBM: boolean;
+    lastMBM:
+      | {
+          key: string;
+          label: string;
+          date: string;
+        }
+      | null;
+  } | null>(null);
+  const [isMBMModalOpen, setIsMBMModalOpen] = useState(false);
+  const [mbmModalData, setMbmModalData] = useState<{
+    key: string;
+    event: MBMEvent;
+  } | null>(null);
 
   // 해당 기간의 컨텐츠 필터링
   const getContentsForPeriod = (
@@ -428,6 +479,22 @@ export const MBMTimeline = ({
     return false;
   };
 
+  const getLastAttendedMBMEvent = (customer: Customer) => {
+    let last: { key: string; label: string; date: string } | null = null;
+
+    WEEKS.forEach((week) => {
+      const mbmEvent = getMBMForWeek(week.startDate, week.endDate);
+      if (
+        mbmEvent &&
+        customer.attendance?.[mbmEvent.key as keyof typeof customer.attendance]
+      ) {
+        last = { key: mbmEvent.key, ...MBM_EVENTS[mbmEvent.key] };
+      }
+    });
+
+    return last;
+  };
+
   // 넛지 타입 결정
   const getNudgeType = (customer: Customer): NudgeType => {
     const lastMBMIndex = getLastAttendedMBMWeekIndex(customer);
@@ -450,6 +517,40 @@ export const MBMTimeline = ({
     }
 
     return null;
+  };
+
+  const openNudgeReasonModal = (customer: Customer) => {
+    const nudgeType = getNudgeType(customer);
+    if (!nudgeType) return;
+    const trustChange = getTrustChangeAfterMBM(customer);
+    const lastMBM = getLastAttendedMBMEvent(customer);
+    const hasAction = hasActionAfterMBM(customer);
+
+    setNudgeModalData({
+      customer,
+      nudgeType,
+      trustChange,
+      lastMBM,
+      hasActionAfterMBM: hasAction,
+    });
+    setIsNudgeModalOpen(true);
+  };
+
+  const closeNudgeReasonModal = () => {
+    setIsNudgeModalOpen(false);
+    setNudgeModalData(null);
+  };
+
+  const openMBMInfoModal = (eventKey: string) => {
+    const event = MBM_EVENTS[eventKey];
+    if (!event) return;
+    setMbmModalData({ key: eventKey, event });
+    setIsMBMModalOpen(true);
+  };
+
+  const closeMBMInfoModal = () => {
+    setIsMBMModalOpen(false);
+    setMbmModalData(null);
   };
 
   // 필터 적용된 데이터
@@ -480,26 +581,29 @@ export const MBMTimeline = ({
             필터
           </Text>
         </div>
-        <div className={styles.filterButtons}>
-          {FILTER_OPTIONS.map((option) => {
-            const Icon = option.icon;
-            const count = nudgeCounts[option.value];
-            const isActive = activeFilter === option.value;
+        <div className={styles.filterControls}>
+          {filters && <div className={styles.externalFilters}>{filters}</div>}
+          <div className={styles.filterButtons}>
+            {FILTER_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const count = nudgeCounts[option.value];
+              const isActive = activeFilter === option.value;
 
-            return (
-              <button
-                key={option.value}
-                className={`${styles.filterButton} ${
-                  isActive ? styles.active : ""
-                } ${option.color ? styles[`filter_${option.color}`] : ""}`}
-                onClick={() => setActiveFilter(option.value)}
-              >
-                {Icon && <Icon size={12} />}
-                <span>{option.label}</span>
-                <span className={styles.filterCount}>{count}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={option.value}
+                  className={`${styles.filterButton} ${
+                    isActive ? styles.active : ""
+                  } ${option.color ? styles[`filter_${option.color}`] : ""}`}
+                  onClick={() => setActiveFilter(option.value)}
+                >
+                  {Icon && <Icon size={12} />}
+                  <span>{option.label}</span>
+                  <span className={styles.filterCount}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -581,37 +685,43 @@ export const MBMTimeline = ({
                       </Text>
                     </button>
                     {nudgeType === "contact" && (
-                      <div
+                      <button
+                        type="button"
                         className={styles.contactBadge}
                         title={`MBM 이후 신뢰지수 +${trustChangeAfterMBM} 상승! 지금 컨택하세요`}
+                        onClick={() => openNudgeReasonModal(customer)}
                       >
                         <Zap size={12} />
                         <Text variant="caption" weight="semibold">
                           컨택 필요
                         </Text>
-                      </div>
+                      </button>
                     )}
                     {nudgeType === "interest" && (
-                      <div
+                      <button
+                        type="button"
                         className={styles.interestBadge}
                         title={`MBM 이후 신뢰지수 +${trustChangeAfterMBM} 상승`}
+                        onClick={() => openNudgeReasonModal(customer)}
                       >
                         <Eye size={12} />
                         <Text variant="caption" weight="semibold">
                           관심 필요
                         </Text>
-                      </div>
+                      </button>
                     )}
                     {nudgeType === "action" && (
-                      <div
+                      <button
+                        type="button"
                         className={styles.actionBadge}
                         title="MBM 참석 이후 팔로업 액션이 없습니다"
+                        onClick={() => openNudgeReasonModal(customer)}
                       >
                         <AlertCircle size={12} />
                         <Text variant="caption" weight="semibold">
                           액션 권장
                         </Text>
-                      </div>
+                      </button>
                     )}
                   </div>
                   <div className={styles.companyMeta}>
@@ -662,16 +772,6 @@ export const MBMTimeline = ({
                         showNudge ? styles[`nudgeCell_${nudgeType}`] : ""
                       }`}
                     >
-                      {/* MBM 참석 표시 */}
-                      {mbmAttended && mbmEvent && (
-                        <div className={styles.mbmAttended}>
-                          <Star size={10} fill="currentColor" />
-                          <Text variant="caption" weight="semibold">
-                            {mbmEvent.label} 참석
-                          </Text>
-                        </div>
-                      )}
-
                       {/* 신뢰지수 */}
                       {trustData && (
                         <div className={styles.trustInfo}>
@@ -737,9 +837,24 @@ export const MBMTimeline = ({
                         </div>
                       )}
 
-                      {/* 영업 액션 */}
-                      {actions.length > 0 && (
+                      {/* MBM 참석 + 영업 액션 */}
+                      {(mbmAttended || actions.length > 0) && (
                         <div className={styles.actions}>
+                          {mbmAttended && mbmEvent && (
+                            <button
+                              type="button"
+                              className={styles.mbmAction}
+                              onClick={() => openMBMInfoModal(mbmEvent.key)}
+                              title="클릭하여 MBM 정보를 확인"
+                            >
+                              <Star size={10} fill="currentColor" />
+                              <div className={styles.mbmActionText}>
+                                <Text variant="caption" weight="semibold">
+                                  {mbmEvent.label} 참석
+                                </Text>
+                              </div>
+                            </button>
+                          )}
                           {actions.map((action, i) => (
                             <button
                               key={i}
@@ -1185,6 +1300,176 @@ export const MBMTimeline = ({
                   )}
                   <Text variant="body-sm">계약</Text>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 넛지 이유 모달 */}
+      <Modal
+        isOpen={isNudgeModalOpen}
+        onClose={closeNudgeReasonModal}
+        title={
+          nudgeModalData
+            ? `${nudgeModalData.customer.companyName} · 넛지 이유`
+            : "넛지 이유"
+        }
+        size="sm"
+      >
+        {nudgeModalData && (
+          <div className={styles.nudgeModal}>
+            <div className={styles.nudgeBadgeRow}>
+              {nudgeModalData.nudgeType === "contact" && (
+                <div className={styles.contactBadge}>
+                  <Zap size={12} />
+                  <Text variant="caption" weight="semibold">
+                    컨택 필요
+                  </Text>
+                </div>
+              )}
+              {nudgeModalData.nudgeType === "interest" && (
+                <div className={styles.interestBadge}>
+                  <Eye size={12} />
+                  <Text variant="caption" weight="semibold">
+                    관심 필요
+                  </Text>
+                </div>
+              )}
+              {nudgeModalData.nudgeType === "action" && (
+                <div className={styles.actionBadge}>
+                  <AlertCircle size={12} />
+                  <Text variant="caption" weight="semibold">
+                    액션 권장
+                  </Text>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.nudgeReasons}>
+              <Text variant="body-sm" weight="semibold">
+                왜 이 넛지가 떴나요?
+              </Text>
+              <div className={styles.nudgeReasonList}>
+                {nudgeModalData.lastMBM && (
+                  <div className={styles.nudgeReasonItem}>
+                    <Star size={12} />
+                    <Text variant="body-sm">
+                      마지막 MBM 참석: {nudgeModalData.lastMBM.label} (
+                      {nudgeModalData.lastMBM.date})
+                    </Text>
+                  </div>
+                )}
+
+                {nudgeModalData.nudgeType === "contact" &&
+                  typeof nudgeModalData.trustChange === "number" && (
+                    <div className={styles.nudgeReasonItem}>
+                      <Zap size={12} />
+                      <Text variant="body-sm">
+                        MBM 이후 신뢰지수 +{nudgeModalData.trustChange}p
+                        상승(10p 이상) → 바로 컨택 추천
+                      </Text>
+                    </div>
+                  )}
+
+                {nudgeModalData.nudgeType === "interest" &&
+                  typeof nudgeModalData.trustChange === "number" && (
+                    <div className={styles.nudgeReasonItem}>
+                      <Eye size={12} />
+                      <Text variant="body-sm">
+                        MBM 이후 신뢰지수가 +{nudgeModalData.trustChange}p
+                        상승 → 관심도 상승으로 판단
+                      </Text>
+                    </div>
+                  )}
+
+                {nudgeModalData.nudgeType === "action" && (
+                  <div className={styles.nudgeReasonItem}>
+                    <AlertCircle size={12} />
+                    <Text variant="body-sm">
+                      MBM 이후 추가 팔로업 액션이 없습니다. 이번 주에 액션을
+                      권장합니다.
+                    </Text>
+                  </div>
+                )}
+
+                {nudgeModalData.trustChange === null && (
+                  <div className={styles.nudgeReasonItem}>
+                    <Minus size={12} />
+                    <Text variant="body-sm">
+                      신뢰지수 변화 데이터가 부족해 기본 규칙으로 넛지를
+                      표시했습니다.
+                    </Text>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.nudgeMeta}>
+              <div>
+                <Text variant="caption" color="tertiary">
+                  MBM 참석 이후 팔로업 액션
+                </Text>
+                <Badge
+                  variant={nudgeModalData.hasActionAfterMBM ? "success" : "error"}
+                  size="sm"
+                >
+                  {nudgeModalData.hasActionAfterMBM ? "있음" : "없음"}
+                </Badge>
+              </div>
+              <div>
+                <Text variant="caption" color="tertiary">
+                  MBM 이후 신뢰지수 변화
+                </Text>
+                <Badge
+                  variant={
+                    nudgeModalData.trustChange && nudgeModalData.trustChange > 0
+                      ? "success"
+                      : "default"
+                  }
+                  size="sm"
+                >
+                  {nudgeModalData.trustChange !== null
+                    ? `${nudgeModalData.trustChange > 0 ? "+" : ""}${
+                        nudgeModalData.trustChange
+                      }p`
+                    : "데이터 없음"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* MBM 상세 모달 */}
+      <Modal
+        isOpen={isMBMModalOpen}
+        onClose={closeMBMInfoModal}
+        title={
+          mbmModalData
+            ? `${mbmModalData.event.label} · MBM 상세`
+            : "MBM 상세"
+        }
+        size="sm"
+      >
+        {mbmModalData && (
+          <div className={styles.mbmModal}>
+            <div className={styles.mbmModalHeader}>
+              <div className={styles.mbmMeta}>
+                <Badge variant="accent" size="sm">
+                  {mbmModalData.event.label}
+                </Badge>
+                <Text variant="body-sm" color="tertiary">
+                  {mbmModalData.event.date}
+                </Text>
+              </div>
+              <div className={styles.mbmTopic}>
+                <Text variant="body-sm" weight="semibold">
+                  주제: {mbmModalData.event.topic}
+                </Text>
+                <Text variant="caption" color="secondary">
+                  {mbmModalData.event.description}
+                </Text>
               </div>
             </div>
           </div>

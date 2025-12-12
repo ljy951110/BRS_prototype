@@ -93,6 +93,14 @@
   width: 100%;
 }
 
+.viewToggleSection {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
 // Filter Section
 .filterSection {
   @include Flex(row, space-between, center, $spacing-lg);
