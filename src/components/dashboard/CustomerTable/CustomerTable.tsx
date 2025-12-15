@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  ArrowUpDown,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -14,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
+  Filter,
 } from "lucide-react";
 import { Text, Card, Badge, Modal } from "@/components/common/atoms";
 import { SalesActionHistory } from "@/components/dashboard/SalesActionHistory";
@@ -47,6 +47,53 @@ interface CustomerTableProps {
   timePeriod: TimePeriod;
 }
 
+type ColumnFilters = {
+  company: string;
+  manager: string;
+  companySize: string;
+  category: string;
+  trustMin: string;
+  trustMax: string;
+  contractMin: string;
+  contractMax: string;
+  possibility: string;
+  expectedMin: string;
+  expectedMax: string;
+  targetStart: string;
+  targetEnd: string;
+  progress: {
+    test: boolean;
+    quote: boolean;
+    approval: boolean;
+    contract: boolean;
+  };
+};
+
+type FilterModalTarget =
+  | "company"
+  | "manager"
+  | "companySize"
+  | "category"
+  | "trust"
+  | "contract"
+  | "possibility"
+  | "expected"
+  | "targetDate"
+  | "progress";
+
+const FILTER_SORT_FIELD: Record<FilterModalTarget, SortField | null> = {
+  company: "companyName",
+  companySize: "companySize",
+  manager: "manager",
+  category: "category",
+  trust: "trustIndex",
+  contract: "contractAmount",
+  possibility: "possibility",
+  expected: "expectedRevenue",
+  targetDate: "targetDate",
+  progress: null,
+};
+
 // 컨텐츠 카테고리 레이블
 const CONTENT_CATEGORY_LABELS: Record<
   string,
@@ -77,6 +124,7 @@ const PERIOD_DAYS: Record<TimePeriod, number> = {
 
 type SortField =
   | "companyName"
+  | "companySize"
   | "manager"
   | "category"
   | "trustIndex"
@@ -301,6 +349,55 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
       contract: boolean;
     }[];
   } | null>(null);
+  const COLUMN_FILTER_DEFAULTS: ColumnFilters = {
+    company: "",
+    manager: "all",
+    companySize: "all",
+    category: "all",
+    trustMin: "",
+    trustMax: "",
+    contractMin: "",
+    contractMax: "",
+    possibility: "all",
+    expectedMin: "",
+    expectedMax: "",
+    targetStart: "",
+    targetEnd: "",
+    progress: {
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  };
+  const [columnFilters, setColumnFilters] = useState<ColumnFilters>(
+    COLUMN_FILTER_DEFAULTS
+  );
+  const [filterModalTarget, setFilterModalTarget] =
+    useState<FilterModalTarget | null>(null);
+
+  const managers = useMemo(
+    () => Array.from(new Set(data.map((c) => c.manager))).sort(),
+    [data]
+  );
+
+  const companySizes = useMemo(
+    () => Array.from(new Set(data.map((c) => c.companySize || "미정"))).sort(),
+    [data]
+  );
+
+  const categories = useMemo(
+    () => Array.from(new Set(data.map((c) => c.category))).sort(),
+    [data]
+  );
+
+  const possibilities = useMemo(
+    () =>
+      Array.from(
+        new Set(data.map((c) => c.adoptionDecision.possibility))
+      ).sort(),
+    [data]
+  );
 
   // 기간에 맞게 변화량 재계산
   const periodData = useMemo(
@@ -308,11 +405,140 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     [data, timePeriod]
   );
 
+  const matchesNumberRange = (
+    value: number | null | undefined,
+    minStr: string,
+    maxStr: string
+  ) => {
+    if (value === null || value === undefined) return false;
+    const min = minStr === "" ? null : Number(minStr);
+    const max = maxStr === "" ? null : Number(maxStr);
+    if (min !== null && value < min) return false;
+    if (max !== null && value > max) return false;
+    return true;
+  };
+
+  const filteredByColumn = useMemo(() => {
+    return periodData.filter((customer) => {
+      const trustIndex = customer.trustIndex ?? 0;
+      const contractAmount = customer.contractAmount ?? 0;
+      const expectedRevenue =
+        customer._periodData?.currentExpectedRevenue ?? 0;
+      const targetDate = customer.adoptionDecision.targetDate;
+
+      if (
+        columnFilters.company &&
+        !customer.companyName
+          .toLowerCase()
+          .includes(columnFilters.company.toLowerCase())
+      ) {
+        return false;
+      }
+
+      if (
+        columnFilters.manager !== "all" &&
+        customer.manager !== columnFilters.manager
+      ) {
+        return false;
+      }
+
+      if (
+        columnFilters.companySize !== "all" &&
+        (customer.companySize || "미정") !== columnFilters.companySize
+      ) {
+        return false;
+      }
+
+      if (
+        columnFilters.category !== "all" &&
+        customer.category !== columnFilters.category
+      ) {
+        return false;
+      }
+
+      if (
+        columnFilters.possibility !== "all" &&
+        customer.adoptionDecision.possibility !== columnFilters.possibility
+      ) {
+        return false;
+      }
+
+      if (
+        (columnFilters.trustMin || columnFilters.trustMax) &&
+        !matchesNumberRange(trustIndex, columnFilters.trustMin, columnFilters.trustMax)
+      ) {
+        return false;
+      }
+
+      if (
+        (columnFilters.contractMin || columnFilters.contractMax) &&
+        !matchesNumberRange(
+          contractAmount,
+          columnFilters.contractMin,
+          columnFilters.contractMax
+        )
+      ) {
+        return false;
+      }
+
+      if (
+        (columnFilters.expectedMin || columnFilters.expectedMax) &&
+        !matchesNumberRange(
+          expectedRevenue,
+          columnFilters.expectedMin,
+          columnFilters.expectedMax
+        )
+      ) {
+        return false;
+      }
+
+      if (columnFilters.targetStart || columnFilters.targetEnd) {
+        if (!targetDate) return false;
+        const target = new Date(targetDate).getTime();
+        if (
+          columnFilters.targetStart &&
+          target < new Date(columnFilters.targetStart).getTime()
+        ) {
+          return false;
+        }
+        if (
+          columnFilters.targetEnd &&
+          target > new Date(columnFilters.targetEnd).getTime()
+        ) {
+          return false;
+        }
+      }
+
+      const hasProgressFilter =
+        columnFilters.progress.test ||
+        columnFilters.progress.quote ||
+        columnFilters.progress.approval ||
+        columnFilters.progress.contract;
+
+      if (hasProgressFilter) {
+        if (
+          (columnFilters.progress.test && !customer.adoptionDecision.test) ||
+          (columnFilters.progress.quote && !customer.adoptionDecision.quote) ||
+          (columnFilters.progress.approval &&
+            !customer.adoptionDecision.approval) ||
+          (columnFilters.progress.contract &&
+            !customer.adoptionDecision.contract)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [columnFilters, periodData]);
+
   // 필드별 값 가져오기
   const getFieldValue = (customer: Customer, field: SortField): any => {
     switch (field) {
       case "companyName":
         return customer.companyName;
+      case "companySize":
+        return customer.companySize || "미정";
       case "manager":
         return customer.manager;
       case "category":
@@ -327,24 +553,14 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         return POSSIBILITY_ORDER[customer.adoptionDecision.possibility] ?? 0;
       case "customerResponse":
         return RESPONSE_ORDER[customer.adoptionDecision.customerResponse] ?? 0;
+      case "targetDate":
+        return customer.adoptionDecision.targetDate
+          ? new Date(customer.adoptionDecision.targetDate).getTime()
+          : 0;
       default:
         return 0;
     }
   };
-
-  const sortedData = useMemo(() => {
-    // 정렬 없는 상태면 원래 순서 유지
-    if (!sortField) return periodData;
-    
-    return [...periodData].sort((a, b) => {
-      const aVal = getFieldValue(a, sortField);
-      const bVal = getFieldValue(b, sortField);
-
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [periodData, sortField, sortDirection]);
 
   // 기간 필터에 따라 표시할 주차 필터링
   const filteredWeeks = useMemo(() => {
@@ -353,31 +569,17 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     return WEEKS.slice(-weeksCount);
   }, [timePeriod]);
 
-  // 정렬 핸들러 (1: 내림차순, 2: 오름차순, 3: 정렬 해제)
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      if (sortDirection === "desc") {
-        // desc → asc
-        setSortDirection("asc");
-      } else {
-        // asc → 정렬 해제
-        setSortField(null);
-        setSortDirection("desc");
-      }
-    } else {
-      // 다른 필드 클릭 시 해당 필드로 변경 (기본 desc)
-      setSortField(field);
-      setSortDirection("desc");
-    }
-  };
+  const sortedData = useMemo(() => {
+    if (!sortField) return filteredByColumn;
+    return [...filteredByColumn].sort((a, b) => {
+      const aVal = getFieldValue(a, sortField);
+      const bVal = getFieldValue(b, sortField);
 
-  // 정렬 상태 확인
-  const getSortConfig = (
-    field: SortField
-  ): { direction: SortDirection } | null => {
-    if (sortField !== field) return null;
-    return { direction: sortDirection };
-  };
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredByColumn, sortField, sortDirection]);
 
   const openCustomerDetail = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -580,36 +782,27 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
   };
 
   const SortHeader = ({
-    field,
     children,
+    filterTarget,
   }: {
-    field: SortField;
     children: React.ReactNode;
-  }) => {
-    const sortConfig = getSortConfig(field);
-    return (
-      <th
-        className={styles.th}
-        onClick={() => handleSort(field)}
-        title="클릭: 정렬 방향 변경"
-      >
-        <div className={styles.sortHeader}>
-          {children}
-          <div className={styles.sortIndicator}>
-            {sortConfig ? (
-              sortConfig.direction === "asc" ? (
-                <TrendingUp size={12} className={styles.sortActive} />
-              ) : (
-                <TrendingDown size={12} className={styles.sortActive} />
-              )
-            ) : (
-              <ArrowUpDown size={12} />
-            )}
-          </div>
-        </div>
-      </th>
-    );
-  };
+    filterTarget?: FilterModalTarget;
+  }) => (
+    <th className={styles.th}>
+      <div className={styles.sortHeader}>
+        <span>{children}</span>
+        {filterTarget && (
+          <button
+            className={styles.filterBtn}
+            onClick={() => setFilterModalTarget(filterTarget)}
+            title="필터 설정"
+          >
+            <Filter size={12} />
+          </button>
+        )}
+      </div>
+    </th>
+  );
 
   const getTrustLevelVariant = (level: Customer["trustLevel"]) => {
     switch (level) {
@@ -637,6 +830,385 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     }
   };
 
+  const renderSortControls = (target: FilterModalTarget) => {
+    const field = FILTER_SORT_FIELD[target];
+    if (!field) return null;
+    const isActive = sortField === field;
+    return (
+      <div className={styles.sortControl}>
+        <span className={styles.sortLabel}>정렬</span>
+        <div className={styles.sortButtons}>
+          <button
+            className={`${styles.sortBtn} ${
+              isActive && sortDirection === "asc" ? styles.active : ""
+            }`}
+            onClick={() => {
+              setSortField(field);
+              setSortDirection("asc");
+            }}
+          >
+            오름차순
+          </button>
+          <button
+            className={`${styles.sortBtn} ${
+              isActive && sortDirection === "desc" ? styles.active : ""
+            }`}
+            onClick={() => {
+              setSortField(field);
+              setSortDirection("desc");
+            }}
+          >
+            내림차순
+          </button>
+          <button
+            className={styles.sortReset}
+            onClick={() => {
+              if (isActive) {
+                setSortField(null);
+                setSortDirection("desc");
+              }
+            }}
+          >
+            해제
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const resetFilter = (target: FilterModalTarget) => {
+    setColumnFilters((prev) => {
+      const next = { ...prev };
+      switch (target) {
+        case "company":
+          next.company = COLUMN_FILTER_DEFAULTS.company;
+          break;
+        case "manager":
+          next.manager = COLUMN_FILTER_DEFAULTS.manager;
+          break;
+        case "companySize":
+          next.companySize = COLUMN_FILTER_DEFAULTS.companySize;
+          break;
+        case "category":
+          next.category = COLUMN_FILTER_DEFAULTS.category;
+          break;
+        case "possibility":
+          next.possibility = COLUMN_FILTER_DEFAULTS.possibility;
+          break;
+        case "trust":
+          next.trustMin = COLUMN_FILTER_DEFAULTS.trustMin;
+          next.trustMax = COLUMN_FILTER_DEFAULTS.trustMax;
+          break;
+        case "contract":
+          next.contractMin = COLUMN_FILTER_DEFAULTS.contractMin;
+          next.contractMax = COLUMN_FILTER_DEFAULTS.contractMax;
+          break;
+        case "expected":
+          next.expectedMin = COLUMN_FILTER_DEFAULTS.expectedMin;
+          next.expectedMax = COLUMN_FILTER_DEFAULTS.expectedMax;
+          break;
+        case "targetDate":
+          next.targetStart = COLUMN_FILTER_DEFAULTS.targetStart;
+          next.targetEnd = COLUMN_FILTER_DEFAULTS.targetEnd;
+          break;
+        case "progress":
+          next.progress = { ...COLUMN_FILTER_DEFAULTS.progress };
+          break;
+      }
+      return next;
+    });
+  };
+
+  const renderFilterModalContent = () => {
+    switch (filterModalTarget) {
+      case "company":
+        return (
+          <div className={styles.modalField}>
+            <label>기업명</label>
+            <input
+              className={styles.filterInput}
+              placeholder="기업명 검색"
+              value={columnFilters.company}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  company: e.target.value,
+                }))
+              }
+            />
+            {renderSortControls("company")}
+          </div>
+        );
+      case "manager":
+        return (
+          <div className={styles.modalField}>
+            <label>담당자</label>
+            <select
+              className={styles.filterSelect}
+              value={columnFilters.manager}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  manager: e.target.value,
+                }))
+              }
+            >
+              <option value="all">전체</option>
+              {managers.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            {renderSortControls("manager")}
+          </div>
+        );
+      case "companySize":
+        return (
+          <div className={styles.modalField}>
+            <label>기업 규모</label>
+            <select
+              className={styles.filterSelect}
+              value={columnFilters.companySize}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  companySize: e.target.value,
+                }))
+              }
+            >
+              <option value="all">전체</option>
+              {companySizes.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+            {renderSortControls("companySize")}
+          </div>
+        );
+      case "category":
+        return (
+          <div className={styles.modalField}>
+            <label>카테고리</label>
+            <select
+              className={styles.filterSelect}
+              value={columnFilters.category}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  category: e.target.value,
+                }))
+              }
+            >
+              <option value="all">전체</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            {renderSortControls("category")}
+          </div>
+        );
+      case "possibility":
+        return (
+          <div className={styles.modalField}>
+            <label>가능성</label>
+            <select
+              className={styles.filterSelect}
+              value={columnFilters.possibility}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  possibility: e.target.value,
+                }))
+              }
+            >
+              <option value="all">전체</option>
+              {possibilities.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            {renderSortControls("possibility")}
+          </div>
+        );
+      case "trust":
+        return (
+          <div className={styles.modalField}>
+            <label>신뢰지수 범위</label>
+            <div className={styles.rangeInputs}>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="min"
+                value={columnFilters.trustMin}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    trustMin: e.target.value,
+                  }))
+                }
+              />
+              <span className={styles.rangeDash}>~</span>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="max"
+                value={columnFilters.trustMax}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    trustMax: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            {renderSortControls("trust")}
+          </div>
+        );
+      case "contract":
+        return (
+          <div className={styles.modalField}>
+            <label>계약금액 범위</label>
+            <div className={styles.rangeInputs}>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="min"
+                value={columnFilters.contractMin}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    contractMin: e.target.value,
+                  }))
+                }
+              />
+              <span className={styles.rangeDash}>~</span>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="max"
+                value={columnFilters.contractMax}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    contractMax: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            {renderSortControls("contract")}
+          </div>
+        );
+      case "expected":
+        return (
+          <div className={styles.modalField}>
+            <label>예상매출 범위</label>
+            <div className={styles.rangeInputs}>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="min"
+                value={columnFilters.expectedMin}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    expectedMin: e.target.value,
+                  }))
+                }
+              />
+              <span className={styles.rangeDash}>~</span>
+              <input
+                type="number"
+                className={styles.filterInput}
+                placeholder="max"
+                value={columnFilters.expectedMax}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    expectedMax: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            {renderSortControls("expected")}
+          </div>
+        );
+      case "targetDate":
+        return (
+          <div className={styles.modalField}>
+            <label>목표일자 구간</label>
+            <div className={styles.dateInputs}>
+              <input
+                type="date"
+                className={styles.filterInput}
+                value={columnFilters.targetStart}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    targetStart: e.target.value,
+                  }))
+                }
+              />
+              <input
+                type="date"
+                className={styles.filterInput}
+                value={columnFilters.targetEnd}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    targetEnd: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            {renderSortControls("targetDate")}
+          </div>
+        );
+      case "progress":
+        return (
+          <div className={styles.modalField}>
+            <label>진행상태</label>
+            <div className={styles.progressChecks}>
+              {[
+                { key: "test", label: "테스트" },
+                { key: "quote", label: "견적" },
+                { key: "approval", label: "승인" },
+                { key: "contract", label: "계약" },
+              ].map((item) => (
+                <label key={item.key} className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={
+                      columnFilters.progress[
+                        item.key as keyof typeof columnFilters.progress
+                      ]
+                    }
+                    onChange={(e) =>
+                      setColumnFilters((prev) => ({
+                        ...prev,
+                        progress: {
+                          ...prev.progress,
+                          [item.key]: e.target.checked,
+                        },
+                      }))
+                    }
+                  />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+            </div>
+            {renderSortControls("progress")}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <Card className={styles.tableCard} padding="none">
@@ -644,15 +1216,48 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <SortHeader field="companyName">기업명</SortHeader>
-                <SortHeader field="manager">담당자</SortHeader>
-                <SortHeader field="category">카테고리</SortHeader>
-                <SortHeader field="trustIndex">신뢰지수</SortHeader>
-                <SortHeader field="contractAmount">계약금액</SortHeader>
-                <SortHeader field="possibility">가능성</SortHeader>
-                <SortHeader field="expectedRevenue">예상매출</SortHeader>
-                <th className={styles.th}>진행상태</th>
-                <SortHeader field="targetDate">목표일자</SortHeader>
+                <SortHeader filterTarget="company">
+                  기업명
+                </SortHeader>
+                <SortHeader filterTarget="companySize">
+                  기업 규모
+                </SortHeader>
+                <SortHeader filterTarget="manager">
+                  담당자
+                </SortHeader>
+                <SortHeader filterTarget="category">
+                  카테고리
+                </SortHeader>
+                <SortHeader filterTarget="trust">
+                  신뢰지수
+                </SortHeader>
+                <SortHeader filterTarget="contract">
+                  계약금액
+                </SortHeader>
+                <SortHeader filterTarget="possibility">
+                  가능성
+                </SortHeader>
+                <SortHeader filterTarget="expected">
+                  예상매출
+                </SortHeader>
+                <th className={styles.th}>
+                  <div className={styles.filterHeader}>
+                    <span>진행상태</span>
+                    <button
+                      className={styles.filterBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilterModalTarget("progress");
+                      }}
+                      title="필터 설정"
+                    >
+                      <Filter size={12} />
+                    </button>
+                  </div>
+                </th>
+                <SortHeader filterTarget="targetDate">
+                  목표일자
+                </SortHeader>
               </tr>
             </thead>
             <tbody>
@@ -665,6 +1270,11 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                   <td className={styles.td}>
                     <Text variant="body-sm" weight="medium">
                       {customer.companyName}
+                    </Text>
+                  </td>
+                  <td className={styles.td}>
+                    <Text variant="body-sm">
+                      {customer.companySize || "미정"}
                     </Text>
                   </td>
                   <td className={styles.td}>
@@ -873,6 +1483,33 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
           </table>
         </div>
       </Card>
+
+      <Modal
+        isOpen={!!filterModalTarget}
+        onClose={() => setFilterModalTarget(null)}
+        title="컬럼 필터"
+        size="sm"
+      >
+        <div className={styles.filterModalContent}>
+          {renderFilterModalContent()}
+          {filterModalTarget && (
+            <div className={styles.modalActions}>
+              <button
+                className={styles.resetBtn}
+                onClick={() => resetFilter(filterModalTarget)}
+              >
+                초기화
+              </button>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setFilterModalTarget(null)}
+              >
+                닫기
+              </button>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* Customer Detail Modal */}
       <Modal

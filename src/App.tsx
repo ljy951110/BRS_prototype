@@ -69,11 +69,41 @@ const TAB_FILTER_UI: Record<
     showProgress: boolean;
   }
 > = {
-  table: { showSearch: true, showManager: true, showCompanySize: true, showCategory: true, showProgress: true },
-  timeline: { showSearch: true, showManager: true, showCompanySize: true, showCategory: true, showProgress: false },
-  activity: { showSearch: true, showManager: false, showCompanySize: true, showCategory: true, showProgress: false },
-  pipeline: { showSearch: true, showManager: true, showCompanySize: true, showCategory: false, showProgress: true },
-  chart: { showSearch: false, showManager: false, showCompanySize: true, showCategory: true, showProgress: true },
+  table: {
+    showSearch: true,
+    showManager: true,
+    showCompanySize: true,
+    showCategory: true,
+    showProgress: true,
+  },
+  timeline: {
+    showSearch: true,
+    showManager: true,
+    showCompanySize: true,
+    showCategory: true,
+    showProgress: false,
+  },
+  activity: {
+    showSearch: true,
+    showManager: false,
+    showCompanySize: true,
+    showCategory: true,
+    showProgress: false,
+  },
+  pipeline: {
+    showSearch: true,
+    showManager: true,
+    showCompanySize: true,
+    showCategory: false,
+    showProgress: true,
+  },
+  chart: {
+    showSearch: false,
+    showManager: false,
+    showCompanySize: true,
+    showCategory: true,
+    showProgress: true,
+  },
 };
 
 function App() {
@@ -324,7 +354,7 @@ function App() {
               onClick={() => setViewMode("table")}
             >
               <TableIcon size={18} />
-              <span>테이블</span>
+              <span>전체 현황</span>
             </button>
             <button
               className={`${styles.viewBtn} ${
@@ -333,7 +363,7 @@ function App() {
               onClick={() => setViewMode("timeline")}
             >
               <Calendar size={18} />
-              <span>액션 타임라인</span>
+              <span>타임라인</span>
             </button>
             <button
               className={`${styles.viewBtn} ${
@@ -364,15 +394,6 @@ function App() {
             </button>
           </div>
         </section>
-
-        {/* Filters (below tabs, above dashboard) */}
-        {viewMode !== "timeline" && viewMode !== "activity" && (
-          <section className={styles.filterSection}>
-            <div className={styles.filters}>
-              {filterControls}
-            </div>
-          </section>
-        )}
 
         {/* Summary Cards - only on table tab */}
         {viewMode === "table" && (
