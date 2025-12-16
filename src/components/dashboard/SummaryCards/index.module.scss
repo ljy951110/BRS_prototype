@@ -1,12 +1,6 @@
 @use '@/styles/variables' as *;
 @use '@/styles/common' as *;
 
-.summaryCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: $spacing-lg;
-}
-
 .card {
   @include Flex(column, flex-start, stretch, $spacing-md);
 }
@@ -67,6 +61,48 @@
     border-color: $color-accent-blue;
     transform: translateY(-2px);
     box-shadow: $shadow-md;
+  }
+}
+
+.hoverableCard {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+// 다크모드에서만 파란색 border
+:global([data-theme="dark"]) {
+  .hoverableCard {
+    &:hover {
+      border-color: #1677ff !important;
+      box-shadow: 0 0 0 1px #1677ff, 0 4px 12px rgba(22, 119, 255, 0.15) !important;
+    }
+  }
+}
+
+// 모든 카드 높이 통일
+.summaryCards {
+  display: flex;
+  flex-wrap: wrap;
+
+  :global {
+    .ant-row {
+      width: 100%;
+    }
+
+    .ant-col {
+      display: flex;
+    }
+    
+    .ant-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .ant-card-body {
+      flex: 1;
+    }
   }
 }
 

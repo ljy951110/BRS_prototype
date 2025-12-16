@@ -1,7 +1,0 @@
-export { CustomerTable } from './CustomerTable';
-
-
-
-
-
-

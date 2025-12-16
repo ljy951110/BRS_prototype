@@ -5,7 +5,6 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: $color-bg-primary;
 }
 
 // Header
@@ -17,51 +16,7 @@
   align-items: center;
   height: 60px;
   padding: 0 $spacing-xl;
-  background: rgba($color-bg-primary, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid $color-border;
   z-index: $z-sticky;
-}
-
-.headerLeft {
-  @include Flex(row, flex-start, center, $spacing-xl);
-}
-
-.headerRight {
-  @include Flex(row, flex-end, center, $spacing-xl);
-}
-
-.periodFilter {
-  @include Flex(row, flex-start, center, $spacing-sm);
-  padding: $spacing-sm $spacing-md;
-  background: $color-bg-secondary;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  color: $color-text-secondary;
-
-  .periodSelect {
-    padding: $spacing-xs $spacing-md;
-    padding-right: $spacing-xl;
-    background: transparent;
-    border: none;
-    border-radius: $radius-sm;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $color-text-primary;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right $spacing-xs center;
-
-    &:hover {
-      color: $color-accent-blue;
-    }
-
-    &:focus {
-      outline: none;
-    }
-  }
 }
 
 .logo {
@@ -96,167 +51,101 @@
 .viewToggleSection {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: $spacing-lg;
+  justify-content: space-between;
+  gap: $spacing-xl;
   position: sticky;
   top: 64px;
   z-index: $z-sticky;
-  background: $color-bg-primary;
-  padding: $spacing-sm 0;
-}
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
 
-// Filter Section
-.filterSection {
-  @include Flex(row, space-between, center, $spacing-lg);
-  flex-wrap: wrap;
-  padding: $spacing-lg;
-  background: $color-bg-secondary;
-  border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  position: sticky;
-  top: 118px;
-  z-index: $z-sticky;
-}
+  // Tabs 스타일 커스터마이징
+  :global {
+    .ant-tabs {
+      margin-bottom: 0;
 
-.filters {
-  @include Flex(row, flex-start, center, $spacing-lg);
-  flex-wrap: wrap;
-}
+      .ant-tabs-nav {
+        margin-bottom: 0;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: $radius-md;
+        padding: 4px;
 
-.searchBox {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
+        &::before {
+          border-bottom: none;
+        }
+      }
 
-.searchIcon {
-  position: absolute;
-  left: $spacing-md;
-  color: $color-text-tertiary;
-  pointer-events: none;
-}
+      .ant-tabs-tab {
+        padding: 8px 16px;
+        margin: 0;
+        border-radius: $radius-sm;
+        border: none;
+        background: transparent;
+        transition: all 0.2s ease;
 
-.searchInput {
-  width: 260px;
-  height: 38px;
-  padding: 0 $spacing-md 0 40px;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  background: $color-bg-tertiary;
-  color: $color-text-primary;
-  font-size: $font-size-sm;
-  transition: border-color $transition-fast, box-shadow $transition-fast;
+        + .ant-tabs-tab {
+          margin-left: 2px;
+        }
 
-  &::placeholder {
-    color: $color-text-muted;
-  }
+        .ant-tabs-tab-btn {
+          color: rgba(0, 0, 0, 0.65);
+        }
 
-  &:focus {
-    border-color: $color-accent-blue;
-    box-shadow: 0 0 0 3px $color-accent-blue-subtle;
-    outline: none;
-  }
-}
+        &:hover {
+          background: rgba(0, 0, 0, 0.04);
 
-.filterGroup {
-  @include Flex(row, flex-start, center, $spacing-md);
-  color: $color-text-tertiary;
-}
+          .ant-tabs-tab-btn {
+            color: rgba(0, 0, 0, 0.88);
+          }
+        }
 
-.filterDivider {
-  width: 1px;
-  height: 24px;
-  margin: 0 $spacing-sm;
-  background: $color-border;
-}
+        &.ant-tabs-tab-active {
+          background: #1677ff;
 
-.periodSelect {
-  border-color: $color-accent-blue;
-  background-color: rgba($color-accent-blue, 0.05);
-  font-weight: $font-weight-medium;
+          .ant-tabs-tab-btn {
+            color: #fff;
+            font-weight: 500;
+          }
+        }
+      }
 
-  &:hover {
-    border-color: $color-accent-blue;
-  }
-}
-
-.select {
-  height: 38px;
-  padding: 0 $spacing-lg 0 $spacing-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  background: $color-bg-tertiary;
-  color: $color-text-primary;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  transition: border-color $transition-fast;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  padding-right: 32px;
-
-  &:hover {
-    border-color: $color-border-strong;
-  }
-
-  &:focus {
-    border-color: $color-accent-blue;
-    outline: none;
-  }
-}
-
-// View Toggle
-.viewToggle {
-  @include Flex(row, flex-end, center, 0);
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  overflow: hidden;
-}
-
-.viewBtn {
-  @include Flex(row, center, center, $spacing-sm);
-  height: 38px;
-  padding: 0 $spacing-lg;
-  background: transparent;
-  color: $color-text-secondary;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  border: none;
-  cursor: pointer;
-  transition: background $transition-fast, color $transition-fast;
-
-  &:not(:last-child) {
-    border-right: 1px solid $color-border;
-  }
-
-  &:hover {
-    background: $color-bg-hover;
-    color: $color-text-primary;
-  }
-
-  &.active {
-    background: $color-accent-blue-subtle;
-    color: $color-accent-blue;
-  }
-
-  span {
-    @media (max-width: 768px) {
-      display: none;
+      .ant-tabs-ink-bar {
+        display: none;
+      }
     }
   }
+}
+
+// Dark mode styles
+:global {
+  [data-theme="dark"] .ant-tabs {
+    .ant-tabs-nav {
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .ant-tabs-tab {
+      .ant-tabs-tab-btn {
+        color: rgba(255, 255, 255, 0.65) !important;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+
+        .ant-tabs-tab-btn {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+      }
+    }
+  }
+}
+
+.filterInline {
+  width: 100%;
 }
 
 // Content Section
 .contentSection {
   flex: 1;
   min-height: 400px;
-}
-
-// Footer
-.footer {
-  @include FlexCenter;
-  margin-top: auto;
 }

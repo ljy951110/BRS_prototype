@@ -1,22 +1,31 @@
-import { useState, useMemo } from "react";
-import {
-  Search,
-  Filter,
-  LayoutGrid,
-  Table as TableIcon,
-  BarChart3,
-  Calendar,
-  Activity,
-} from "lucide-react";
-import { Text, Card } from "@/components/common/atoms";
-import { SummaryCards } from "@/components/dashboard/SummaryCards";
-import { CustomerTable } from "@/components/dashboard/CustomerTable";
-import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { Charts } from "@/components/dashboard/Charts";
-import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
+import { CustomerTable } from "@/components/dashboard/CustomerTable";
+import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
+import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
+import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { mockData } from "@/data/mockData";
 import { Customer } from "@/types/customer";
+import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  SearchOutlined,
+  TableOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
+import {
+  ConfigProvider,
+  Input,
+  Layout,
+  Select,
+  Space,
+  Switch,
+  Tabs,
+  theme,
+  Typography
+} from "antd";
+import { Activity, useMemo, useState } from "react";
 import styles from "./App.module.scss";
 
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
@@ -106,7 +115,13 @@ const TAB_FILTER_UI: Record<
   },
 };
 
-function App() {
+interface AppContentProps {
+  isDark: boolean;
+  onToggleTheme: (checked: boolean) => void;
+}
+
+function AppContent({ isDark, onToggleTheme }: AppContentProps) {
+  const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("1w");
 
@@ -213,240 +228,227 @@ function App() {
   }, [currentFilters]);
 
   const filterControls = (
-    <>
+    <Space wrap size="middle" className={styles.filterInline}>
       {TAB_FILTER_UI[viewMode].showSearch && (
-        <div className={styles.searchBox}>
-          <Search size={18} className={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="기업명 검색..."
-            value={currentFilters.searchQuery}
-            onChange={(e) => updateCurrentFilter("searchQuery", e.target.value)}
-            className={styles.searchInput}
-          />
-        </div>
+        <Input
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="기업명 검색..."
+          value={currentFilters.searchQuery}
+          onChange={(e) => updateCurrentFilter("searchQuery", e.target.value)}
+          style={{ width: 260 }}
+        />
       )}
 
-      {(TAB_FILTER_UI[viewMode].showManager ||
-        TAB_FILTER_UI[viewMode].showCompanySize ||
-        TAB_FILTER_UI[viewMode].showCategory ||
-        TAB_FILTER_UI[viewMode].showProgress) && (
-        <div className={styles.filterGroup}>
-          {viewMode !== "timeline" && <Filter size={16} />}
-
-          {TAB_FILTER_UI[viewMode].showManager && (
-            <select
-              value={currentFilters.selectedManager}
-              onChange={(e) =>
-                updateCurrentFilter("selectedManager", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 담당자</option>
-              {managers.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showCompanySize && (
-            <select
-              value={currentFilters.selectedCompanySize}
-              onChange={(e) =>
-                updateCurrentFilter("selectedCompanySize", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 기업 규모</option>
-              {companySizes.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showCategory && (
-            <select
-              value={currentFilters.selectedCategory}
-              onChange={(e) =>
-                updateCurrentFilter("selectedCategory", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">조직 구분</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showProgress && (
-            <select
-              value={currentFilters.selectedProgress}
-              onChange={(e) =>
-                updateCurrentFilter(
-                  "selectedProgress",
-                  e.target.value as ProgressStatus
-                )
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 진행상태</option>
-              <option value="contract">계약 완료</option>
-              <option value="approval">승인 단계</option>
-              <option value="quote">견적 단계</option>
-              <option value="test">테스트 단계</option>
-              <option value="none">미진행</option>
-            </select>
-          )}
-        </div>
+      {TAB_FILTER_UI[viewMode].showManager && (
+        <Select
+          value={currentFilters.selectedManager}
+          onChange={(val) => updateCurrentFilter("selectedManager", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 담당자" },
+            ...managers.map((m) => ({ value: m, label: m })),
+          ]}
+        />
       )}
-    </>
+
+      {TAB_FILTER_UI[viewMode].showCompanySize && (
+        <Select
+          value={currentFilters.selectedCompanySize}
+          onChange={(val) => updateCurrentFilter("selectedCompanySize", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 기업 규모" },
+            ...companySizes.map((size) => ({ value: size, label: size })),
+          ]}
+        />
+      )}
+
+      {TAB_FILTER_UI[viewMode].showCategory && (
+        <Select
+          value={currentFilters.selectedCategory}
+          onChange={(val) => updateCurrentFilter("selectedCategory", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "조직 구분" },
+            ...categories.map((c) => ({ value: c, label: c })),
+          ]}
+        />
+      )}
+
+      {TAB_FILTER_UI[viewMode].showProgress && (
+        <Select
+          value={currentFilters.selectedProgress}
+          onChange={(val) =>
+            updateCurrentFilter("selectedProgress", val as ProgressStatus)
+          }
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 진행상태" },
+            { value: "contract", label: "계약 완료" },
+            { value: "approval", label: "승인 단계" },
+            { value: "quote", label: "견적 단계" },
+            { value: "test", label: "테스트 단계" },
+            { value: "none", label: "미진행" },
+          ]}
+        />
+      )}
+    </Space>
   );
 
+  const tabItems = [
+    {
+      key: "table",
+      label: (
+        <Space size={6}>
+          <TableOutlined />
+          전체 현황
+        </Space>
+      ),
+    },
+    {
+      key: "timeline",
+      label: (
+        <Space size={6}>
+          <CalendarOutlined />
+          타임라인
+        </Space>
+      ),
+    },
+    {
+      key: "activity",
+      label: (
+        <Space size={6}>
+          <ThunderboltOutlined />
+          고객 활동 분석
+        </Space>
+      ),
+    },
+    {
+      key: "pipeline",
+      label: (
+        <Space size={6}>
+          <AppstoreOutlined />딜
+        </Space>
+      ),
+    },
+    {
+      key: "chart",
+      label: (
+        <Space size={6}>
+          <BarChartOutlined />
+          차트
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className={styles.app}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
+    <Layout
+      className={styles.app}
+      data-theme={isDark ? "dark" : "light"}
+      style={{
+        background: token.colorBgLayout,
+        color: token.colorText,
+      }}
+    >
+      <Layout.Header
+        className={styles.header}
+        style={{
+          background: token.colorBgElevated,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        <Space align="center" size="large">
           <div className={styles.logo}>
             <div className={styles.logoIcon}>
-              <BarChart3 size={24} />
+              <BarChartOutlined />
             </div>
-            <Text variant="h4">Bgent</Text>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              Bgent
+            </Typography.Title>
           </div>
-        </div>
-        <div className={styles.headerRight}>
-          <Text variant="body-sm" color="tertiary">
-            마지막 업데이트: 2025.12.09
-          </Text>
-        </div>
-      </header>
+        </Space>
+        <Space align="center" size="middle">
+          <Space align="center" size={6}>
+            <Typography.Text type="secondary">Light</Typography.Text>
+            <Switch checked={isDark} onChange={onToggleTheme} size="small" />
+            <Typography.Text type="secondary">Dark</Typography.Text>
+          </Space>
+        </Space>
+      </Layout.Header>
 
-      {/* Main Content */}
-      <main className={styles.main}>
-        {/* 기간 필터 + View Toggle */}
-        <section className={styles.viewToggleSection}>
-          <div className={styles.periodFilter}>
-            <Calendar size={16} />
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-              className={styles.periodSelect}
-            >
-              {TIME_PERIOD_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.viewToggle}>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "table" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("table")}
-            >
-              <TableIcon size={18} />
-              <span>전체 현황</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "timeline" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("timeline")}
-            >
-              <Calendar size={18} />
-              <span>타임라인</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "activity" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("activity")}
-            >
-              <Activity size={18} />
-              <span>고객 활동 분석</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "pipeline" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("pipeline")}
-            >
-              <LayoutGrid size={18} />
-              <span>딜</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "chart" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("chart")}
-            >
-              <BarChart3 size={18} />
-              <span>차트</span>
-            </button>
-          </div>
-        </section>
+      <Layout.Content
+        className={styles.main}
+        style={{ background: token.colorBgLayout }}
+      >
+        <div className={styles.viewToggleSection}>
+          <Select
+            value={timePeriod}
+            onChange={(val) => setTimePeriod(val as TimePeriod)}
+            options={TIME_PERIOD_OPTIONS}
+            suffixIcon={<CalendarOutlined />}
+            style={{ minWidth: 160 }}
+          />
+          <Tabs
+            activeKey={viewMode}
+            onChange={(key) => setViewMode(key as ViewMode)}
+            items={tabItems}
+            size="large"
+          />
+        </div>
 
-        {/* Summary Cards - only on table tab */}
-        {viewMode === "table" && (
+        <Activity mode={viewMode === "table" ? "visible" : "hidden"}>
           <section className={styles.section}>
             <SummaryCards data={filteredData} timePeriod={timePeriod} />
           </section>
-        )}
+        </Activity>
 
-        {/* Content Area */}
         <section className={styles.contentSection}>
-          {viewMode === "table" && (
+          <Activity mode={viewMode === "table" ? "visible" : "hidden"}>
             <CustomerTable data={filteredData} timePeriod={timePeriod} />
-          )}
-          {viewMode === "pipeline" && (
+          </Activity>
+          <Activity mode={viewMode === "pipeline" ? "visible" : "hidden"}>
             <PipelineBoard data={filteredData} timePeriod={timePeriod} />
-          )}
-          {viewMode === "chart" && (
+          </Activity>
+          <Activity mode={viewMode === "chart" ? "visible" : "hidden"}>
             <Charts data={filteredData} timePeriod={timePeriod} />
-          )}
-          {viewMode === "timeline" && (
+          </Activity>
+          <Activity mode={viewMode === "timeline" ? "visible" : "hidden"}>
             <MBMTimeline
               data={filteredData}
               timePeriod={timePeriod}
               filters={filterControls}
             />
-          )}
-          {viewMode === "activity" && (
+          </Activity>
+          <Activity mode={viewMode === "activity" ? "visible" : "hidden"}>
             <CustomerActivityAnalysis
               data={filteredData}
               timePeriod={timePeriod}
               filters={filterControls}
             />
-          )}
+          </Activity>
         </section>
+      </Layout.Content>
+    </Layout>
+  );
+}
 
-        {/* Footer Stats */}
-        <Card className={styles.footer} padding="sm">
-          <Text variant="body-sm" color="secondary">
-            총{" "}
-            <Text as="span" weight="semibold" color="primary">
-              {filteredData.length}
-            </Text>
-            개 고객 표시 중
-            {currentFilters.selectedManager !== "all" &&
-              ` · 담당자: ${currentFilters.selectedManager}`}
-            {currentFilters.selectedCategory !== "all" &&
-              ` · ${currentFilters.selectedCategory}`}
-            {currentFilters.selectedPossibility !== "all" &&
-              ` · ${currentFilters.selectedPossibility} 가능성`}
-          </Text>
-        </Card>
-      </main>
-    </div>
+function App() {
+  const [isDark, setIsDark] = useState(true);
+
+  const handleToggleTheme = (checked: boolean) => {
+    setIsDark(checked);
+  };
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
+      <AppContent isDark={isDark} onToggleTheme={handleToggleTheme} />
+    </ConfigProvider>
   );
 }
 
