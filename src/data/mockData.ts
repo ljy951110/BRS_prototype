@@ -1,14 +1,14 @@
 import {
   Customer,
   TrustHistory,
-  ChangeDirection,
-  Possibility,
-  CustomerResponse,
+  ChangeDirectionType,
+  PossibilityType,
+  CustomerResponseType,
   SalesAction,
 } from "@/types/customer";
-import type { TimePeriod } from "@/App";
+import type { TimePeriodType } from "@/App";
 // 가능성 숫자 변환
-export const POSSIBILITY_VALUE: Record<Possibility, number> = {
+export const POSSIBILITY_VALUE: Record<PossibilityType, number> = {
   "90%": 0.9,
   "40%": 0.4,
   "0%": 0,
@@ -16,13 +16,13 @@ export const POSSIBILITY_VALUE: Record<Possibility, number> = {
 // 예상 매출 계산 (목표매출 * 가능성)
 export const calculateExpectedRevenue = (
   targetRevenue: number | null | undefined,
-  possibility: Possibility
+  possibility: PossibilityType
 ): number => {
   if (!targetRevenue) return 0;
   return Math.round(targetRevenue * POSSIBILITY_VALUE[possibility]);
 };
 // 기간에 따른 일수 매핑
-const PERIOD_DAYS: Record<TimePeriod, number> = {
+const PERIOD_DAYS: Record<TimePeriodType, number> = {
   "1w": 7,
   "1m": 30,
   "6m": 180,
@@ -30,8 +30,8 @@ const PERIOD_DAYS: Record<TimePeriod, number> = {
 };
 // salesActions에서 기간 내 가장 최신 액션의 가능성/고객반응 가져오기
 interface PastAdoptionData {
-  possibility: Possibility;
-  customerResponse: CustomerResponse;
+  possibility: PossibilityType;
+  customerResponse: CustomerResponseType;
   targetRevenue: number | null;
   targetDate: string | null;
   test: boolean;
@@ -43,8 +43,8 @@ interface PastAdoptionData {
 const getAdoptionFromSalesActions = (
   salesActions: SalesAction[] | undefined,
   currentAdoption: {
-    possibility: Possibility;
-    customerResponse: CustomerResponse;
+    possibility: PossibilityType;
+    customerResponse: CustomerResponseType;
     targetRevenue?: number | null;
     targetDate?: string | null;
     test?: boolean;
@@ -52,7 +52,7 @@ const getAdoptionFromSalesActions = (
     approval?: boolean;
     contract?: boolean;
   },
-  period: TimePeriod
+  period: TimePeriodType
 ): PastAdoptionData => {
   const defaultResult: PastAdoptionData = {
     possibility: currentAdoption.possibility,
@@ -130,7 +130,7 @@ const getSortedHistoryKeys = (history: TrustHistory | undefined): string[] => {
     });
 };
 // 기간에 따른 주 수 매핑
-const PERIOD_WEEKS: Record<TimePeriod, number> = {
+const PERIOD_WEEKS: Record<TimePeriodType, number> = {
   "1w": 1,
   "1m": 4,
   "6m": 26,
@@ -140,8 +140,8 @@ const PERIOD_WEEKS: Record<TimePeriod, number> = {
 export const calculateChangeForPeriod = (
   history: TrustHistory | undefined,
   currentIndex: number | null | undefined,
-  period: TimePeriod
-): { changeAmount: number; changeDirection: ChangeDirection } => {
+  period: TimePeriodType
+): { changeAmount: number; changeDirection: ChangeDirectionType } => {
   if (!history || currentIndex === null || currentIndex === undefined) {
     return { changeAmount: 0, changeDirection: "none" };
   }
@@ -167,7 +167,7 @@ export const calculateChangeForPeriod = (
 const getPastTrustIndex = (
   history: TrustHistory | undefined,
   currentIndex: number | null | undefined,
-  period: TimePeriod
+  period: TimePeriodType
 ): number | null => {
   if (!history || currentIndex === null || currentIndex === undefined) {
     return null;
@@ -186,7 +186,7 @@ const getPastTrustIndex = (
 // 기간에 맞게 데이터 변환
 export const getDataWithPeriodChange = (
   data: Customer[],
-  period: TimePeriod
+  period: TimePeriodType
 ): Customer[] => {
   return data.map((customer) => {
     const { changeAmount, changeDirection } = calculateChangeForPeriod(
@@ -226,7 +226,7 @@ export const getDataWithPeriodChange = (
       POSSIBILITY_VALUE[currentAdoption.possibility] -
       POSSIBILITY_VALUE[pastAdoption.possibility];
     // 고객반응 변화 계산
-    const responseOrder: Record<CustomerResponse, number> = {
+    const responseOrder: Record<CustomerResponseType, number> = {
       상: 3,
       중: 2,
       하: 1,

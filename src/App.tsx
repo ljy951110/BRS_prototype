@@ -1,11 +1,11 @@
+import { DashboardTableRequest, fetchDashboardTable, ProgressStage, TimePeriodApi } from "@/api";
 import { Charts } from "@/components/dashboard/Charts";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
 import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
-import { mockData } from "@/data/mockData";
-import { Customer } from "@/types/customer";
+import { Customer, PossibilityType } from "@/types/customer";
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -14,22 +14,40 @@ import {
   TableOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 import {
   ConfigProvider,
   Input,
   Layout,
   Select,
   Space,
+  Spin,
   Switch,
   Tabs,
   theme,
   Typography
 } from "antd";
-import { Activity, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./App.module.scss";
 
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
-export type TimePeriod = "1w" | "1m" | "6m" | "1y";
+export type TimePeriodType = "1w" | "1m" | "6m" | "1y";
+
+const TIME_PERIOD_TO_API: Record<TimePeriodType, TimePeriodApi> = {
+  "1w": "WEEK",
+  "1m": "MONTH",
+  "6m": "HALF_YEAR",
+  "1y": "YEAR",
+};
+
+const PROGRESS_STAGE_MAP: Record<ProgressStatus, ProgressStage | null> = {
+  all: null,
+  test: "TEST",
+  quote: "QUOTE",
+  approval: "APPROVAL",
+  contract: "CLOSING",
+  none: null,
+};
 
 // 진행상태 필터 타입
 type ProgressStatus =
@@ -61,7 +79,7 @@ const DEFAULT_FILTERS: TabFilters = {
   selectedProgress: "all",
 };
 
-const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
+const TIME_PERIOD_OPTIONS: { value: TimePeriodType; label: string }[] = [
   { value: "1w", label: "최근 1주일" },
   { value: "1m", label: "최근 1달" },
   { value: "6m", label: "최근 반기" },
@@ -82,7 +100,7 @@ const TAB_FILTER_UI: Record<
     showSearch: true,
     showManager: true,
     showCompanySize: true,
-    showCategory: true,
+    showCategory: false,
     showProgress: true,
   },
   timeline: {
@@ -123,7 +141,7 @@ interface AppContentProps {
 function AppContent({ isDark, onToggleTheme }: AppContentProps) {
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("1w");
+  const [timePeriod, setTimePeriod] = useState<TimePeriodType>("1w");
 
   // 탭별 독립적인 필터 상태
   const [tabFilters, setTabFilters] = useState<TabFilterState>({
@@ -145,87 +163,89 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     }));
   };
 
-  // 고유 담당자 목록
+  // API 요청 바디 생성
+  const requestBody: DashboardTableRequest = useMemo(() => {
+    const filters: DashboardTableRequest["filters"] = {};
+
+    if (currentFilters.selectedManager !== "all") {
+      filters.managers = [currentFilters.selectedManager];
+    }
+    if (currentFilters.selectedCategory !== "all") {
+      filters.categories = [currentFilters.selectedCategory as Customer["category"]];
+    }
+    if (currentFilters.selectedCompanySize !== "all") {
+      filters.companySizes = [currentFilters.selectedCompanySize as Customer["companySize"]];
+    }
+    if (currentFilters.selectedPossibility !== "all") {
+      filters.possibilities = [currentFilters.selectedPossibility as PossibilityType];
+    }
+    const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
+    if (stage) {
+      filters.stages = [stage];
+    }
+
+    return {
+      timePeriod: TIME_PERIOD_TO_API[timePeriod],
+      search:
+        currentFilters.searchQuery.trim().length > 0
+          ? { companyName: currentFilters.searchQuery.trim() }
+          : undefined,
+      filters: Object.keys(filters).length ? filters : undefined,
+      pagination: { page: 1, pageSize: 300 },
+    };
+  }, [currentFilters, timePeriod]);
+
+  // React Query로 API 호출 (약간의 지연으로 MSW 준비 대기)
+  const [mswReady, setMswReady] = useState(false);
+
+  useEffect(() => {
+    // MSW가 준비될 시간을 주기 위한 짧은 지연
+    const timer = setTimeout(() => {
+      console.log('[App] Enabling React Query...');
+      setMswReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["dashboard-table", requestBody],
+    queryFn: () => fetchDashboardTable(requestBody),
+    staleTime: 60 * 1000,
+    enabled: mswReady, // MSW 준비 후에만 쿼리 실행
+  });
+
+  // DashboardTableRow를 Customer로 타입 변환
+  const tableRows = useMemo(
+    () => (apiData?.rows ?? []) as unknown as Customer[],
+    [apiData?.rows]
+  );
+
+  // 고유 담당자 목록 (API 응답 기반)
   const managers = useMemo(
-    () => [...new Set(mockData.map((c) => c.manager))].sort(),
-    []
+    () => [...new Set(tableRows.map((c) => c.manager))].sort(),
+    [tableRows]
   );
 
   const categories = useMemo(
-    () => [...new Set(mockData.map((c) => c.category))].sort(),
-    []
+    () => [...new Set(tableRows.map((c) => c.category))].sort(),
+    [tableRows]
   );
 
   const companySizes = useMemo(
-    () => [...new Set(mockData.map((c) => c.companySize || "미정"))].sort(),
-    []
+    () => [...new Set(tableRows.map((c) => c.companySize || "미정"))].sort(),
+    [tableRows]
   );
 
-  // 필터링된 데이터 (현재 탭의 필터 사용)
+  // 진행상태 "없음" 필터는 프론트에서 추가 처리
   const filteredData = useMemo(() => {
-    const {
-      searchQuery,
-      selectedManager,
-      selectedCategory,
-      selectedCompanySize,
-      selectedPossibility,
-      selectedProgress,
-    } = currentFilters;
-
-    return mockData.filter((customer: Customer) => {
-      // 검색어 필터
-      if (
-        searchQuery &&
-        !customer.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      // 담당자 필터
-      if (selectedManager !== "all" && customer.manager !== selectedManager) {
-        return false;
-      }
-      // 카테고리 필터
-      if (
-        selectedCategory !== "all" &&
-        customer.category !== selectedCategory
-      ) {
-        return false;
-      }
-      // 기업 규모 필터
-      if (
-        selectedCompanySize !== "all" &&
-        (customer.companySize || "미정") !== selectedCompanySize
-      ) {
-        return false;
-      }
-      // 가능성 필터
-      if (
-        selectedPossibility !== "all" &&
-        customer.adoptionDecision.possibility !== selectedPossibility
-      ) {
-        return false;
-      }
-      // 진행상태 필터
-      if (selectedProgress !== "all") {
+    if (currentFilters.selectedProgress === "none") {
+      return tableRows.filter((customer) => {
         const ad = customer.adoptionDecision;
-        if (selectedProgress === "none") {
-          // 아무 진행 상태도 없는 경우
-          if (ad.test || ad.quote || ad.approval || ad.contract) {
-            return false;
-          }
-        } else if (selectedProgress === "contract") {
-          if (!ad.contract) return false;
-        } else if (selectedProgress === "approval") {
-          if (!ad.approval || ad.contract) return false;
-        } else if (selectedProgress === "quote") {
-          if (!ad.quote || ad.approval) return false;
-        } else if (selectedProgress === "test") {
-          if (!ad.test || ad.quote) return false;
-        }
-      }
-      return true;
-    });
-  }, [currentFilters]);
+        return !(ad.test || ad.quote || ad.approval || ad.contract);
+      });
+    }
+    return tableRows;
+  }, [tableRows, currentFilters.selectedProgress]);
 
   const filterControls = (
     <Space wrap size="middle" className={styles.filterInline}>
@@ -383,13 +403,24 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         style={{ background: token.colorBgLayout }}
       >
         <div className={styles.viewToggleSection}>
-          <Select
-            value={timePeriod}
-            onChange={(val) => setTimePeriod(val as TimePeriod)}
-            options={TIME_PERIOD_OPTIONS}
-            suffixIcon={<CalendarOutlined />}
-            style={{ minWidth: 160 }}
-          />
+          <Space size="middle">
+            <Select
+              value={timePeriod}
+              onChange={(val) => setTimePeriod(val as TimePeriodType)}
+              options={TIME_PERIOD_OPTIONS}
+              suffixIcon={<CalendarOutlined />}
+              style={{ minWidth: 160 }}
+            />
+            <Select
+              value={currentFilters.selectedCategory}
+              onChange={(val) => updateCurrentFilter("selectedCategory", val)}
+              style={{ minWidth: 160 }}
+              options={[
+                { value: "all", label: "전체 조직" },
+                ...categories.map((c) => ({ value: c, label: c })),
+              ]}
+            />
+          </Space>
           <Tabs
             activeKey={viewMode}
             onChange={(key) => setViewMode(key as ViewMode)}
@@ -398,37 +429,43 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           />
         </div>
 
-        <Activity mode={viewMode === "table" ? "visible" : "hidden"}>
-          <section className={styles.section}>
-            <SummaryCards data={filteredData} timePeriod={timePeriod} />
-          </section>
-        </Activity>
+        <Spin spinning={isLoading}>
+          {viewMode === "table" && (
+            <section className={styles.section}>
+              <SummaryCards data={filteredData} timePeriod={timePeriod} />
+            </section>
+          )}
 
-        <section className={styles.contentSection}>
-          <Activity mode={viewMode === "table" ? "visible" : "hidden"}>
-            <CustomerTable data={filteredData} timePeriod={timePeriod} />
-          </Activity>
-          <Activity mode={viewMode === "pipeline" ? "visible" : "hidden"}>
-            <PipelineBoard data={filteredData} timePeriod={timePeriod} />
-          </Activity>
-          <Activity mode={viewMode === "chart" ? "visible" : "hidden"}>
-            <Charts data={filteredData} timePeriod={timePeriod} />
-          </Activity>
-          <Activity mode={viewMode === "timeline" ? "visible" : "hidden"}>
-            <MBMTimeline
-              data={filteredData}
-              timePeriod={timePeriod}
-              filters={filterControls}
-            />
-          </Activity>
-          <Activity mode={viewMode === "activity" ? "visible" : "hidden"}>
-            <CustomerActivityAnalysis
-              data={filteredData}
-              timePeriod={timePeriod}
-              filters={filterControls}
-            />
-          </Activity>
-        </section>
+          <section className={styles.contentSection}>
+            {viewMode === "table" && (
+              <CustomerTable
+                data={filteredData}
+                timePeriod={timePeriod}
+                loading={isLoading}
+              />
+            )}
+            {viewMode === "pipeline" && (
+              <PipelineBoard data={filteredData} timePeriod={timePeriod} />
+            )}
+            {viewMode === "chart" && (
+              <Charts data={filteredData} timePeriod={timePeriod} />
+            )}
+            {viewMode === "timeline" && (
+              <MBMTimeline
+                data={filteredData}
+                timePeriod={timePeriod}
+                filters={filterControls}
+              />
+            )}
+            {viewMode === "activity" && (
+              <CustomerActivityAnalysis
+                data={filteredData}
+                timePeriod={timePeriod}
+                filters={filterControls}
+              />
+            )}
+          </section>
+        </Spin>
       </Layout.Content>
     </Layout>
   );

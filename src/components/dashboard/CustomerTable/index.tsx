@@ -3,7 +3,7 @@ import {
   calculateExpectedRevenue,
   getDataWithPeriodChange,
 } from "@/data/mockData";
-import { Customer, Possibility } from "@/types/customer";
+import { Customer, PossibilityType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
   Button,
@@ -26,12 +26,13 @@ import type { ColumnsType } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import { useEffect, useMemo, useState } from "react";
 
-import type { TimePeriod } from "@/App";
+import type { TimePeriodType } from "@/App";
 const { Title, Text: AntText } = Typography;
 
 interface CustomerTableProps {
   data: Customer[];
-  timePeriod: TimePeriod;
+  timePeriod: TimePeriodType;
+  loading?: boolean;
 }
 
 type TableRow = Customer & {
@@ -53,21 +54,6 @@ const trustTagColor = (level: Customer["trustLevel"]) => {
       return "orange";
     case "P3":
       return "red";
-    default:
-      return "default";
-  }
-};
-
-const categoryColor = (category: string) => {
-  switch (category) {
-    case "채용":
-      return "blue";
-    case "공공":
-      return "magenta";
-    case "병원":
-      return "cyan";
-    case "성과":
-      return "lime";
     default:
       return "default";
   }
@@ -201,7 +187,7 @@ const renderProgressTags = (
   );
 };
 
-export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
+export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -313,7 +299,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         new Set(
           tableData
             .map((row) => row.adoptionDecision.possibility)
-            .filter((p): p is Possibility => !!p)
+            .filter((p): p is PossibilityType => !!p)
         )
       ).map((value) => ({ label: value, value })),
     [tableData]
@@ -394,16 +380,6 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
       ),
       onFilter: (value, record) => record.manager === value,
       width: 140,
-    },
-    {
-      title: "카테고리",
-      dataIndex: "category",
-      render: (val: string) => <Tag color={categoryColor(val)}>{val}</Tag>,
-      filters: Array.from(new Set(tableData.map((d) => d.category))).map(
-        (c) => ({ text: c, value: c })
-      ),
-      onFilter: (value, record) => record.category === value,
-      width: 120,
     },
     {
       title: "신뢰지수",
@@ -771,6 +747,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         columns={columns}
         dataSource={tableData}
         pagination={{ pageSize: 10 }}
+        loading={loading}
         onRow={(record) => ({
           onClick: () => setSelectedCustomer(record),
           style: { cursor: "pointer" },

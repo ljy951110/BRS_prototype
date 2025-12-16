@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Phone, Users, Calendar, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import { Text, Badge, Modal } from "@/components/common/atoms";
-import { SalesAction, Customer, Possibility } from "@/types/customer";
+import { SalesAction, Customer, PossibilityType } from "@/types/customer";
 import { formatCurrency } from "@/data/mockData";
 import styles from "./index.module.scss";
 
@@ -9,8 +9,8 @@ export interface ActionModalData {
   action: SalesAction;
   weekLabel: string;
   customer?: Customer;
-  prevPossibility?: Possibility | null;
-  currentPossibility?: Possibility | null;
+  prevPossibility?: PossibilityType | null;
+  currentPossibility?: PossibilityType | null;
   prevCustomerResponse?: string | null;
   prevTargetRevenue?: number | null;
   prevTest?: boolean;

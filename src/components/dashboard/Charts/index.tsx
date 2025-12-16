@@ -19,12 +19,12 @@ import {
 import { Text, Card } from '@/components/common/atoms';
 import { Customer } from '@/types/customer';
 import { formatCompactCurrency, getDataWithPeriodChange } from '@/data/mockData';
-import type { TimePeriod } from '@/App';
+import type { TimePeriodType } from '@/App';
 import styles from './index.module.scss';
 
 interface ChartsProps {
   data: Customer[];
-  timePeriod: TimePeriod;
+  timePeriod: TimePeriodType;
 }
 
 const COLORS = {
@@ -39,7 +39,7 @@ const COLORS = {
 
 const PIE_COLORS = [COLORS.success, COLORS.warning, COLORS.error];
 
-const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
+const TIME_PERIOD_LABELS: Record<TimePeriodType, string> = {
   '1w': '1주일',
   '1m': '1개월',
   '6m': '6개월',
@@ -47,7 +47,7 @@ const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
 };
 
 // 기간에 따른 주 수 매핑
-const PERIOD_WEEKS: Record<TimePeriod, number> = {
+const PERIOD_WEEKS: Record<TimePeriodType, number> = {
   '1w': 1,
   '1m': 4,
   '6m': 26,

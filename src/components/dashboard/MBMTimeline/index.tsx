@@ -27,15 +27,15 @@ import {
   Customer,
   ContentEngagement,
   SalesAction,
-  Possibility,
+  PossibilityType,
 } from "@/types/customer";
 import { formatCurrency } from "@/data/mockData";
-import type { TimePeriod } from "@/App";
+import type { TimePeriodType } from "@/App";
 import styles from "./index.module.scss";
 
 interface MBMTimelineProps {
   data: Customer[];
-  timePeriod: TimePeriod;
+  timePeriod: TimePeriodType;
   filters?: ReactNode;
 }
 
@@ -174,14 +174,14 @@ const ALL_WEEKS: Week[] = [
 
 type WeekKey = Week["key"];
 
-const WEEK_COUNT_BY_PERIOD: Record<TimePeriod, number> = {
+const WEEK_COUNT_BY_PERIOD: Record<TimePeriodType, number> = {
   "1w": 1,
   "1m": 4,
   "6m": 26,
   "1y": 52,
 };
 
-const getWeeksForPeriod = (timePeriod: TimePeriod): Week[] => {
+const getWeeksForPeriod = (timePeriod: TimePeriodType): Week[] => {
   const count = WEEK_COUNT_BY_PERIOD[timePeriod] ?? ALL_WEEKS.length;
   const currentIndex =
     ALL_WEEKS.findIndex((w) => w.isCurrent) !== -1
@@ -250,8 +250,8 @@ interface ActionModalData {
   customer: Customer;
   action: SalesAction;
   weekLabel: string;
-  prevPossibility?: Possibility | null;
-  currentPossibility?: Possibility | null;
+  prevPossibility?: PossibilityType | null;
+  currentPossibility?: PossibilityType | null;
   prevCustomerResponse?: string | null;
   prevTargetRevenue?: number | null;
   prevTest?: boolean;
@@ -343,7 +343,7 @@ export const MBMTimeline = ({
     weekLabel: string
   ) => {
     // 해당 액션 전의 값들 찾기
-    let prevPossibility: Possibility | null = null;
+    let prevPossibility: PossibilityType | null = null;
     let prevCustomerResponse: string | null = null;
     let prevTargetRevenue: number | null = null;
     let prevTest = false;

@@ -3,25 +3,18 @@
 ## 요청 (Request)
 
 ```ts
-export type MANAGER = string; // 담당자 식별자/이름. => 프론트에서 들고 있을지, 아니면 나중에 연동할지 결정.
-export type PROGRESS_STAGE = "TEST" | "QUOTE" | "APPROVAL" | "CLOSING"; // 계약 진행상태
-export type TIME_PERIOD = "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR"; // 기간 필터
-export type CATEGORY = "채용" | "공공" | "병원" | "성과"; // 카테고리
-export type COMPANY_SIZE = "T0" | "T1" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8" | "T9" | "T10" | null;
-export type TRUST_LEVEL = "P1" | "P2" | "P3" | null; // 신뢰 레벨
-export type POSSIBILITY = "90%" | "40%" | "0%"; // 계약 가능성
 
 export interface DashboardTableRequest {
-  timePeriod: TIME_PERIOD; // "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR"
+  timePeriod: TimePeriodApiType; // "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR"
   search?: { companyName?: string }; // 기업명 부분 검색(소문자 비교)
   filters?: {
-    companySizes?: COMPANY_SIZE[];               // 기업 규모 다중 선택
-    managers?: MANAGER[];                       // 담당자 다중 선택
-    categories?: CATEGORY[];                    // 카테고리 다중 선택
-    possibilities?: POSSIBILITY[];              // 가능성 다중 선택
-    stages?: PROGRESS_STAGE[];                   // 진행상태: 최고 단계가 선택 값과 동일한 행만
-    contractAmountRange?: { minMan?: number | null; maxMan?: number | null };   // 계약금액(만원)
-    expectedRevenueRange?: { minMan?: number | null; maxMan?: number | null };  // 예상매출(만원)
+    companySizes?: CompanySizeType[];               // 기업 규모 다중 선택
+    managers?: string[];                       // 담당자 다중 선택
+    categories?: CategoryType[];                    // 카테고리 다중 선택
+    possibilities?: PossibilityType[];              // 가능성 다중 선택
+    stages?: ProgressStageType[];                   // 진행상태: 최고 단계가 선택 값과 동일한 행만
+    contractAmountRange?: { minMan?: number | null; maxMan?: number | null };   // 계약금액(원)
+    expectedRevenueRange?: { minMan?: number | null; maxMan?: number | null };  // 예상매출(원)
     targetMonths?: number[];                    // 1~12, 목표일자 월 포함 시
   };
   sort?: {
@@ -53,14 +46,14 @@ export interface DashboardTableResponse {
 }
 
 export interface DashboardTableRow {
-  no: number;                             // 테이블: 번호
+  companyId:number;                       // 테이블 :기업id
   companyName: string;                    // 테이블: 기업명
-  companySize: COMPANY_SIZE;               // 테이블: 기업 규모
-  category: CATEGORY;                     // 테이블: 카테고리
-  manager: MANAGER;                       // 테이블: 담당자
+  companySize: CompanySizeType;           // 테이블: 기업 규모
+  category: CategoryType;                 // 테이블: 카테고리
+  manager: string;                   // 테이블: 담당자
   contractAmount: number | null;          // 테이블: 계약금액 (원 단위)
   trustIndex?: number | null;             // 테이블: 신뢰지수(현재)
-  trustLevel: TRUST_LEVEL | null;          // 테이블: 신뢰레벨
+  trustLevel: TrustLevelType | null;      // 테이블: 신뢰레벨
   adoptionDecision: AdoptionDecision;     // 테이블: 가능성/목표일자/진행상태
   expectedRevenue?: number;               // 테이블: 예상매출(현재, 원 단위)
   periodChange?: PeriodChange;            // 테이블: 과거값 비교용
@@ -68,7 +61,7 @@ export interface DashboardTableRow {
 
 export interface PeriodChange {
   previousTrustIndex: number | null;      // 테이블: 신뢰지수(과거)
-  previousPossibility: POSSIBILITY;       // 테이블: 가능성(과거)
+  previousPossibility: PossibilityType;   // 테이블: 가능성(과거)
   previousExpectedRevenue: number;        // 테이블: 예상매출(과거)
   currentExpectedRevenue: number;         // 테이블: 예상매출(현재)
   previousTargetMonth: number | null;     // 테이블: 목표월(과거, 1~12)
@@ -79,7 +72,7 @@ export interface PeriodChange {
 }
 
 export interface AdoptionDecision {
-  possibility: POSSIBILITY;               // 테이블: 가능성(현재) "0%" | "40%" | "90%"
+  possibility: PossibilityType;           // 테이블: 가능성(현재) "0%" | "40%" | "90%"
   targetRevenue?: number | null;          // 테이블: 목표 매출
   targetMonth?: number | null;            // 테이블: 목표월 표시(1~12)
   test?: boolean;                         // 테이블: 진행상태 T
@@ -99,4 +92,4 @@ export interface AdoptionDecision {
 
 - 가능성/목표일자/계약금액/예상매출/기업명 검색 등 모든 필터를 조합해 요청합니다.
 - 진행상태 필터는 “최고 진행 단계가 선택 값과 정확히 일치”하는 행만 필요합니다.
-- 금액 필터 입력은 만원 단위로 전달하므로, 서버에서는 `minMan * 10_000` 형태로 비교하면 됩니다.
+- 금액 필터 입력은 원 단위로 전달합니다.

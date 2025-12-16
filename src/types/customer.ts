@@ -1,20 +1,20 @@
-export type CompanySize = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
-export type Category = "채용" | "공공" | "병원" | "성과";
-export type TrustLevel = "P1" | "P2" | "P3" | null;
-export type ChangeDirection = "up" | "down" | "none" | null;
-export type CustomerResponse = "상" | "중" | "하";
-export type Possibility = "90%" | "40%" | "0%";
+export type CompanySizeType = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
+export type CategoryType = "채용" | "공공" | "병원" | "성과";
+export type TrustLevelType = "P1" | "P2" | "P3" | null;
+export type ChangeDirectionType = "up" | "down" | "none" | null;
+export type CustomerResponseType = "상" | "중" | "하";
+export type PossibilityType = "90%" | "40%" | "0%";
 
 // 조회/참석 기업 상세 정보 (공통 컴포넌트용)
 export interface ViewerDetail {
   companyName: string;
   date?: string;
-  category: Category | string;
-  companySize?: CompanySize | string | null;
+  category: CategoryType | string;
+  companySize?: CompanySizeType | string | null;
   manager: string;
   contractAmount: number;
   targetRevenue: number;
-  possibility: Possibility | string;
+  possibility: PossibilityType | string;
   test: boolean;
   quote: boolean;
   approval: boolean;
@@ -31,7 +31,7 @@ export interface Attendance {
 // 주간별 신뢰 데이터
 export interface TrustData {
   trustIndex: number;
-  trustLevel: "P1" | "P2" | "P3";
+  trustLevel: TrustLevelType;
 }
 
 // 주간 단위 신뢰 히스토리 (키: 해당 주 월요일 MMDD)
@@ -53,8 +53,8 @@ export interface SalesAction {
   content: string;
   date: string;
   // 영업 액션 후의 상태 변화
-  possibility?: Possibility;
-  customerResponse?: CustomerResponse;
+  possibility?: PossibilityType;
+  customerResponse?: CustomerResponseType;
   targetRevenue?: number | null;
   targetDate?: string | null; // 목표 일자
   // 진행 상태 체크리스트
@@ -65,17 +65,17 @@ export interface SalesAction {
 }
 
 // 컨텐츠 퍼널 카테고리
-export type ContentCategory = "TOFU" | "MOFU" | "BOFU";
+export type ContentCategoryType = "TOFU" | "MOFU" | "BOFU";
 
 // 컨텐츠 조회 기록
 export interface ContentEngagement {
   title: string;
   date: string;
-  category: ContentCategory;
+  category: ContentCategoryType;
 }
 
 export interface TrustFormation {
-  customerResponse: CustomerResponse;
+  customerResponse: CustomerResponseType;
   targetDate?: string | null;
   targetRevenueMin?: number | null;
   targetRevenueMax?: number | null;
@@ -84,8 +84,8 @@ export interface TrustFormation {
 }
 
 export interface ValueRecognition {
-  customerResponse: CustomerResponse;
-  possibility: Possibility;
+  customerResponse: CustomerResponseType;
+  possibility: PossibilityType;
   targetDate?: string | null;
   targetRevenue?: number | null;
   test?: boolean;
@@ -96,8 +96,8 @@ export interface ValueRecognition {
 }
 
 export interface AdoptionDecision {
-  customerResponse: CustomerResponse;
-  possibility: Possibility;
+  customerResponse: CustomerResponseType;
+  possibility: PossibilityType;
   targetDate?: string | null;
   targetRevenue?: number | null;
   test?: boolean;
@@ -110,8 +110,8 @@ export interface AdoptionDecision {
 // 기간별 변화 데이터 (getDataWithPeriodChange에서 계산됨)
 export interface PeriodData {
   pastTrustIndex: number | null;
-  pastPossibility: Possibility;
-  pastCustomerResponse: CustomerResponse;
+  pastPossibility: PossibilityType;
+  pastCustomerResponse: CustomerResponseType;
   pastExpectedRevenue: number;
   currentExpectedRevenue: number;
   possibilityChange: "up" | "down" | "none";
@@ -128,17 +128,17 @@ export interface PeriodData {
 export interface Customer {
   no: number;
   companyName: string;
-  companySize: CompanySize;
-  category: Category;
+  companySize: CompanySizeType;
+  category: CategoryType;
   productUsage: string;
   manager: string;
   renewalDate: string | null;
   contractAmount: number | null;
   hDot: boolean;
-  trustLevel: TrustLevel;
+  trustLevel: TrustLevelType;
   trustIndex?: number | null;
   changeAmount?: number | null;
-  changeDirection: ChangeDirection;
+  changeDirection: ChangeDirectionType;
   rank?: number | null;
   trustHistory?: TrustHistory;
   salesActions?: SalesAction[]; // 영업 액션 (가능성/고객반응 변화 포함)
@@ -151,7 +151,7 @@ export interface Customer {
 }
 
 // 파이프라인 단계
-export type PipelineStage =
+export type PipelineStageType =
   | "trustFormation"
   | "valueRecognition"
   | "adoptionDecision";
@@ -159,9 +159,9 @@ export type PipelineStage =
 // 필터 타입
 export interface Filters {
   manager: string[];
-  category: Category[];
-  companySize: CompanySize[];
-  possibility: Possibility[];
-  trustLevel: TrustLevel[];
+  category: CategoryType[];
+  companySize: CompanySizeType[];
+  possibility: PossibilityType[];
+  trustLevel: TrustLevelType[];
   searchQuery: string;
 }

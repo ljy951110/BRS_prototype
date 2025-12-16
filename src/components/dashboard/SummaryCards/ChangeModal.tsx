@@ -1,4 +1,4 @@
-import type { TimePeriod } from "@/App";
+import type { TimePeriodType } from "@/App";
 import { formatCompactCurrency } from "@/data/mockData";
 import { Customer, SalesAction } from "@/types/customer";
 import { PhoneOutlined } from "@ant-design/icons";
@@ -17,14 +17,14 @@ type ModalType = "revenue" | "trust" | "possibility" | null;
 
 interface ChangeModalProps {
   modalType: ModalType;
-  timePeriod: TimePeriod;
+  timePeriod: TimePeriodType;
   modalData: { up: Customer[]; down: Customer[] };
   onClose: () => void;
   onSelectCustomer: (customer: Customer, actions: SalesAction[]) => void;
-  getActionsInPeriod: (customer: Customer, period: TimePeriod) => SalesAction[];
+  getActionsInPeriod: (customer: Customer, period: TimePeriodType) => SalesAction[];
 }
 
-const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
+const TIME_PERIOD_LABELS: Record<TimePeriodType, string> = {
   "1w": "1주일",
   "1m": "1개월",
   "6m": "6개월",

@@ -1,4 +1,4 @@
-import type { TimePeriod } from "@/App";
+import type { TimePeriodType } from "@/App";
 import { formatCompactCurrency, getDataWithPeriodChange } from "@/data/mockData";
 import { Customer, SalesAction } from "@/types/customer";
 import {
@@ -25,10 +25,10 @@ type ModalType = "revenue" | "trust" | "possibility" | null;
 
 interface SummaryCardsProps {
   data: Customer[];
-  timePeriod: TimePeriod;
+  timePeriod: TimePeriodType;
 }
 
-const PERIOD_DAYS: Record<TimePeriod, number> = {
+const PERIOD_DAYS: Record<TimePeriodType, number> = {
   "1w": 7,
   "1m": 30,
   "6m": 180,
@@ -114,7 +114,7 @@ export const SummaryCards = ({ data, timePeriod }: SummaryCardsProps) => {
   const modalData =
     modalType === null ? { up: [], down: [] } : changedCompanies[modalType];
 
-  const getActionsInPeriod = (customer: Customer, period: TimePeriod) => {
+  const getActionsInPeriod = (customer: Customer, period: TimePeriodType) => {
     if (!customer.salesActions || customer.salesActions.length === 0) return [];
     const now = new Date("2024-12-10");
     const periodStart = new Date(now);
