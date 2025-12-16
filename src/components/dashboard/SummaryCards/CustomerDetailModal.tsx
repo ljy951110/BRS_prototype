@@ -65,6 +65,29 @@ export const CustomerDetailModal = ({
               {customer.trustIndex} ({customer.trustLevel})
             </Tag>
           </Descriptions.Item>
+          <Descriptions.Item label="목표매출" span={2}>
+            <Tag
+              color={
+                customer._periodData?.pastTargetRevenue !== undefined &&
+                  (customer.adoptionDecision.targetRevenue || 0) >
+                  (customer._periodData?.pastTargetRevenue || 0)
+                  ? "green"
+                  : customer._periodData?.pastTargetRevenue !== undefined &&
+                    (customer.adoptionDecision.targetRevenue || 0) <
+                    (customer._periodData?.pastTargetRevenue || 0)
+                    ? "red"
+                    : "default"
+              }
+            >
+              {formatCompactCurrency(
+                customer._periodData?.pastTargetRevenue ?? 0
+              )}{" "}
+              →{" "}
+              {formatCompactCurrency(
+                customer.adoptionDecision.targetRevenue ?? 0
+              )}
+            </Tag>
+          </Descriptions.Item>
           <Descriptions.Item label="예상매출" span={2}>
             <Tag
               color={

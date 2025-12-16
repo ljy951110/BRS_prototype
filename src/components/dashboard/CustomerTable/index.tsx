@@ -201,11 +201,15 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   // 범위 필터 state
   const [contractAmountMin, setContractAmountMin] = useState<number | null>(null);
   const [contractAmountMax, setContractAmountMax] = useState<number | null>(null);
+  const [targetRevenueMin, setTargetRevenueMin] = useState<number | null>(null);
+  const [targetRevenueMax, setTargetRevenueMax] = useState<number | null>(null);
   const [expectedRevenueMin, setExpectedRevenueMin] = useState<number | null>(null);
   const [expectedRevenueMax, setExpectedRevenueMax] = useState<number | null>(null);
   const [targetMonths, setTargetMonths] = useState<number[]>([]);
   const [contractAmountMinDraft, setContractAmountMinDraft] = useState<number | null>(null); // 만원 단위
   const [contractAmountMaxDraft, setContractAmountMaxDraft] = useState<number | null>(null); // 만원 단위
+  const [targetRevenueMinDraft, setTargetRevenueMinDraft] = useState<number | null>(null); // 만원 단위
+  const [targetRevenueMaxDraft, setTargetRevenueMaxDraft] = useState<number | null>(null); // 만원 단위
   const [expectedRevenueMinDraft, setExpectedRevenueMinDraft] = useState<number | null>(null); // 만원 단위
   const [expectedRevenueMaxDraft, setExpectedRevenueMaxDraft] = useState<number | null>(null); // 만원 단위
   const [targetMonthsDraft, setTargetMonthsDraft] = useState<number[]>([]);
@@ -218,6 +222,12 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
     setContractAmountMaxDraft(
       contractAmountMax !== null ? Math.round(contractAmountMax / 10000) : null
     );
+    setTargetRevenueMinDraft(
+      targetRevenueMin !== null ? Math.round(targetRevenueMin / 10000) : null
+    );
+    setTargetRevenueMaxDraft(
+      targetRevenueMax !== null ? Math.round(targetRevenueMax / 10000) : null
+    );
     setExpectedRevenueMinDraft(
       expectedRevenueMin !== null ? Math.round(expectedRevenueMin / 10000) : null
     );
@@ -228,6 +238,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   }, [
     contractAmountMin,
     contractAmountMax,
+    targetRevenueMin,
+    targetRevenueMax,
     expectedRevenueMin,
     expectedRevenueMax,
     targetMonths,
@@ -266,6 +278,14 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           return false;
         }
 
+        // 목표매출 범위 필터
+        if (targetRevenueMin !== null && (row.adoptionDecision.targetRevenue ?? 0) < targetRevenueMin) {
+          return false;
+        }
+        if (targetRevenueMax !== null && (row.adoptionDecision.targetRevenue ?? 0) > targetRevenueMax) {
+          return false;
+        }
+
         // 예상매출 범위 필터
         if (expectedRevenueMin !== null && row.expectedRevenue < expectedRevenueMin) {
           return false;
@@ -291,7 +311,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
 
         return true;
       });
-  }, [data, timePeriod, contractAmountMin, contractAmountMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch]);
+  }, [data, timePeriod, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch]);
 
   const possibilityOptions = useMemo(
     () =>
@@ -486,6 +506,95 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       ),
       render: (val: number | null) => formatMan(val),
       width: 140,
+    },
+    {
+      title: "목표매출",
+      dataIndex: "_periodData",
+      sorter: (a, b) => {
+        const aDiff = (a.adoptionDecision.targetRevenue || 0) - (a._periodData?.pastTargetRevenue || 0);
+        const bDiff = (b.adoptionDecision.targetRevenue || 0) - (b._periodData?.pastTargetRevenue || 0);
+        return aDiff - bDiff;
+      },
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8 }}>
+          <InputNumber
+            style={{ width: 180 }}
+            placeholder="최소"
+            value={targetRevenueMinDraft ?? undefined}
+            onChange={(value) => {
+              setTargetRevenueMinDraft(value === null ? null : Number(value));
+            }}
+            formatter={(v) => (v ? `${v}만` : "")}
+            parser={(v) => Number((v || "").replace(/[^0-9.-]/g, ""))}
+          />
+          <InputNumber
+            style={{ width: 180 }}
+            placeholder="최대"
+            value={targetRevenueMaxDraft ?? undefined}
+            onChange={(value) => {
+              setTargetRevenueMaxDraft(value === null ? null : Number(value));
+            }}
+            formatter={(v) => (v ? `${v}만` : "")}
+            parser={(v) => Number((v || "").replace(/[^0-9.-]/g, ""))}
+          />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                setTargetRevenueMin(
+                  targetRevenueMinDraft !== null
+                    ? targetRevenueMinDraft * 10000
+                    : null
+                );
+                setTargetRevenueMax(
+                  targetRevenueMaxDraft !== null
+                    ? targetRevenueMaxDraft * 10000
+                    : null
+                );
+                confirm({ closeDropdown: true });
+              }}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                setTargetRevenueMinDraft(null);
+                setTargetRevenueMaxDraft(null);
+                setTargetRevenueMin(null);
+                setTargetRevenueMax(null);
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: () => (
+        <FilterFilled
+          style={{
+            color:
+              targetRevenueMin !== null || targetRevenueMax !== null
+                ? token.colorPrimary
+                : undefined,
+          }}
+        />
+      ),
+      render: (_, record) => {
+        const past = record._periodData?.pastTargetRevenue ?? 0;
+        const current = record.adoptionDecision.targetRevenue ?? 0;
+        const diff = current - past;
+        const color = diff > 0 ? "green" : diff < 0 ? "red" : "default";
+        return (
+          <Tag color={color}>
+            {formatMan(past)} → {formatMan(current)}
+          </Tag>
+        );
+      },
+      width: 180,
     },
     {
       title: "가능성",
@@ -843,6 +952,31 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                         {selectedCustomer._periodData?.pastTrustIndex ?? "-"} →{" "}
                         {selectedCustomer.trustIndex} (
                         {selectedCustomer.trustLevel})
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="목표매출" span={2}>
+                      <Tag
+                        color={
+                          selectedCustomer._periodData?.pastTargetRevenue !==
+                            undefined &&
+                            (selectedCustomer.adoptionDecision.targetRevenue || 0) >
+                            (selectedCustomer._periodData?.pastTargetRevenue || 0)
+                            ? "green"
+                            : selectedCustomer._periodData?.pastTargetRevenue !==
+                              undefined &&
+                              (selectedCustomer.adoptionDecision.targetRevenue || 0) <
+                              (selectedCustomer._periodData?.pastTargetRevenue || 0)
+                              ? "red"
+                              : "default"
+                        }
+                      >
+                        {formatMan(
+                          selectedCustomer._periodData?.pastTargetRevenue
+                        )}{" "}
+                        →{" "}
+                        {formatMan(
+                          selectedCustomer.adoptionDecision.targetRevenue
+                        )}
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="예상매출" span={2}>

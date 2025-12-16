@@ -112,6 +112,7 @@ export interface PeriodData {
   pastTrustIndex: number | null;
   pastPossibility: PossibilityType;
   pastCustomerResponse: CustomerResponseType;
+  pastTargetRevenue: number | null;
   pastExpectedRevenue: number;
   currentExpectedRevenue: number;
   possibilityChange: "up" | "down" | "none";

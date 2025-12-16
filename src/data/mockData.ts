@@ -249,6 +249,7 @@ export const getDataWithPeriodChange = (
         pastTrustIndex,
         pastPossibility: pastAdoption.possibility,
         pastCustomerResponse: pastAdoption.customerResponse,
+        pastTargetRevenue: pastAdoption.targetRevenue,
         pastExpectedRevenue,
         currentExpectedRevenue,
         possibilityChange:
