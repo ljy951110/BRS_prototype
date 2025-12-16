@@ -9,6 +9,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler' // Use modern Sass API
+      }
+    }
+  },
   server: {
     host: true // 모든 IP에서 접속 허용
   }
