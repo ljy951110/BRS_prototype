@@ -4,9 +4,13 @@
  */
 
 import {
+  getCustomerSummaryHandler,
+  getSalesHistoryHandler,
+} from '@/repository/query/customerDetailApiController/handler';
+import {
   getDashboardCompaniesHandler,
   getFilterOptionsHandler,
-} from './dashboard.handler';
+} from '@/repository/query/dashboardApiController/handler';
 
 /**
  * 모든 MSW handlers
@@ -17,9 +21,11 @@ export const handlers = [
   getFilterOptionsHandler,
   getDashboardCompaniesHandler,
 
-  // TODO: 다른 API handlers 추가
   // Customer Detail API
-  // Sales History API
+  getCustomerSummaryHandler,
+  getSalesHistoryHandler,
+
+  // TODO: 다른 API handlers 추가
   // Trust Change Detail API
 ];
 

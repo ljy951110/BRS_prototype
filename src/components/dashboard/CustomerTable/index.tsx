@@ -3,6 +3,7 @@ import {
   calculateExpectedRevenue,
   getDataWithPeriodChange,
 } from "@/data/mockData";
+import { useGetCustomerSummary, useGetSalesHistory } from "@/repository/query/customerDetailApiController/queryHook";
 import { Customer, PossibilityType, ProductType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
@@ -22,7 +23,7 @@ import {
   theme,
   Typography
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +36,11 @@ interface CustomerTableProps {
   data: Customer[];
   timePeriod: TimePeriodType;
   loading?: boolean;
+  pagination?: TablePaginationConfig;
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
 }
 
 type TableRow = Customer & {
@@ -221,7 +227,7 @@ const renderProgressTags = (
   );
 };
 
-export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps) => {
+export const CustomerTable = ({ data, timePeriod, loading, pagination: paginationProp, dateRange }: CustomerTableProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -231,6 +237,34 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
     date: string;
   } | null>(null);
   const { token } = theme.useToken();
+
+  // 고객 요약 정보 조회
+  const { data: _customerSummary, isLoading: _isSummaryLoading } = useGetCustomerSummary(
+    selectedCustomer?.no ?? 0,
+    {
+      dateRange: dateRange || {
+        startDate: '2024-11-10',
+        endDate: '2024-12-10',
+      },
+    },
+    {
+      enabled: !!selectedCustomer && !!dateRange,
+    }
+  );
+
+  // 영업 히스토리 조회
+  const { data: salesHistoryData, isLoading: isSalesHistoryLoading } = useGetSalesHistory(
+    selectedCustomer?.no ?? 0,
+    {
+      dateRange: dateRange || {
+        startDate: '2024-11-10',
+        endDate: '2024-12-10',
+      },
+    },
+    {
+      enabled: !!selectedCustomer && !!dateRange,
+    }
+  );
 
   // 범위 필터 state
   const [contractAmountMin, setContractAmountMin] = useState<number | null>(null);
@@ -1505,18 +1539,27 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   ];
 
   return (
-    <Card styles={{ body: { padding: 0 } }}>
+    <Card
+      styles={{
+        body: {
+          padding: 0,
+          minHeight: '400px',
+          maxHeight: 'calc(100vh - 200px)',
+          overflow: 'auto',
+        },
+      }}
+    >
       <Table
         columns={columns}
         dataSource={tableData}
-        pagination={{ pageSize: 10 }}
+        pagination={paginationProp || { pageSize: 10 }}
         loading={loading}
         size="small"
         onRow={(record) => ({
           onClick: () => setSelectedCustomer(record),
           style: { cursor: "pointer" },
         })}
-        scroll={{ x: 1800 }}
+        scroll={{ x: 1800, y: 'calc(100vh - 450px)' }}
       />
 
       <Modal
@@ -1701,17 +1744,23 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
               {
                 key: "actions",
                 label: "영업 히스토리",
-                children: (
+                children: isSalesHistoryLoading ? (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
+                ) : (
                   <SalesActionHistory
-                    actions={
-                      selectedCustomer.salesActions
-                        ? [...selectedCustomer.salesActions].sort(
-                          (a, b) =>
-                            new Date(b.date).getTime() -
-                            new Date(a.date).getTime()
-                        )
-                        : []
-                    }
+                    actions={(salesHistoryData?.data?.salesActions || []).map(action => ({
+                      type: action.type.toLowerCase() as 'call' | 'meeting',
+                      content: action.content,
+                      date: action.date,
+                      possibility: action.stateChange?.after?.possibility as PossibilityType | undefined,
+                      customerResponse: undefined, // API에서 제공하지 않음
+                      targetRevenue: action.stateChange?.after?.targetRevenue ?? null,
+                      targetDate: action.stateChange?.after?.targetDate ?? null,
+                      test: action.stateChange?.after?.test ?? false,
+                      quote: action.stateChange?.after?.quote ?? false,
+                      approval: action.stateChange?.after?.approval ?? false,
+                      contract: action.stateChange?.after?.contract ?? false,
+                    }))}
                     customer={selectedCustomer}
                   />
                 ),
@@ -1797,7 +1846,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         title={selectedContent?.title || "콘텐츠 상세"}
       >
         {selectedContent && (
-          <Space direction="vertical" size={8}>
+          <Space size={8}>
             <Space>
               <Tag color="blue">{selectedContent.category}</Tag>
               <AntText type="secondary">{selectedContent.date}</AntText>

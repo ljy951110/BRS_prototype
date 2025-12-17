@@ -145,11 +145,15 @@ interface AppContentProps {
 function AppContent({ isDark, onToggleTheme }: AppContentProps) {
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
-  // 기본값: 최근 1주일 (오늘 - 7일 ~ 오늘)
+  // 기본값: 2025-12-11 ~ 2025-12-18
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().subtract(7, "day"),
-    dayjs(),
+    dayjs("2025-12-11"),
+    dayjs("2025-12-18"),
   ]);
+  
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // 탭별 독립적인 필터 상태
   const [tabFilters, setTabFilters] = useState<TabFilterState>({
@@ -169,7 +173,13 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       ...prev,
       [viewMode]: { ...prev[viewMode], [key]: value },
     }));
+    setCurrentPage(1); // 필터 변경 시 첫 페이지로
   };
+  
+  // dateRange 변경 시에도 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dateRange]);
 
   // dateRange에서 일수를 계산하여 가장 가까운 TimePeriodType으로 변환
   const timePeriod: TimePeriodType = useMemo(() => {
@@ -211,9 +221,9 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           ? { companyName: currentFilters.searchQuery.trim() }
           : undefined,
       filters: Object.keys(filters).length ? filters : undefined,
-      pagination: { page: 1, pageSize: 300 },
+      pagination: { page: currentPage, pageSize },
     };
-  }, [currentFilters, dateRange]);
+  }, [currentFilters, dateRange, currentPage, pageSize]);
 
   // React Query로 API 호출 (약간의 지연으로 MSW 준비 대기)
   const [mswReady, setMswReady] = useState(false);
@@ -556,6 +566,25 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
                   data={filteredData}
                   timePeriod={timePeriod}
                   loading={isLoading}
+                  dateRange={{
+                    startDate: dateRange[0].format('YYYY-MM-DD'),
+                    endDate: dateRange[1].format('YYYY-MM-DD'),
+                  }}
+                  pagination={{
+                    current: currentPage,
+                    pageSize,
+                    total: apiData?.data?.total ?? 0,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} / 전체 ${total}건`,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    onChange: (page, newPageSize) => {
+                      setCurrentPage(page);
+                      if (newPageSize !== pageSize) {
+                        setPageSize(newPageSize);
+                        setCurrentPage(1); // 페이지 크기 변경 시 첫 페이지로
+                      }
+                    },
+                  }}
                 />
               </>
             )}

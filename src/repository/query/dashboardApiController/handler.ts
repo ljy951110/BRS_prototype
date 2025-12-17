@@ -1,0 +1,890 @@
+/**
+ * Dashboard API MSW Handlers
+ * 대시보드 관련 API mock handlers
+ */
+
+import type {
+  DashboardTableRequest,
+  DashboardTableResponse,
+  DashboardTableRow,
+  Possibility,
+} from "@/repository/openapi/model";
+import { http, HttpResponse } from "msw";
+
+// ==================== Mock Data ====================
+
+/**
+ * Dashboard API용 Mock 데이터 (DashboardTableRow 형식)
+ * 실제 서비스에서는 이 데이터가 DB에서 조회됩니다
+ */
+const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
+  {
+    companyId: 4,
+    companyName: "비전바이오켐",
+    companySize: "T0",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 11000000,
+    current: {
+      trustIndex: 40,
+      possibility: "40%",
+      targetMonth: 1,
+      targetRevenue: 5000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 36,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 8,
+    companyName: "도쿄일렉트론코리아",
+    companySize: "T9",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 50000000,
+    current: {
+      trustIndex: 28,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 5000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 25,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 3000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 24,
+    companyName: "서울도시가스",
+    companySize: "T5",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 41250000,
+    current: {
+      trustIndex: 55,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 58000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 48,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 40000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 25,
+    companyName: "AJ네트웍스",
+    companySize: "T9",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 62400000,
+    current: {
+      trustIndex: 17,
+      possibility: "40%",
+      targetMonth: 1,
+      targetRevenue: 8000000,
+      test: true,
+      quote: true,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 19,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 30,
+    companyName: "(주)도루코",
+    companySize: "T1",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 15200000,
+    current: {
+      trustIndex: 66,
+      possibility: "40%",
+      targetMonth: 2,
+      targetRevenue: 8000000,
+      test: true,
+      quote: true,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 74,
+      possibility: "40%",
+      targetMonth: 2,
+      targetRevenue: 10000000,
+      test: true,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 43,
+    companyName: "대한제분",
+    companySize: "T1",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이정호",
+    contractAmount: 10000000,
+    current: {
+      trustIndex: 39,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 48,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 5000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 217,
+    companyName: "한국컴패션",
+    companySize: "T1",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "윤상준",
+    contractAmount: 6300000,
+    current: {
+      trustIndex: 10,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 6000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 10,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 3000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 237,
+    companyName: "빙그레",
+    companySize: "T5",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이지훈",
+    contractAmount: 33000000,
+    current: {
+      trustIndex: 26,
+      possibility: "90%",
+      targetMonth: 11,
+      targetRevenue: 29600000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 19,
+      possibility: "40%",
+      targetMonth: 11,
+      targetRevenue: 20000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 240,
+    companyName: "유라코포레이션",
+    companySize: "T9",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이지훈",
+    contractAmount: 30000000,
+    current: {
+      trustIndex: 23,
+      possibility: "90%",
+      targetMonth: 11,
+      targetRevenue: 30000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 15,
+      possibility: "40%",
+      targetMonth: 11,
+      targetRevenue: 20000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 242,
+    companyName: "농우바이오",
+    companySize: "T1",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이지훈",
+    contractAmount: 10030000,
+    current: {
+      trustIndex: 21,
+      possibility: "90%",
+      targetMonth: 11,
+      targetRevenue: 10030000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 16,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 8000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 272,
+    companyName: "메리츠캐피탈",
+    companySize: "T10",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "이지훈",
+    contractAmount: 10000000,
+    current: {
+      trustIndex: 46,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 3500000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: true,
+    },
+    previous: {
+      trustIndex: 49,
+      possibility: "40%",
+      targetMonth: 11,
+      targetRevenue: 2000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 299,
+    companyName: "에이플러스에셋어드바이저",
+    companySize: "T3",
+    category: "recruit",
+    productUsage: ["역검"],
+    manager: "이정호",
+    contractAmount: 2000000,
+    current: {
+      trustIndex: 47,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 5000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 56,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 373,
+    companyName: "안국건강",
+    companySize: "T0",
+    category: "recruit",
+    productUsage: ["역검"],
+    manager: "김택수",
+    contractAmount: 2700000,
+    current: {
+      trustIndex: 96,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 1500000,
+      test: true,
+      quote: true,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 94,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 468,
+    companyName: "에스테이트",
+    companySize: "T0",
+    category: "recruit",
+    productUsage: ["역검"],
+    manager: "윤상준",
+    contractAmount: 2700000,
+    current: {
+      trustIndex: 14,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 6000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 15,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 4000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 510,
+    companyName: "에이치비테크놀러지",
+    companySize: "T3",
+    category: "recruit",
+    productUsage: ["역검"],
+    manager: "이지훈",
+    contractAmount: 1000000,
+    current: {
+      trustIndex: 16,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 1000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 19,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 500000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 553,
+    companyName: "동오그룹",
+    companySize: "T5",
+    category: "recruit",
+    productUsage: ["ATS"],
+    manager: "김종현",
+    contractAmount: 17000000,
+    current: {
+      trustIndex: 62,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 8000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 57,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 5000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 597,
+    companyName: "삼우종합건축사사무소",
+    companySize: "T5",
+    category: "recruit",
+    productUsage: ["ATS"],
+    manager: "유재현",
+    contractAmount: 15000000,
+    current: {
+      trustIndex: 86,
+      possibility: "40%",
+      targetMonth: 1,
+      targetRevenue: 3750000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 82,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 708,
+    companyName: "디비아이엔씨",
+    companySize: "T9",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "윤상준",
+    contractAmount: 240000000,
+    current: {
+      trustIndex: 32,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 4000000,
+      test: true,
+      quote: true,
+      approval: true,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 28,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 3000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 709,
+    companyName: "해안종합건축사사무소",
+    companySize: "T5",
+    category: "recruit",
+    productUsage: ["ATS", "역검"],
+    manager: "윤상준",
+    contractAmount: 50000000,
+    current: {
+      trustIndex: 35,
+      possibility: "90%",
+      targetMonth: 12,
+      targetRevenue: 10000000,
+      test: true,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 32,
+      possibility: "40%",
+      targetMonth: 12,
+      targetRevenue: 8000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 637,
+    companyName: "엠로",
+    companySize: "T3",
+    category: "recruit",
+    productUsage: ["ATS"],
+    manager: "이지훈",
+    contractAmount: 24000000,
+    current: {
+      trustIndex: 51,
+      possibility: "90%",
+      targetMonth: 8,
+      targetRevenue: 24000000,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 54,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 1046,
+    companyName: "(주)도루코 성과",
+    companySize: "T10",
+    category: "performance",
+    productUsage: ["INHR+통합"],
+    manager: "김용진",
+    contractAmount: 24800000,
+    current: {
+      trustIndex: 82,
+      possibility: "40%",
+      targetMonth: 1,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 78,
+      possibility: "40%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+  {
+    companyId: 710,
+    companyName: "국가과학기술인력개발원",
+    companySize: "T5",
+    category: "public",
+    productUsage: ["ATS", "역검SR"],
+    manager: "송병규",
+    contractAmount: 10000000,
+    current: {
+      trustIndex: 45,
+      possibility: "40%",
+      targetMonth: 1,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+    previous: {
+      trustIndex: 42,
+      possibility: "0%",
+      targetMonth: null,
+      targetRevenue: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    },
+  },
+];
+
+// ==================== Helper Functions ====================
+
+/**
+ * 예상 매출 계산 (목표매출 * 가능성)
+ */
+const calculateExpectedRevenue = (
+  targetRevenue: number | null | undefined,
+  possibility: Possibility | null | undefined
+): number => {
+  if (!targetRevenue || !possibility) return 0;
+
+  const possibilityValue: Record<string, number> = {
+    "0%": 0,
+    "40%": 0.4,
+    "90%": 0.9,
+  };
+
+  const rate = possibilityValue[possibility] || 0;
+  return Math.round(targetRevenue * rate);
+};
+
+/**
+ * 숫자 범위 체크
+ */
+const inRange = (
+  value: number | null | undefined,
+  min?: number | null,
+  max?: number | null
+) => {
+  if (value === null || value === undefined) return false;
+  if (min !== null && min !== undefined && value < min) return false;
+  if (max !== null && max !== undefined && value > max) return false;
+  return true;
+};
+
+// ==================== API Handlers ====================
+
+/**
+ * 필터 옵션 조회
+ * GET /api/v1/dashboard/companies/filters
+ */
+export const getFilterOptionsHandler = http.get(
+  "/api/v1/dashboard/companies/filters",
+  () => {
+    console.log('[MSW] 📥 Intercepted GET /api/v1/dashboard/companies/filters');
+
+    const uniqueManagers = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.manager)));
+    const uniqueCategories = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.category).filter(Boolean)));
+    const uniqueCompanySizes = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.companySize).filter(Boolean)));
+    const uniquePossibilities = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.current.possibility).filter(Boolean)));
+
+    const response = {
+      managers: uniqueManagers,
+      categories: uniqueCategories,
+      companySizes: uniqueCompanySizes,
+      possibilities: uniquePossibilities,
+      mbmPipelineStatuses: ['test', 'quote', 'approval', 'contract'],
+    };
+
+    console.log('[MSW] 📤 Sending filter options:', response);
+    return HttpResponse.json(response);
+  }
+);
+
+/**
+ * 대시보드 테이블 데이터 조회
+ * POST /api/v1/dashboard/companies
+ */
+export const getDashboardCompaniesHandler = http.post(
+  "/api/v1/dashboard/companies",
+  async ({ request }) => {
+    console.log('[MSW] 📥 Intercepted POST /api/v1/dashboard/companies');
+
+    const body = (await request.json()) as DashboardTableRequest;
+    console.log('[MSW] Request body:', body);
+
+    const page = body.pagination?.page ?? 1;
+    const pageSize = body.pagination?.pageSize ?? 50;
+
+    const companyNameSearch = body.search?.companyName?.trim().toLowerCase();
+    const filters = body.filters;
+
+    let rows = [...MOCK_DASHBOARD_DATA];
+
+    // ==================== 필터링 ====================
+
+    // 기업명 검색
+    if (companyNameSearch) {
+      rows = rows.filter((row) =>
+        row.companyName.toLowerCase().includes(companyNameSearch)
+      );
+    }
+
+    // 기업 규모 필터
+    if (filters?.companySizes?.length) {
+      const sizes = new Set(filters.companySizes);
+      rows = rows.filter((row) => {
+        const size = row.companySize;
+        return size ? sizes.has(size) : false;
+      });
+    }
+
+    // 담당자 필터
+    if (filters?.managers?.length) {
+      const managers = new Set(filters.managers);
+      rows = rows.filter((row) => row.manager && managers.has(row.manager));
+    }
+
+    // 카테고리 필터
+    if (filters?.categories?.length) {
+      const categories = new Set(filters.categories);
+      rows = rows.filter((row) => row.category && categories.has(row.category));
+    }
+
+    // 가능성 필터
+    if (filters?.possibilities?.length) {
+      const possibilities = new Set(filters.possibilities);
+      rows = rows.filter((row) => row.current.possibility && possibilities.has(row.current.possibility));
+    }
+
+    // 진행 단계 필터
+    if (filters?.stages?.length) {
+      rows = rows.filter((row) => {
+        return filters.stages?.some(stage => {
+          if (stage === 'test') return row.current.test;
+          if (stage === 'quote') return row.current.quote;
+          if (stage === 'approval') return row.current.approval;
+          if (stage === 'contract') return row.current.contract;
+          return false;
+        });
+      });
+    }
+
+    // 계약금액 범위 필터
+    if (filters?.contractAmountRange) {
+      const min = filters.contractAmountRange.minMan
+        ? filters.contractAmountRange.minMan * 10000
+        : null;
+      const max = filters.contractAmountRange.maxMan
+        ? filters.contractAmountRange.maxMan * 10000
+        : null;
+      rows = rows.filter((row) => inRange(row.contractAmount ?? null, min, max));
+    }
+
+    // 예상 매출 범위 필터
+    if (filters?.expectedRevenueRange) {
+      const min = filters.expectedRevenueRange.minMan
+        ? filters.expectedRevenueRange.minMan * 10000
+        : null;
+      const max = filters.expectedRevenueRange.maxMan
+        ? filters.expectedRevenueRange.maxMan * 10000
+        : null;
+      rows = rows.filter((row) => {
+        const expectedRevenue = calculateExpectedRevenue(row.current.targetRevenue, row.current.possibility);
+        return inRange(expectedRevenue, min, max);
+      });
+    }
+
+    // 목표 월 필터
+    if (filters?.targetMonths?.length) {
+      const months = new Set(filters.targetMonths);
+      rows = rows.filter((row) => row.current.targetMonth && months.has(row.current.targetMonth));
+    }
+
+    // ==================== 정렬 ====================
+
+    if (body.sort) {
+      const { field, order } = body.sort;
+      const modifier = order === "desc" ? -1 : 1;
+      rows = [...rows].sort((a, b) => {
+        const compareStrings = (x: string | null | undefined, y: string | null | undefined) =>
+          ((x || "").localeCompare(y || "")) * modifier;
+
+        switch (field) {
+          case "companyName":
+            return compareStrings(a.companyName, b.companyName);
+          case "companySize":
+            return compareStrings(a.companySize ?? null, b.companySize ?? null);
+          case "manager":
+            return compareStrings(a.manager ?? null, b.manager ?? null);
+          case "category":
+            return compareStrings(a.category ?? null, b.category ?? null);
+          case "trustIndex":
+            return ((a.current.trustIndex ?? 0) - (b.current.trustIndex ?? 0)) * modifier;
+          case "contractAmount":
+            return ((a.contractAmount ?? 0) - (b.contractAmount ?? 0)) * modifier;
+          case "possibility": {
+            const aVal = Number((a.current.possibility || "0").replace("%", ""));
+            const bVal = Number((b.current.possibility || "0").replace("%", ""));
+            return (aVal - bVal) * modifier;
+          }
+          case "expectedRevenue": {
+            const aRev = calculateExpectedRevenue(a.current.targetRevenue, a.current.possibility);
+            const bRev = calculateExpectedRevenue(b.current.targetRevenue, b.current.possibility);
+            return (aRev - bRev) * modifier;
+          }
+          case "targetDate": {
+            const aMonth = a.current.targetMonth ?? 0;
+            const bMonth = b.current.targetMonth ?? 0;
+            return (aMonth - bMonth) * modifier;
+          }
+          default:
+            return 0;
+        }
+      });
+    }
+
+    // ==================== 페이지네이션 ====================
+
+    const total = rows.length;
+    const start = (page - 1) * pageSize;
+    const paged = rows.slice(start, start + pageSize);
+
+    const response: DashboardTableResponse = {
+      rows: paged,
+      total,
+      currentPage: page,
+      pageSize,
+    };
+
+    console.log('[MSW] 📤 Sending response:', {
+      totalRows: response.total,
+      pagedRows: response.rows.length,
+      page: response.currentPage,
+    });
+
+    return HttpResponse.json(response);
+  }
+);
+

@@ -1,9 +1,11 @@
 import { mergeQueryKeys } from '@lukemorales/query-key-factory';
 
+import { customerDetailQueryKeys } from './customerDetailApiController/queryKey';
 import { dashboardQueryKeys } from './dashboardApiController/queryKey';
 
 export const queryKeys = mergeQueryKeys(
   dashboardQueryKeys,
+  customerDetailQueryKeys,
 );
 
 /**
