@@ -24,7 +24,9 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./index.module.scss";
 
 import type { TimePeriodType } from "@/App";
 const { Title, Text: AntText } = Typography;
@@ -704,13 +706,13 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       ),
       onFilter: (value, record) => record.productUsage.includes(value as ProductType),
       render: (products: string[]) => (
-        <Space size={4} wrap>
+        <div className={styles.tagGroup}>
           {products.map((product) => (
             <Tag key={product} color="blue" bordered>
               {product}
             </Tag>
           ))}
-        </Space>
+        </div>
       ),
       width: 180,
     },
@@ -752,16 +754,16 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       render: (_, record) => {
         const past = record._periodData?.pastTrustIndex ?? null;
         const current = record.trustIndex || 0;
-        const color =
-          past !== null && current > past
-            ? "green"
-            : past !== null && current < past
-              ? "red"
-              : "default";
+        const isPositive = past !== null && current > past;
+        const isNegative = past !== null && current < past;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
         return (
-          <Tag color={color}>
-            {past !== null ? `${past} → ${current}` : current}
-          </Tag>
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{past ?? current}</span>
+            <ArrowRight size={10} />
+            <span>{current}</span>
+          </div>
         );
       },
       width: 150,
@@ -968,12 +970,16 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       render: (_, record) => {
         const past = record._periodData?.pastTargetRevenue ?? 0;
         const current = record.adoptionDecision.targetRevenue ?? 0;
-        const diff = current - past;
-        const color = diff > 0 ? "green" : diff < 0 ? "red" : "default";
+        const isPositive = current > past;
+        const isNegative = current < past;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
         return (
-          <Tag color={color}>
-            {formatMan(past)} → {formatMan(current)}
-          </Tag>
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{formatMan(past)}</span>
+            <ArrowRight size={10} />
+            <span>{formatMan(current)}</span>
+          </div>
         );
       },
       width: 180,
@@ -1048,16 +1054,20 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       ),
       onFilter: (value, record) => record.adoptionDecision.possibility === value,
       render: (_, record) => {
-        const past = record._periodData?.pastPossibility;
+        const past = record._periodData?.pastPossibility || "0%";
         const current = record.adoptionDecision.possibility;
-        const pastNum = Number((past || "0").replace("%", ""));
+        const pastNum = Number(past.replace("%", ""));
         const currentNum = Number((current || "0").replace("%", ""));
-        const diff = currentNum - pastNum;
-        const color = diff > 0 ? "green" : diff < 0 ? "red" : "default";
+        const isPositive = currentNum > pastNum;
+        const isNegative = currentNum < pastNum;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
         return (
-          <Tag color={color}>
-            {past} → {current}
-          </Tag>
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{past}</span>
+            <ArrowRight size={10} />
+            <span>{current}</span>
+          </div>
         );
       },
       width: 150,
@@ -1164,12 +1174,16 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         const past = record._periodData?.pastExpectedRevenue ?? 0;
         const current =
           record._periodData?.currentExpectedRevenue ?? record.expectedRevenue;
-        const diff = current - past;
-        const color = diff > 0 ? "green" : diff < 0 ? "red" : "default";
+        const isPositive = current > past;
+        const isNegative = current < past;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
         return (
-          <Tag color={color}>
-            {formatMan(past)} → {formatMan(current)}
-          </Tag>
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{formatMan(past)}</span>
+            <ArrowRight size={10} />
+            <span>{formatMan(current)}</span>
+          </div>
         );
       },
       width: 180,
@@ -1276,14 +1290,19 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       render: (_, record) => {
         const past = record._periodData?.pastTargetDate || "-";
         const current = record.adoptionDecision.targetDate || "-";
-        const color = targetDateColor(
-          record._periodData?.pastTargetDate,
-          record.adoptionDecision.targetDate
-        );
+        const pastDate = parseTargetDate(past);
+        const currentDate = parseTargetDate(current);
+        // 목표일자가 당겨지면 긍정적 (더 빨리 매출 발생), 늦춰지면 부정적
+        const isPositive = pastDate && currentDate && currentDate.getTime() < pastDate.getTime();
+        const isNegative = pastDate && currentDate && currentDate.getTime() > pastDate.getTime();
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
         return (
-          <Tag color={color}>
-            {past} → {current}
-          </Tag>
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{past}</span>
+            <ArrowRight size={10} />
+            <span>{current}</span>
+          </div>
         );
       },
       width: 150,
