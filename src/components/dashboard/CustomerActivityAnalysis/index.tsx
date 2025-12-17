@@ -13,7 +13,7 @@ import { Text, Card, Badge, Modal } from "@/components/common/atoms";
 import { CompanyInfoCard } from "@/components/dashboard/CompanyInfoCard";
 import { ContentInfoCard } from "@/components/dashboard/ContentInfoCard";
 import { Customer } from "@/types/customer";
-import type { TimePeriodType } from "@/App";
+import type { TimePeriodType } from "@/types/common";
 import styles from "./index.module.scss";
 
 interface ContentAnalysisProps {

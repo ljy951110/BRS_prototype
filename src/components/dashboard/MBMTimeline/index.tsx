@@ -30,7 +30,7 @@ import {
   PossibilityType,
 } from "@/types/customer";
 import { formatCurrency } from "@/data/mockData";
-import type { TimePeriodType } from "@/App";
+import type { TimePeriodType } from "@/types/common";
 import styles from "./index.module.scss";
 
 interface MBMTimelineProps {

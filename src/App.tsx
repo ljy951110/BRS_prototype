@@ -1,11 +1,27 @@
-import { DashboardTableRequest, fetchDashboardTable, ProgressStage, TimePeriodApi } from "@/api";
 import { Charts } from "@/components/dashboard/Charts";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
 import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
-import { Customer, PossibilityType } from "@/types/customer";
+import type {
+  Category,
+  CompanySize,
+  DashboardTableRequest,
+  Possibility,
+  ProgressStage as ProgressStageType,
+} from "@/repository/openapi/model";
+import { ProgressStage } from "@/repository/openapi/model";
+import { useGetDashboardCompanies, useGetFilterOptions } from "@/repository/query/dashboardApiController/queryHook";
+import { TimePeriodType } from "@/types/common";
+import {
+  CategoryType,
+  ChangeDirectionType,
+  CompanySizeType,
+  Customer,
+  PossibilityType,
+  TrustLevelType
+} from "@/types/customer";
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -14,7 +30,6 @@ import {
   TableOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
 import {
   ConfigProvider,
   DatePicker,
@@ -35,21 +50,13 @@ import styles from "./App.module.scss";
 const { RangePicker } = DatePicker;
 
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
-export type TimePeriodType = "1w" | "1m" | "6m" | "1y";
 
-const TIME_PERIOD_TO_API: Record<TimePeriodType, TimePeriodApi> = {
-  "1w": "WEEK",
-  "1m": "MONTH",
-  "6m": "HALF_YEAR",
-  "1y": "YEAR",
-};
-
-const PROGRESS_STAGE_MAP: Record<ProgressStatus, ProgressStage | null> = {
+const PROGRESS_STAGE_MAP: Record<ProgressStatus, ProgressStageType | null> = {
   all: null,
-  test: "TEST",
-  quote: "QUOTE",
-  approval: "APPROVAL",
-  contract: "CLOSING",
+  test: ProgressStage.TEST,
+  quote: ProgressStage.QUOTE,
+  approval: ProgressStage.APPROVAL,
+  contract: ProgressStage.CONTRACT,
   none: null,
 };
 
@@ -82,13 +89,6 @@ const DEFAULT_FILTERS: TabFilters = {
   selectedPossibility: "all",
   selectedProgress: "all",
 };
-
-const TIME_PERIOD_OPTIONS: { value: TimePeriodType; label: string }[] = [
-  { value: "1w", label: "최근 1주일" },
-  { value: "1m", label: "최근 1달" },
-  { value: "6m", label: "최근 반기" },
-  { value: "1y", label: "최근 1년" },
-];
 
 const TAB_FILTER_UI: Record<
   ViewMode,
@@ -188,13 +188,13 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       filters.managers = [currentFilters.selectedManager];
     }
     if (currentFilters.selectedCategory !== "all") {
-      filters.categories = [currentFilters.selectedCategory as Customer["category"]];
+      filters.categories = [currentFilters.selectedCategory as Category];
     }
     if (currentFilters.selectedCompanySize !== "all") {
-      filters.companySizes = [currentFilters.selectedCompanySize as Customer["companySize"]];
+      filters.companySizes = [currentFilters.selectedCompanySize as CompanySize];
     }
     if (currentFilters.selectedPossibility !== "all") {
-      filters.possibilities = [currentFilters.selectedPossibility as PossibilityType];
+      filters.possibilities = [currentFilters.selectedPossibility as Possibility];
     }
     const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
     if (stage) {
@@ -202,7 +202,10 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     }
 
     return {
-      timePeriod: TIME_PERIOD_TO_API[timePeriod],
+      dateRange: {
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD'),
+      },
       search:
         currentFilters.searchQuery.trim().length > 0
           ? { companyName: currentFilters.searchQuery.trim() }
@@ -210,7 +213,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       filters: Object.keys(filters).length ? filters : undefined,
       pagination: { page: 1, pageSize: 300 },
     };
-  }, [currentFilters, timePeriod]);
+  }, [currentFilters, dateRange]);
 
   // React Query로 API 호출 (약간의 지연으로 MSW 준비 대기)
   const [mswReady, setMswReady] = useState(false);
@@ -224,39 +227,135 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const { data: apiData, isLoading } = useQuery({
-    queryKey: ["dashboard-table", requestBody],
-    queryFn: () => fetchDashboardTable(requestBody),
+  // 필터 옵션 조회
+  const { data: filterOptions } = useGetFilterOptions({
+    enabled: mswReady,
+  });
+
+  // 테이블 데이터 조회
+  const { data: apiData, isLoading } = useGetDashboardCompanies(requestBody, {
     staleTime: 60 * 1000,
     enabled: mswReady, // MSW 준비 후에만 쿼리 실행
   });
 
-  // DashboardTableRow를 Customer로 타입 변환
-  const tableRows = useMemo(
-    () => (apiData?.rows ?? []) as unknown as Customer[],
-    [apiData?.rows]
-  );
+  // DashboardTableRow를 Customer로 변환
+  const tableRows = useMemo(() => {
+    if (!apiData?.data?.rows) return [];
 
-  // 고유 담당자 목록 (API 응답 기반)
+    return apiData.data.rows.map((row) => {
+      const current = row.current;
+      const previous = row.previous;
+
+      // 신뢰지수 변화 계산
+      const currentTrust = current.trustIndex ?? 0;
+      const previousTrust = previous.trustIndex ?? 0;
+      const changeAmount = currentTrust - previousTrust;
+      const changeDirection: ChangeDirectionType =
+        changeAmount > 0 ? 'up' : changeAmount < 0 ? 'down' : 'none';
+
+      // 신뢰 레벨 계산 (P1: 80+, P2: 60-79, P3: 0-59)
+      const getTrustLevel = (trust: number): TrustLevelType => {
+        if (trust >= 80) return 'P1';
+        if (trust >= 60) return 'P2';
+        return 'P3';
+      };
+
+      // Category 매핑
+      const mapCategory = (cat: string | null | undefined): CategoryType => {
+        if (cat === 'recruit') return '채용';
+        if (cat === 'public') return '공공';
+        if (cat === 'performance') return '성과';
+        return '채용'; // 기본값
+      };
+
+      return {
+        no: row.companyId,
+        companyName: row.companyName,
+        companySize: row.companySize as CompanySizeType,
+        category: mapCategory(row.category),
+        productUsage: row.productUsage || [],
+        manager: row.manager ?? '',
+        renewalDate: null,
+        contractAmount: row.contractAmount ?? null,
+        hDot: false,
+        trustLevel: getTrustLevel(currentTrust),
+        trustIndex: currentTrust,
+        changeAmount,
+        changeDirection,
+        rank: null,
+        trustHistory: undefined,
+        salesActions: [],
+        contentEngagements: [],
+        attendance: {},
+        trustFormation: {
+          customerResponse: '중',
+          detail: '',
+          targetDate: null,
+          targetRevenueMin: null,
+          targetRevenueMax: null,
+          interestFunction: null,
+        },
+        valueRecognition: {
+          customerResponse: '중',
+          possibility: current.possibility as PossibilityType ?? '0%',
+          targetRevenue: current.targetRevenue,
+          targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
+          test: current.test ?? false,
+          quote: current.quote ?? false,
+          approval: current.approval ?? false,
+          contract: current.contract ?? false,
+          simulation: null,
+        },
+        adoptionDecision: {
+          customerResponse: '중',
+          possibility: current.possibility as PossibilityType ?? '0%',
+          targetRevenue: current.targetRevenue,
+          targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
+          test: current.test ?? false,
+          quote: current.quote ?? false,
+          approval: current.approval ?? false,
+          contract: current.contract ?? false,
+          simulation: null,
+        },
+        _periodData: {
+          pastTrustIndex: previousTrust,
+          pastPossibility: previous.possibility as PossibilityType ?? '0%',
+          pastCustomerResponse: '중',
+          pastTargetRevenue: previous.targetRevenue,
+          pastTargetDate: previous.targetMonth ? `2024-${String(previous.targetMonth).padStart(2, '0')}-01` : null,
+          pastTest: previous.test ?? false,
+          pastQuote: previous.quote ?? false,
+          pastApproval: previous.approval ?? false,
+          pastContract: previous.contract ?? false,
+          pastExpectedRevenue: previous.targetRevenue ?? 0,
+          currentExpectedRevenue: current.targetRevenue ?? 0,
+          possibilityChange: 'none',
+          responseChange: 'none',
+        },
+      } as Customer;
+    });
+  }, [apiData?.data?.rows]);
+
+  // 필터 옵션들 (API에서 가져옴)
   const managers = useMemo(
-    () => [...new Set(tableRows.map((c) => c.manager))].sort(),
-    [tableRows]
+    () => filterOptions?.data?.managers ?? [],
+    [filterOptions]
   );
 
   const categories = useMemo(
-    () => [...new Set(tableRows.map((c) => c.category))].sort(),
-    [tableRows]
+    () => filterOptions?.data?.categories ?? [],
+    [filterOptions]
   );
 
   const companySizes = useMemo(
-    () => [...new Set(tableRows.map((c) => c.companySize || "미정"))].sort(),
-    [tableRows]
+    () => filterOptions?.data?.companySizes ?? [],
+    [filterOptions]
   );
 
   // 진행상태 "없음" 필터는 프론트에서 추가 처리
   const filteredData = useMemo(() => {
     if (currentFilters.selectedProgress === "none") {
-      return tableRows.filter((customer) => {
+      return tableRows.filter((customer: Customer) => {
         const ad = customer.adoptionDecision;
         return !(ad.test || ad.quote || ad.approval || ad.contract);
       });
@@ -284,7 +383,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           style={{ minWidth: 160 }}
           options={[
             { value: "all", label: "전체 담당자" },
-            ...managers.map((m) => ({ value: m, label: m })),
+            ...managers.map((m: string) => ({ value: m, label: m })),
           ]}
         />
       )}
@@ -296,7 +395,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           style={{ minWidth: 160 }}
           options={[
             { value: "all", label: "전체 기업 규모" },
-            ...companySizes.map((size) => ({ value: size, label: size })),
+            ...companySizes.map((size: CompanySize) => ({ value: size, label: size })),
           ]}
         />
       )}
@@ -308,7 +407,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           style={{ minWidth: 160 }}
           options={[
             { value: "all", label: "조직 구분" },
-            ...categories.map((c) => ({ value: c, label: c })),
+            ...categories.map((c: Category) => ({ value: c, label: c })),
           ]}
         />
       )}

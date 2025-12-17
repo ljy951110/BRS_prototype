@@ -24,8 +24,8 @@ export const ProductType = {
     ATS: 'ATS',
     SR: '역검SR',
     INHR: 'INHR+통합',
-    : '역검',
-    2: '이탈사'
+    RV: '역검',
+    CHURN: '이탈사'
 } as const;
 
 export type ProductType = typeof ProductType[keyof typeof ProductType];

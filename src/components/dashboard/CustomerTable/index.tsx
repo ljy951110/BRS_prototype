@@ -28,7 +28,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 
-import type { TimePeriodType } from "@/App";
+import type { TimePeriodType } from "@/types/common";
 const { Title, Text: AntText } = Typography;
 
 interface CustomerTableProps {
@@ -158,6 +158,11 @@ const renderProgressTags = (
   const past = (record as TableRow)._periodData;
   const hasPastData = !!past;
 
+  // adoptionDecision이 없는 경우 빈 태그 반환
+  if (!ad) {
+    return <Space size={6}></Space>;
+  }
+
   const activeStyle = {
     borderColor: colors.activeBorder,
     color: colors.activeText,
@@ -175,7 +180,7 @@ const renderProgressTags = (
   };
 
   const stages: {
-    key: keyof typeof ad;
+    key: "test" | "quote" | "approval" | "contract";
     label: string;
     pastFlag?: boolean;
     active: boolean;
@@ -300,8 +305,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         expectedRevenue:
           c._periodData?.currentExpectedRevenue ??
           calculateExpectedRevenue(
-            c.adoptionDecision.targetRevenue,
-            c.adoptionDecision.possibility
+            c.adoptionDecision?.targetRevenue,
+            c.adoptionDecision?.possibility
           ),
       }))
       .filter((row) => {
@@ -314,10 +319,10 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         }
 
         // 목표매출 범위 필터
-        if (targetRevenueMin !== null && (row.adoptionDecision.targetRevenue ?? 0) < targetRevenueMin) {
+        if (targetRevenueMin !== null && (row.adoptionDecision?.targetRevenue ?? 0) < targetRevenueMin) {
           return false;
         }
-        if (targetRevenueMax !== null && (row.adoptionDecision.targetRevenue ?? 0) > targetRevenueMax) {
+        if (targetRevenueMax !== null && (row.adoptionDecision?.targetRevenue ?? 0) > targetRevenueMax) {
           return false;
         }
 
@@ -331,7 +336,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
 
         // 목표일자 월 필터
         if (targetMonths.length > 0) {
-          const targetDate = parseTargetDate(row.adoptionDecision.targetDate);
+          const targetDate = parseTargetDate(row.adoptionDecision?.targetDate);
           if (!targetDate) return false; // 목표일자가 없으면 제외
           const month = targetDate.getMonth() + 1;
           if (!targetMonths.includes(month)) return false;
@@ -380,17 +385,17 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           case "contractAmount":
             return ((a.contractAmount ?? 0) - (b.contractAmount ?? 0)) * modifier;
           case "targetRevenue":
-            return ((a.adoptionDecision.targetRevenue ?? 0) - (b.adoptionDecision.targetRevenue ?? 0)) * modifier;
+            return ((a.adoptionDecision?.targetRevenue ?? 0) - (b.adoptionDecision?.targetRevenue ?? 0)) * modifier;
           case "possibility": {
-            const aVal = Number((a.adoptionDecision.possibility || "0").replace("%", ""));
-            const bVal = Number((b.adoptionDecision.possibility || "0").replace("%", ""));
+            const aVal = Number((a.adoptionDecision?.possibility || "0").replace("%", ""));
+            const bVal = Number((b.adoptionDecision?.possibility || "0").replace("%", ""));
             return (aVal - bVal) * modifier;
           }
           case "expectedRevenue":
             return (a.expectedRevenue - b.expectedRevenue) * modifier;
           case "targetDate": {
-            const aDate = new Date(a.adoptionDecision.targetDate || 0).getTime();
-            const bDate = new Date(b.adoptionDecision.targetDate || 0).getTime();
+            const aDate = new Date(a.adoptionDecision?.targetDate || 0).getTime();
+            const bDate = new Date(b.adoptionDecision?.targetDate || 0).getTime();
             return (aDate - bDate) * modifier;
           }
           case "lastContact": {
@@ -411,7 +416,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       Array.from(
         new Set(
           tableData
-            .map((row) => row.adoptionDecision.possibility)
+            .map((row) => row.adoptionDecision?.possibility)
             .filter((p): p is PossibilityType => !!p)
         )
       ).map((value) => ({ label: value, value })),
@@ -427,7 +432,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
     []
   );
 
-  const getProgressLevel = (ad: Customer["adoptionDecision"]) => {
+  const getProgressLevel = (ad: Customer["adoptionDecision"] | undefined) => {
+    if (!ad) return -1;
     if (ad.contract) return 3;
     if (ad.approval) return 2;
     if (ad.quote) return 1;
@@ -1181,7 +1187,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       ),
       render: (_, record) => {
         const past = record._periodData?.pastTargetRevenue ?? 0;
-        const current = record.adoptionDecision.targetRevenue ?? 0;
+        const current = record.adoptionDecision?.targetRevenue ?? 0;
         const isPositive = current > past;
         const isNegative = current < past;
         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
@@ -1264,12 +1270,12 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       filterIcon: (filtered) => (
         <FilterFilled style={{ color: filtered || sortField === "possibility" ? token.colorPrimary : undefined }} />
       ),
-      onFilter: (value, record) => record.adoptionDecision.possibility === value,
+      onFilter: (value, record) => record.adoptionDecision?.possibility === value,
       render: (_, record) => {
         const past = record._periodData?.pastPossibility || "0%";
-        const current = record.adoptionDecision.possibility;
+        const current = record.adoptionDecision?.possibility || "0%";
         const pastNum = Number(past.replace("%", ""));
-        const currentNum = Number((current || "0").replace("%", ""));
+        const currentNum = Number(current.replace("%", ""));
         const isPositive = currentNum > pastNum;
         const isNegative = currentNum < pastNum;
         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
@@ -1478,7 +1484,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       ),
       render: (_, record) => {
         const past = record._periodData?.pastTargetDate || "-";
-        const current = record.adoptionDecision.targetDate || "-";
+        const current = record.adoptionDecision?.targetDate || "-";
         const pastDate = parseTargetDate(past);
         const currentDate = parseTargetDate(current);
         // 목표일자가 당겨지면 긍정적 (더 빨리 매출 발생), 늦춰지면 부정적
@@ -1499,7 +1505,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   ];
 
   return (
-    <Card bodyStyle={{ padding: 0 }}>
+    <Card styles={{ body: { padding: 0 } }}>
       <Table
         columns={columns}
         dataSource={tableData}
@@ -1553,7 +1559,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                           selectedCustomer._periodData?.pastPossibility !==
                             undefined &&
                             Number(
-                              selectedCustomer.adoptionDecision.possibility.replace(
+                              (selectedCustomer.adoptionDecision?.possibility || "0%").replace(
                                 "%",
                                 ""
                               )
@@ -1568,7 +1574,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                             : selectedCustomer._periodData?.pastPossibility !==
                               undefined &&
                               Number(
-                                selectedCustomer.adoptionDecision.possibility.replace(
+                                (selectedCustomer.adoptionDecision?.possibility || "0%").replace(
                                   "%",
                                   ""
                                 )
@@ -1584,7 +1590,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                         }
                       >
                         {selectedCustomer._periodData?.pastPossibility ?? "-"} →{" "}
-                        {selectedCustomer.adoptionDecision.possibility}
+                        {selectedCustomer.adoptionDecision?.possibility || "0%"}
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="계약금액">
@@ -1616,12 +1622,12 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                         color={
                           selectedCustomer._periodData?.pastTargetRevenue !==
                             undefined &&
-                            (selectedCustomer.adoptionDecision.targetRevenue || 0) >
+                            (selectedCustomer.adoptionDecision?.targetRevenue || 0) >
                             (selectedCustomer._periodData?.pastTargetRevenue || 0)
                             ? "green"
                             : selectedCustomer._periodData?.pastTargetRevenue !==
                               undefined &&
-                              (selectedCustomer.adoptionDecision.targetRevenue || 0) <
+                              (selectedCustomer.adoptionDecision?.targetRevenue || 0) <
                               (selectedCustomer._periodData?.pastTargetRevenue || 0)
                               ? "red"
                               : "default"
@@ -1632,7 +1638,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                         )}{" "}
                         →{" "}
                         {formatMan(
-                          selectedCustomer.adoptionDecision.targetRevenue
+                          selectedCustomer.adoptionDecision?.targetRevenue
                         )}
                       </Tag>
                     </Descriptions.Item>
@@ -1664,8 +1670,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                           selectedCustomer._periodData
                             ?.currentExpectedRevenue ??
                           calculateExpectedRevenue(
-                            selectedCustomer.adoptionDecision.targetRevenue,
-                            selectedCustomer.adoptionDecision.possibility
+                            selectedCustomer.adoptionDecision?.targetRevenue,
+                            selectedCustomer.adoptionDecision?.possibility
                           )
                         )}
                       </Tag>
@@ -1681,12 +1687,12 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                       <Tag
                         color={targetDateColor(
                           selectedCustomer._periodData?.pastTargetDate,
-                          selectedCustomer.adoptionDecision.targetDate
+                          selectedCustomer.adoptionDecision?.targetDate
                         )}
                       >
                         {(selectedCustomer._periodData?.pastTargetDate || "-") +
                           " → " +
-                          (selectedCustomer.adoptionDecision.targetDate || "-")}
+                          (selectedCustomer.adoptionDecision?.targetDate || "-")}
                       </Tag>
                     </Descriptions.Item>
                   </Descriptions>

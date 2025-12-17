@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Minus, FlaskConical, FileText, ThumbsUp, File
 import { Text, Card, Badge } from '@/components/common/atoms';
 import { Customer } from '@/types/customer';
 import { formatCompactCurrency } from '@/data/mockData';
-import type { TimePeriodType } from '@/App';
+import type { TimePeriodType } from '@/types/common';
 import styles from './index.module.scss';
 
 interface PipelineBoardProps {

@@ -22,26 +22,36 @@ interface ApiErrorRs<T extends string = string> {
 
 /**
  * 환경변수에 따른 API baseURL을 반환합니다.
- * - development: MSW 사용으로 baseURL 불필요 (상대경로)
- * - production: 실제 API 서버 URL
+ * - VITE_MODE=local: MSW 사용 (baseURL 빈 문자열)
+ * - VITE_API_URL 설정: 지정된 URL 사용
+ * - 기타: 기본 API 서버 URL
  */
 export const getBaseUrl = (): string => {
-  const env = import.meta.env.MODE; // 'development' | 'production'
+  const mode = import.meta.env.VITE_MODE || import.meta.env.MODE;
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // 환경 변수로 명시적으로 API URL이 설정된 경우
-  if (apiUrl) {
-    return apiUrl;
-  }
+  console.log('[Axios] Environment check:', {
+    VITE_MODE: import.meta.env.VITE_MODE,
+    MODE: import.meta.env.MODE,
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    resolved_mode: mode,
+  });
 
-  // 개발 환경: MSW 사용, baseURL 없음 (상대 경로)
-  if (env === 'development') {
+  // MODE가 'local'이면 MSW 사용 (빈 문자열 = 상대 경로)
+  if (mode === 'local') {
+    console.log('[Axios] ✅ Using MSW (MODE: local, baseURL: "")');
     return '';
   }
 
-  // 프로덕션 환경: 실제 API 서버 URL
-  // TODO: 실제 프로덕션 API URL로 변경 필요
-  return 'https://api.example.com';
+  // 환경 변수로 명시적으로 API URL이 설정된 경우
+  if (apiUrl) {
+    console.log('[Axios] Using API URL from env:', apiUrl);
+    return apiUrl;
+  }
+
+  // 기본: 실제 API 서버 URL
+  console.log('[Axios] Using default API URL');
+  return 'http://10.11.30.192:8001';
 };
 
 const baseURL = getBaseUrl();

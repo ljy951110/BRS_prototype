@@ -1,4 +1,4 @@
-import type { TimePeriodType } from "@/App";
+import type { TimePeriodType } from "@/types/common";
 import { formatCompactCurrency, getDataWithPeriodChange } from "@/data/mockData";
 import { Customer, SalesAction } from "@/types/customer";
 import {

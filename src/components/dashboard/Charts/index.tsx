@@ -19,7 +19,7 @@ import {
 import { Text, Card } from '@/components/common/atoms';
 import { Customer } from '@/types/customer';
 import { formatCompactCurrency, getDataWithPeriodChange } from '@/data/mockData';
-import type { TimePeriodType } from '@/App';
+import type { TimePeriodType } from '@/types/common';
 import styles from './index.module.scss';
 
 interface ChartsProps {

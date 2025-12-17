@@ -1,12 +1,12 @@
+import type { TimePeriodType } from "@/types/common";
 import {
-  Customer,
-  TrustHistory,
   ChangeDirectionType,
-  PossibilityType,
+  Customer,
   CustomerResponseType,
+  PossibilityType,
   SalesAction,
+  TrustHistory,
 } from "@/types/customer";
-import type { TimePeriodType } from "@/App";
 // 가능성 숫자 변환
 export const POSSIBILITY_VALUE: Record<PossibilityType, number> = {
   "90%": 0.9,
@@ -51,9 +51,23 @@ const getAdoptionFromSalesActions = (
     quote?: boolean;
     approval?: boolean;
     contract?: boolean;
-  },
+  } | undefined,
   period: TimePeriodType
 ): PastAdoptionData => {
+  // currentAdoption이 undefined인 경우 기본값 반환
+  if (!currentAdoption) {
+    return {
+      possibility: "0%",
+      customerResponse: "하",
+      targetRevenue: null,
+      targetDate: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    };
+  }
+
   const defaultResult: PastAdoptionData = {
     possibility: currentAdoption.possibility,
     customerResponse: currentAdoption.customerResponse,
@@ -194,6 +208,28 @@ export const getDataWithPeriodChange = (
       customer.trustIndex,
       period
     );
+    // adoptionDecision이 없는 경우 기본값 처리
+    if (!customer.adoptionDecision) {
+      return {
+        ...customer,
+        _periodData: {
+          pastTrustIndex: customer.trustIndex ?? null,
+          pastPossibility: "0%",
+          pastCustomerResponse: "하",
+          pastTargetRevenue: null,
+          pastExpectedRevenue: 0,
+          currentExpectedRevenue: 0,
+          possibilityChange: "none",
+          responseChange: "none",
+          pastTest: false,
+          pastQuote: false,
+          pastApproval: false,
+          pastContract: false,
+          pastTargetDate: null,
+        },
+      };
+    }
+
     // salesActions에서 기간 시작 시점의 가능성/고객반응 가져오기
     const pastAdoption = getAdoptionFromSalesActions(
       customer.salesActions,
@@ -256,8 +292,8 @@ export const getDataWithPeriodChange = (
           possibilityChange > 0
             ? "up"
             : possibilityChange < 0
-            ? "down"
-            : "none",
+              ? "down"
+              : "none",
         responseChange:
           responseChange > 0 ? "up" : responseChange < 0 ? "down" : "none",
         // 진행상태 과거값
