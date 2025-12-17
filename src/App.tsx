@@ -17,6 +17,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import {
   ConfigProvider,
+  DatePicker,
   Input,
   Layout,
   Select,
@@ -27,8 +28,11 @@ import {
   theme,
   Typography
 } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./App.module.scss";
+
+const { RangePicker } = DatePicker;
 
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
 export type TimePeriodType = "1w" | "1m" | "6m" | "1y";
@@ -141,7 +145,11 @@ interface AppContentProps {
 function AppContent({ isDark, onToggleTheme }: AppContentProps) {
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
-  const [timePeriod, setTimePeriod] = useState<TimePeriodType>("1w");
+  // 기본값: 최근 1주일 (오늘 - 7일 ~ 오늘)
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(7, "day"),
+    dayjs(),
+  ]);
 
   // 탭별 독립적인 필터 상태
   const [tabFilters, setTabFilters] = useState<TabFilterState>({
@@ -162,6 +170,15 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       [viewMode]: { ...prev[viewMode], [key]: value },
     }));
   };
+
+  // dateRange에서 일수를 계산하여 가장 가까운 TimePeriodType으로 변환
+  const timePeriod: TimePeriodType = useMemo(() => {
+    const days = dateRange[1].diff(dateRange[0], "day");
+    if (days <= 7) return "1w";
+    if (days <= 30) return "1m";
+    if (days <= 180) return "6m";
+    return "1y";
+  }, [dateRange]);
 
   // API 요청 바디 생성
   const requestBody: DashboardTableRequest = useMemo(() => {
@@ -403,24 +420,6 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         style={{ background: token.colorBgLayout }}
       >
         <div className={styles.viewToggleSection}>
-          <Space size="middle">
-            <Select
-              value={timePeriod}
-              onChange={(val) => setTimePeriod(val as TimePeriodType)}
-              options={TIME_PERIOD_OPTIONS}
-              suffixIcon={<CalendarOutlined />}
-              style={{ minWidth: 160 }}
-            />
-            <Select
-              value={currentFilters.selectedCategory}
-              onChange={(val) => updateCurrentFilter("selectedCategory", val)}
-              style={{ minWidth: 160 }}
-              options={[
-                { value: "all", label: "전체 조직" },
-                ...categories.map((c) => ({ value: c, label: c })),
-              ]}
-            />
-          </Space>
           <Tabs
             activeKey={viewMode}
             onChange={(key) => setViewMode(key as ViewMode)}
@@ -438,11 +437,28 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
 
           <section className={styles.contentSection}>
             {viewMode === "table" && (
-              <CustomerTable
-                data={filteredData}
-                timePeriod={timePeriod}
-                loading={isLoading}
-              />
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Space size="middle" align="center">
+                    <Typography.Text strong>조회 기간:</Typography.Text>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={(dates) => {
+                        if (dates && dates[0] && dates[1]) {
+                          setDateRange([dates[0], dates[1]]);
+                        }
+                      }}
+                      format="YYYY-MM-DD"
+                      style={{ width: 280 }}
+                    />
+                  </Space>
+                </div>
+                <CustomerTable
+                  data={filteredData}
+                  timePeriod={timePeriod}
+                  loading={isLoading}
+                />
+              </>
             )}
             {viewMode === "pipeline" && (
               <PipelineBoard data={filteredData} timePeriod={timePeriod} />

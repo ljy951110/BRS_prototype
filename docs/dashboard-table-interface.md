@@ -11,6 +11,7 @@ export interface DashboardTableRequest {
     companySizes?: CompanySizeType[];               // 기업 규모 다중 선택
     managers?: string[];                       // 담당자 다중 선택
     categories?: CategoryType[];                    // 카테고리 다중 선택
+    productUsages?: ProductType[];             // 제품사용 다중 선택 (개별 제품 단위로 필터링)
     possibilities?: PossibilityType[];              // 가능성 다중 선택
     stages?: ProgressStageType[];                   // 진행상태: 최고 단계가 선택 값과 동일한 행만
     contractAmountRange?: { minMan?: number | null; maxMan?: number | null };   // 계약금액(원)
@@ -24,6 +25,7 @@ export interface DashboardTableRequest {
       | "companySize"
       | "manager"
       | "category"
+      | "productUsage"
       | "trustIndex"
       | "contractAmount"
       | "targetRevenue"
@@ -52,11 +54,15 @@ export interface DashboardTableRow {
   companyName: string;                    // 테이블: 기업명
   companySize: CompanySizeType;           // 테이블: 기업 규모
   category: CategoryType;                 // 테이블: 카테고리
+  productUsage: ProductType[];            // 테이블: 제품사용 배열 (예: ["ATS"], ["역검"], ["ATS", "역검SR"])
   manager: string;                        // 테이블: 담당자
   contractAmount: number | null;          // 테이블: 계약금액 (원 단위)
   current: PeriodDataType;                // 테이블: 현재 상태
   previous: PeriodDataType;               // 테이블: 과거 상태 (기간 비교용)
 }
+
+// 제품 타입 정의
+export type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이탈사";
 
 export interface PeriodDataType {
   trustIndex: number | null;              // 신뢰지수

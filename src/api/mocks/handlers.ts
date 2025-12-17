@@ -1,14 +1,14 @@
-import type { TimePeriod } from "@/App";
+import { DashboardTableRequest, ProgressStage } from "@/api";
+import type { TimePeriodType } from "@/App";
 import {
   calculateExpectedRevenue,
   getDataWithPeriodChange,
   mockData,
 } from "@/data/mockData";
-import { Customer, Possibility } from "@/types/customer";
-import { DashboardTableRequest, PROGRESS_STAGE } from "@/api/types/dashboard";
+import { Customer, PossibilityType } from "@/types/customer";
 import { http, HttpResponse } from "msw";
 
-const TIME_PERIOD_MAP: Record<string, TimePeriod> = {
+const TIME_PERIOD_MAP: Record<string, TimePeriodType> = {
   WEEK: "1w",
   MONTH: "1m",
   HALF_YEAR: "6m",
@@ -17,7 +17,7 @@ const TIME_PERIOD_MAP: Record<string, TimePeriod> = {
 
 const getHighestStage = (
   ad: Customer["adoptionDecision"]
-): PROGRESS_STAGE | null => {
+): ProgressStage | null => {
   if (ad.contract) return "CLOSING";
   if (ad.approval) return "APPROVAL";
   if (ad.quote) return "QUOTE";
@@ -90,8 +90,15 @@ export const handlers = [
       rows = rows.filter((row) => categories.has(row.category));
     }
 
+    if (filters?.productUsages?.length) {
+      const productUsages = new Set(filters.productUsages);
+      rows = rows.filter((row) => 
+        row.productUsage.some((product) => productUsages.has(product))
+      );
+    }
+
     if (filters?.possibilities?.length) {
-      const possibilities = new Set<Possibility>(filters.possibilities);
+      const possibilities = new Set<PossibilityType>(filters.possibilities);
       rows = rows.filter((row) =>
         possibilities.has(row.adoptionDecision.possibility)
       );
@@ -152,6 +159,8 @@ export const handlers = [
             return compareStrings(a.manager, b.manager);
           case "category":
             return compareStrings(a.category, b.category);
+          case "productUsage":
+            return compareStrings(a.productUsage.join(","), b.productUsage.join(","));
           case "trustIndex":
             return ((a.trustIndex ?? 0) - (b.trustIndex ?? 0)) * modifier;
           case "contractAmount":

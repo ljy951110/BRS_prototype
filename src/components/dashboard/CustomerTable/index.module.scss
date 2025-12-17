@@ -1,6 +1,48 @@
 @use '@/styles/variables' as *;
 @use '@/styles/common' as *;
 
+// Ant Design Table 스타일 오버라이드 (origin/1phase_yj 디자인 참고)
+:global {
+  .ant-table-wrapper .ant-table {
+    font-size: $font-size-sm;
+    background: $color-bg-primary;
+    
+    .ant-table-container {
+      background: $color-bg-primary;
+    }
+    
+    .ant-table-thead > tr > th {
+      position: sticky;
+      top: 0;
+      padding: $spacing-md 32px;
+      background: $color-bg-secondary;
+      border-bottom: 1px solid $color-border;
+      border-right: none;
+      font-weight: $font-weight-medium;
+      color: $color-text-secondary;
+      white-space: nowrap;
+      font-size: $font-size-sm;
+    }
+    
+    .ant-table-tbody > tr > td {
+      padding: $spacing-md 32px;
+      font-size: $font-size-sm;
+      background: $color-bg-primary;
+      border-right: none;
+      border-bottom: 1px solid $color-border;
+    }
+    
+    .ant-table-tbody > tr {
+      transition: background $transition-fast;
+      background: $color-bg-primary;
+      
+      &:hover > td {
+        background: $color-bg-hover;
+      }
+    }
+  }
+}
+
 .tableCard {
   overflow: hidden;
 }

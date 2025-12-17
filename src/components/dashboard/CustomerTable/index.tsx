@@ -3,7 +3,7 @@ import {
   calculateExpectedRevenue,
   getDataWithPeriodChange,
 } from "@/data/mockData";
-import { Customer, PossibilityType } from "@/types/customer";
+import { Customer, PossibilityType, ProductType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
   Button,
@@ -44,19 +44,6 @@ const formatMan = (val: number | null | undefined) => {
   if (val === null || val === undefined) return "-";
   const man = Math.round(val / 10000);
   return `${man}만`;
-};
-
-const trustTagColor = (level: Customer["trustLevel"]) => {
-  switch (level) {
-    case "P1":
-      return "green";
-    case "P2":
-      return "orange";
-    case "P3":
-      return "red";
-    default:
-      return "default";
-  }
 };
 
 // 목표일자 문자열을 날짜로 변환
@@ -215,6 +202,10 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   const [targetMonthsDraft, setTargetMonthsDraft] = useState<number[]>([]);
   const [companySearch, setCompanySearch] = useState("");
 
+  // 정렬 state
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   useEffect(() => {
     setContractAmountMinDraft(
       contractAmountMin !== null ? Math.round(contractAmountMin / 10000) : null
@@ -310,8 +301,46 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         }
 
         return true;
+      })
+      .sort((a, b) => {
+        if (!sortField) return 0;
+
+        const modifier = sortOrder === "asc" ? 1 : -1;
+
+        switch (sortField) {
+          case "companyName":
+            return a.companyName.localeCompare(b.companyName) * modifier;
+          case "companySize":
+            return String(a.companySize ?? "").localeCompare(String(b.companySize ?? "")) * modifier;
+          case "manager":
+            return a.manager.localeCompare(b.manager) * modifier;
+          case "category":
+            return a.category.localeCompare(b.category) * modifier;
+          case "productUsage":
+            return a.productUsage.join(",").localeCompare(b.productUsage.join(",")) * modifier;
+          case "trustIndex":
+            return ((a.trustIndex ?? 0) - (b.trustIndex ?? 0)) * modifier;
+          case "contractAmount":
+            return ((a.contractAmount ?? 0) - (b.contractAmount ?? 0)) * modifier;
+          case "targetRevenue":
+            return ((a.adoptionDecision.targetRevenue ?? 0) - (b.adoptionDecision.targetRevenue ?? 0)) * modifier;
+          case "possibility": {
+            const aVal = Number((a.adoptionDecision.possibility || "0").replace("%", ""));
+            const bVal = Number((b.adoptionDecision.possibility || "0").replace("%", ""));
+            return (aVal - bVal) * modifier;
+          }
+          case "expectedRevenue":
+            return (a.expectedRevenue - b.expectedRevenue) * modifier;
+          case "targetDate": {
+            const aDate = new Date(a.adoptionDecision.targetDate || 0).getTime();
+            const bDate = new Date(b.adoptionDecision.targetDate || 0).getTime();
+            return (aDate - bDate) * modifier;
+          }
+          default:
+            return 0;
+        }
       });
-  }, [data, timePeriod, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch]);
+  }, [data, timePeriod, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch, sortField, sortOrder]);
 
   const possibilityOptions = useMemo(
     () =>
@@ -346,9 +375,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
     {
       title: "기업명",
       dataIndex: "companyName",
-      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
       filterDropdown: ({ confirm, clearFilters }: FilterDropdownProps) => (
-        <Space direction="vertical" style={{ padding: 8 }}>
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
           <Input
             placeholder="기업명 검색"
             value={companySearch}
@@ -356,13 +384,40 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             onPressEnter={() => confirm({ closeDropdown: true })}
             allowClear
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "companyName" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("companyName");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "companyName" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("companyName");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
               type="primary"
               size="small"
               onClick={() => confirm({ closeDropdown: true })}
             >
-              검색
+              적용
             </Button>
             <Button
               size="small"
@@ -378,33 +433,322 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         </Space>
       ),
       filterIcon: (filtered) => (
-        <FilterFilled style={{ color: filtered || companySearch ? token.colorPrimary : undefined }} />
+        <FilterFilled style={{ color: filtered || companySearch || sortField === "companyName" ? token.colorPrimary : undefined }} />
       ),
-      width: 160,
+      width: 200,
     },
     {
       title: "기업 규모",
       dataIndex: "companySize",
-      filters: Array.from(
-        new Set(tableData.map((d) => d.companySize || "미정"))
-      ).map((size) => ({ text: size || "미정", value: size || "미정" })),
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="기업 규모 선택"
+            style={{ width: "100%" }}
+            options={Array.from(new Set(tableData.map((d) => d.companySize || "미정"))).map((size) => ({ label: size || "미정", value: size || "미정" }))}
+            value={selectedKeys as string[]}
+            onChange={(values) => setSelectedKeys(values)}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "companySize" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("companySize");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "companySize" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("companySize");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: (filtered) => (
+        <FilterFilled style={{ color: filtered || sortField === "companySize" ? token.colorPrimary : undefined }} />
+      ),
       onFilter: (value, record) => (record.companySize || "미정") === value,
-      width: 120,
+      width: 240,
     },
     {
       title: "담당자",
       dataIndex: "manager",
-      sorter: (a, b) => a.manager.localeCompare(b.manager),
-      filters: Array.from(new Set(tableData.map((d) => d.manager))).map(
-        (m) => ({ text: m, value: m })
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="담당자 선택"
+            style={{ width: "100%" }}
+            options={Array.from(new Set(tableData.map((d) => d.manager))).map((m) => ({ label: m, value: m }))}
+            value={selectedKeys as string[]}
+            onChange={(values) => setSelectedKeys(values)}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "manager" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("manager");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "manager" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("manager");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: (filtered) => (
+        <FilterFilled style={{ color: filtered || sortField === "manager" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.manager === value,
-      width: 140,
+      width: 180,
+    },
+    {
+      title: "카테고리",
+      dataIndex: "category",
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="카테고리 선택"
+            style={{ width: "100%" }}
+            options={Array.from(new Set(tableData.map((d) => d.category))).map((c) => ({ label: c, value: c }))}
+            value={selectedKeys as string[]}
+            onChange={(values) => setSelectedKeys(values)}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "category" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("category");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "category" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("category");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: (filtered) => (
+        <FilterFilled style={{ color: filtered || sortField === "category" ? token.colorPrimary : undefined }} />
+      ),
+      onFilter: (value, record) => record.category === value,
+      width: 240,
+    },
+    {
+      title: "제품사용",
+      dataIndex: "productUsage",
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="제품사용 선택"
+            style={{ width: "100%" }}
+            options={Array.from(new Set(tableData.flatMap((d) => d.productUsage))).map((p) => ({ label: p, value: p }))}
+            value={selectedKeys as string[]}
+            onChange={(values) => setSelectedKeys(values)}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "productUsage" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("productUsage");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "productUsage" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("productUsage");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: (filtered) => (
+        <FilterFilled style={{ color: filtered || sortField === "productUsage" ? token.colorPrimary : undefined }} />
+      ),
+      onFilter: (value, record) => record.productUsage.includes(value as ProductType),
+      render: (products: string[]) => (
+        <Space size={4} wrap>
+          {products.map((product) => (
+            <Tag key={product} color="blue" bordered>
+              {product}
+            </Tag>
+          ))}
+        </Space>
+      ),
+      width: 180,
     },
     {
       title: "신뢰지수",
       dataIndex: "trustIndex",
-      sorter: (a, b) => (a.trustIndex || 0) - (b.trustIndex || 0),
+      filterDropdown: ({ confirm }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "trustIndex" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("trustIndex");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "trustIndex" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("trustIndex");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: () => (
+        <FilterFilled style={{ color: sortField === "trustIndex" ? token.colorPrimary : undefined }} />
+      ),
       render: (_, record) => {
         const past = record._periodData?.pastTrustIndex ?? null;
         const current = record.trustIndex || 0;
@@ -413,29 +757,18 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             ? "green"
             : past !== null && current < past
               ? "red"
-              : trustTagColor(record.trustLevel);
+              : "default";
         return (
-          <Space size={4}>
-            {past !== null && (
-              <Tag color={color}>
-                {past} → {current}
-              </Tag>
-            )}
-            {past === null && (
-              <Tag color={trustTagColor(record.trustLevel)}>{current}</Tag>
-            )}
-            <Tag color={trustTagColor(record.trustLevel)}>
-              {record.trustLevel}
-            </Tag>
-          </Space>
+          <Tag color={color}>
+            {past !== null ? `${past} → ${current}` : current}
+          </Tag>
         );
       },
-      width: 140,
+      width: 150,
     },
     {
       title: "계약금액",
       dataIndex: "contractAmount",
-      sorter: (a, b) => (a.contractAmount || 0) - (b.contractAmount || 0),
       filterDropdown: ({ confirm, clearFilters }) => (
         <Space direction="vertical" style={{ padding: 8 }}>
           <InputNumber
@@ -458,6 +791,33 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             formatter={(v) => (v ? `${v}만` : "")}
             parser={(v) => Number((v || "").replace(/[^0-9.-]/g, ""))}
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "contractAmount" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("contractAmount");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "contractAmount" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("contractAmount");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
               type="primary"
@@ -498,23 +858,18 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled
           style={{
             color:
-              contractAmountMin !== null || contractAmountMax !== null
+              contractAmountMin !== null || contractAmountMax !== null || sortField === "contractAmount"
                 ? token.colorPrimary
                 : undefined,
           }}
         />
       ),
       render: (val: number | null) => formatMan(val),
-      width: 140,
+      width: 150,
     },
     {
       title: "목표매출",
       dataIndex: "_periodData",
-      sorter: (a, b) => {
-        const aDiff = (a.adoptionDecision.targetRevenue || 0) - (a._periodData?.pastTargetRevenue || 0);
-        const bDiff = (b.adoptionDecision.targetRevenue || 0) - (b._periodData?.pastTargetRevenue || 0);
-        return aDiff - bDiff;
-      },
       filterDropdown: ({ confirm, clearFilters }) => (
         <Space direction="vertical" style={{ padding: 8 }}>
           <InputNumber
@@ -537,6 +892,33 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             formatter={(v) => (v ? `${v}만` : "")}
             parser={(v) => Number((v || "").replace(/[^0-9.-]/g, ""))}
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "targetRevenue" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("targetRevenue");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "targetRevenue" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("targetRevenue");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
               type="primary"
@@ -577,7 +959,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled
           style={{
             color:
-              targetRevenueMin !== null || targetRevenueMax !== null
+              targetRevenueMin !== null || targetRevenueMax !== null || sortField === "targetRevenue"
                 ? token.colorPrimary
                 : undefined,
           }}
@@ -599,21 +981,6 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
     {
       title: "가능성",
       dataIndex: "_periodData",
-      sorter: (a, b) => {
-        const aCurrent = Number(
-          (a.adoptionDecision.possibility || "0").replace("%", "")
-        );
-        const aPast = Number(
-          (a._periodData?.pastPossibility || "0").replace("%", "")
-        );
-        const bCurrent = Number(
-          (b.adoptionDecision.possibility || "0").replace("%", "")
-        );
-        const bPast = Number(
-          (b._periodData?.pastPossibility || "0").replace("%", "")
-        );
-        return aCurrent - aPast - (bCurrent - bPast);
-      },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
         <div style={{ padding: 8, minWidth: 200 }}>
           <Select
@@ -629,6 +996,33 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             }}
             optionFilterProp="label"
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "possibility" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("possibility");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "possibility" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("possibility");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space style={{ marginTop: 8 }}>
             <Button
               type="primary"
@@ -650,7 +1044,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         </div>
       ),
       filterIcon: (filtered) => (
-        <FilterFilled style={{ color: filtered ? token.colorPrimary : undefined }} />
+        <FilterFilled style={{ color: filtered || sortField === "possibility" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.adoptionDecision.possibility === value,
       render: (_, record) => {
@@ -666,16 +1060,11 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </Tag>
         );
       },
-      width: 140,
+      width: 150,
     },
     {
       title: "예상매출",
       dataIndex: "_periodData",
-      sorter: (a, b) =>
-        (a._periodData?.currentExpectedRevenue ?? a.expectedRevenue) -
-        (a._periodData?.pastExpectedRevenue ?? 0) -
-        ((b._periodData?.currentExpectedRevenue ?? b.expectedRevenue) -
-          (b._periodData?.pastExpectedRevenue ?? 0)),
       filterDropdown: ({ confirm, clearFilters }) => (
         <Space direction="vertical" style={{ padding: 8 }}>
           <InputNumber
@@ -698,6 +1087,33 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             formatter={(v) => (v ? `${v}만` : "")}
             parser={(v) => Number((v || "").replace(/[^0-9.-]/g, ""))}
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "expectedRevenue" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("expectedRevenue");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "expectedRevenue" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("expectedRevenue");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
               type="primary"
@@ -738,7 +1154,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled
           style={{
             color:
-              expectedRevenueMin !== null || expectedRevenueMax !== null
+              expectedRevenueMin !== null || expectedRevenueMax !== null || sortField === "expectedRevenue"
                 ? token.colorPrimary
                 : undefined,
           }}
@@ -779,14 +1195,11 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         return currentLevel === requiredLevel;
       },
       render: (_, record) => renderProgressTags(record, true, progressColors),
-      width: 160,
+      width: 180,
     },
     {
       title: "목표일자",
       dataIndex: "adoptionDecision",
-      sorter: (a, b) =>
-        new Date(a.adoptionDecision.targetDate || "1970-01-01").getTime() -
-        new Date(b.adoptionDecision.targetDate || "1970-01-01").getTime(),
       filterDropdown: ({ confirm, clearFilters }) => (
         <Space direction="vertical" style={{ padding: 8 }}>
           <Select
@@ -798,6 +1211,33 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             value={targetMonthsDraft}
             onChange={(value) => setTargetMonthsDraft(value)}
           />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "targetDate" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("targetDate");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "targetDate" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("targetDate");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
               type="primary"
@@ -827,7 +1267,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled
           style={{
             color:
-              targetMonths.length > 0
+              targetMonths.length > 0 || sortField === "targetDate"
                 ? token.colorPrimary
                 : undefined,
           }}
@@ -846,17 +1286,18 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </Tag>
         );
       },
-      width: 140,
+      width: 150,
     },
   ];
 
   return (
-    <Card>
+    <Card bodyStyle={{ padding: 0 }}>
       <Table
         columns={columns}
         dataSource={tableData}
         pagination={{ pageSize: 10 }}
         loading={loading}
+        size="small"
         onRow={(record) => ({
           onClick: () => setSelectedCustomer(record),
           style: { cursor: "pointer" },
@@ -946,12 +1387,11 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                               (selectedCustomer._periodData?.pastTrustIndex ||
                                 0)
                               ? "red"
-                              : trustTagColor(selectedCustomer.trustLevel)
+                              : "default"
                         }
                       >
                         {selectedCustomer._periodData?.pastTrustIndex ?? "-"} →{" "}
-                        {selectedCustomer.trustIndex} (
-                        {selectedCustomer.trustLevel})
+                        {selectedCustomer.trustIndex}
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="목표매출" span={2}>

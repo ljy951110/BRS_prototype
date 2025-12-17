@@ -2,6 +2,7 @@ export type ManagerType = string;
 export type ProgressStageType = "TEST" | "QUOTE" | "APPROVAL" | "CLOSING";
 export type TimePeriodApiType = "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR";
 export type CategoryType = "채용" | "공공" | "병원" | "성과";
+export type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이탈사";
 export type CompanySizeType = "T0" | "T1" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8" | "T9" | "T10" | null;
 export type TrustLevelType = "P1" | "P2" | "P3" | null;
 export type PossibilityType = "90%" | "40%" | "0%";
@@ -13,6 +14,7 @@ export interface DashboardTableRequest {
     companySizes?: CompanySizeType[];
     managers?: ManagerType[];
     categories?: CategoryType[];
+    productUsages?: string[];
     possibilities?: PossibilityType[];
     stages?: ProgressStageType[];
     contractAmountRange?: { minMan?: number | null; maxMan?: number | null };
@@ -25,6 +27,7 @@ export interface DashboardTableRequest {
     | "companySize"
     | "manager"
     | "category"
+    | "productUsage"
     | "trustIndex"
     | "contractAmount"
     | "possibility"
@@ -62,6 +65,7 @@ export interface DashboardTableRow {
   companyName: string;
   companySize: CompanySizeType;
   category: CategoryType;
+  productUsage: ProductType[];
   manager: ManagerType;
   contractAmount: number | null;
   trustIndex?: number | null;

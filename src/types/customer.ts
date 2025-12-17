@@ -1,5 +1,6 @@
 export type CompanySizeType = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
 export type CategoryType = "채용" | "공공" | "병원" | "성과";
+export type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이탈사";
 export type TrustLevelType = "P1" | "P2" | "P3" | null;
 export type ChangeDirectionType = "up" | "down" | "none" | null;
 export type CustomerResponseType = "상" | "중" | "하";
@@ -11,6 +12,7 @@ export interface ViewerDetail {
   date?: string;
   category: CategoryType | string;
   companySize?: CompanySizeType | string | null;
+  productUsage: ProductType[];
   manager: string;
   contractAmount: number;
   targetRevenue: number;
@@ -131,7 +133,7 @@ export interface Customer {
   companyName: string;
   companySize: CompanySizeType;
   category: CategoryType;
-  productUsage: string;
+  productUsage: ProductType[];
   manager: string;
   renewalDate: string | null;
   contractAmount: number | null;
