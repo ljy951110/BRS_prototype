@@ -145,12 +145,12 @@ interface AppContentProps {
 function AppContent({ isDark, onToggleTheme }: AppContentProps) {
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
-  // 기본값: 2025-12-11 ~ 2025-12-18
+  // 기본값: 최근 1주일 (오늘 - 7일 ~ 오늘)
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs("2025-12-11"),
-    dayjs("2025-12-18"),
+    dayjs().subtract(7, "day"),
+    dayjs(),
   ]);
-  
+
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -175,7 +175,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     }));
     setCurrentPage(1); // 필터 변경 시 첫 페이지로
   };
-  
+
   // dateRange 변경 시에도 페이지 리셋
   useEffect(() => {
     setCurrentPage(1);
