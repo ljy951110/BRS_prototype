@@ -123,6 +123,10 @@ export interface PeriodData {
   pastContract: boolean;
   // 목표일자 과거값
   pastTargetDate: string | null;
+  // 목표 매출 과거값
+  pastTargetRevenue: number | null;
+  // 도입결정 단계 과거값
+  pastAdoptionStage: string | null;
 }
 
 export interface Customer {

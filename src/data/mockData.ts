@@ -268,7 +268,7 @@ export const getDataWithPeriodChange = (
         // 목표일자 과거값
         pastTargetDate: pastAdoption.targetDate,
         // 도입결정 단계 과거값
-        pastAdoptionStage: pastAdoption.contract ? "계약" : pastAdoption.approval ? "승인" : pastAdoption.quote ? "견적" : pastAdoption.test ? "테스트" : "-",
+        pastAdoptionStage: pastAdoption.contract ? "계약" : pastAdoption.approval ? "품의" : pastAdoption.quote ? "견적서" : pastAdoption.test ? "테스트" : "-",
       },
     };
   });
