@@ -9,17 +9,35 @@ import {
   Activity,
 } from "lucide-react";
 import { Text, Card } from "@/components/common/atoms";
-import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { Charts } from "@/components/dashboard/Charts";
+import { BusinessInsight } from "@/components/dashboard/BusinessInsight/BusinessInsight";
+import { KPICards } from "@/components/dashboard/BusinessInsight/KPICards/KPICards";
 import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
 import { mockData } from "@/data/mockData";
 import { Customer } from "@/types/customer";
 import styles from "./App.module.scss";
 
-type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
+// 날짜 유틸리티 함수
+const getDefaultDateRange = () => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 7); // 일주일 전
+  return {
+    start: start.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+  };
+};
+
+type ViewMode =
+  | "businessInsight"
+  | "table"
+  | "pipeline"
+  | "chart"
+  | "timeline"
+  | "activity";
 export type TimePeriod = "1w" | "1m" | "6m" | "1y";
 
 // 진행상태 필터 타입
@@ -69,6 +87,13 @@ const TAB_FILTER_UI: Record<
     showProgress: boolean;
   }
 > = {
+  businessInsight: {
+    showSearch: false,
+    showManager: false,
+    showCompanySize: false,
+    showCategory: false,
+    showProgress: false,
+  },
   table: {
     showSearch: true,
     showManager: true,
@@ -109,9 +134,11 @@ const TAB_FILTER_UI: Record<
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("1w");
+  const [dateRange, setDateRange] = useState(getDefaultDateRange);
 
   // 탭별 독립적인 필터 상태
   const [tabFilters, setTabFilters] = useState<TabFilterState>({
+    businessInsight: { ...DEFAULT_FILTERS },
     table: { ...DEFAULT_FILTERS },
     pipeline: { ...DEFAULT_FILTERS },
     timeline: { ...DEFAULT_FILTERS },
@@ -332,21 +359,32 @@ function App() {
       <main className={styles.main}>
         {/* 기간 필터 + View Toggle */}
         <section className={styles.viewToggleSection}>
-          <div className={styles.periodFilter}>
-            <Calendar size={16} />
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-              className={styles.periodSelect}
-            >
-              {TIME_PERIOD_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {viewMode !== "table" && (
+            <div className={styles.periodFilter}>
+              <Calendar size={16} />
+              <select
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
+                className={styles.periodSelect}
+              >
+                {TIME_PERIOD_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className={styles.viewToggle}>
+            <button
+              className={`${styles.viewBtn} ${
+                viewMode === "businessInsight" ? styles.active : ""
+              }`}
+              onClick={() => setViewMode("businessInsight")}
+            >
+              <LayoutGrid size={18} />
+              <span>MBM 인사이트</span>
+            </button>
             <button
               className={`${styles.viewBtn} ${
                 viewMode === "table" ? styles.active : ""
@@ -354,7 +392,7 @@ function App() {
               onClick={() => setViewMode("table")}
             >
               <TableIcon size={18} />
-              <span>전체 현황</span>
+              <span>사업 인사이트</span>
             </button>
             <button
               className={`${styles.viewBtn} ${
@@ -395,17 +433,42 @@ function App() {
           </div>
         </section>
 
-        {/* Summary Cards - only on table tab */}
+        {/* KPI Cards - only on table tab */}
         {viewMode === "table" && (
           <section className={styles.section}>
-            <SummaryCards data={filteredData} timePeriod={timePeriod} />
+            <KPICards />
           </section>
         )}
 
         {/* Content Area */}
         <section className={styles.contentSection}>
+          {viewMode === "businessInsight" && <BusinessInsight />}
           {viewMode === "table" && (
-            <CustomerTable data={filteredData} timePeriod={timePeriod} />
+            <>
+              {/* Date Picker - 기업 테이블용 날짜 필터 */}
+              <div className={styles.tableFilterSection}>
+                <div className={styles.datePickerWrapper}>
+                  <Calendar size={16} />
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    className={styles.dateInput}
+                  />
+                  <span className={styles.dateSeparator}>~</span>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    className={styles.dateInput}
+                  />
+                </div>
+              </div>
+              <CustomerTable 
+                data={filteredData} 
+                timePeriod={timePeriod}
+              />
+            </>
           )}
           {viewMode === "pipeline" && (
             <PipelineBoard data={filteredData} timePeriod={timePeriod} />

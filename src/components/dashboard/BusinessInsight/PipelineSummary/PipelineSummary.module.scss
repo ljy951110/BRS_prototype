@@ -1,0 +1,61 @@
+@use "@/styles/variables" as *;
+
+.container {
+  margin-bottom: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pipelineWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: $color-bg-primary;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid $color-border;
+}
+
+.stageCard {
+  flex: 1;
+  background-color: $color-bg-secondary;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: $color-bg-hover;
+  }
+
+  &.active {
+    background-color: $color-accent-blue-subtle;
+    border-color: $color-accent-blue;
+  }
+}
+
+.stageHeader {
+  margin-bottom: 8px;
+}
+
+.stageBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  opacity: 0.5;
+  color: $color-text-tertiary;
+}

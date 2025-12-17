@@ -22,6 +22,7 @@ import {
   SalesAction,
   ContentEngagement,
   Possibility,
+  MBMPipelineStatus,
 } from "@/types/customer";
 import {
   formatCurrency,
@@ -61,6 +62,9 @@ type ColumnFilters = {
   expectedMax: string;
   targetStart: string;
   targetEnd: string;
+  mbmPipeline: string;
+  lastContactStart: string;
+  lastContactEnd: string;
   progress: {
     test: boolean;
     quote: boolean;
@@ -79,6 +83,8 @@ type FilterModalTarget =
   | "possibility"
   | "expected"
   | "targetDate"
+  | "mbmPipeline"
+  | "lastContact"
   | "progress";
 
 const FILTER_SORT_FIELD: Record<FilterModalTarget, SortField | null> = {
@@ -91,6 +97,8 @@ const FILTER_SORT_FIELD: Record<FilterModalTarget, SortField | null> = {
   possibility: "possibility",
   expected: "expectedRevenue",
   targetDate: "targetDate",
+  mbmPipeline: null,
+  lastContact: null,
   progress: null,
 };
 
@@ -201,6 +209,100 @@ const getCategoryVariant = (category: string) => {
       return "cyan";
     default:
       return "default";
+  }
+};
+
+// MBM 파이프라인 상태 표시용
+const MBM_PIPELINE_LABELS: Record<MBMPipelineStatus, { label: string; variant: "default" | "info" | "warning" | "success" | "error" | "purple" | "cyan" }> = {
+  invited: { label: "참여전", variant: "default" },
+  participated: { label: "참여", variant: "info" },
+  followup: { label: "팔로업 진행", variant: "purple" },
+  stagnant: { label: "정체", variant: "warning" },
+  closed: { label: "종료", variant: "success" },
+};
+
+// 고객 반응 표시용
+const CUSTOMER_RESPONSE_VARIANTS: Record<string, "success" | "warning" | "error"> = {
+  상: "success",
+  중: "warning", 
+  하: "error",
+};
+
+// 제품사용 파싱 (ATS/역검 -> 태그 배열)
+const parseProductUsage = (usage: string): string[] => {
+  if (!usage) return [];
+  // "ATS/역검" -> ["ATS", "역검"]
+  return usage.split(/[/,]/).map(s => s.trim()).filter(Boolean);
+};
+
+// 최근 MBM 날짜 계산
+const getLastMBMDate = (attendance: Customer["attendance"]): string | null => {
+  if (!attendance) return null;
+  
+  const MBM_DATES: Record<string, string> = {
+    "1218": "12/18",
+    "1209": "12/09", 
+    "1107": "11/07",
+  };
+  
+  // 가장 최근 MBM 참석 찾기 (키 역순으로 정렬)
+  const attendedKeys = Object.keys(attendance)
+    .filter(key => attendance[key as keyof typeof attendance])
+    .sort((a, b) => parseInt(b) - parseInt(a));
+  
+  if (attendedKeys.length === 0) return null;
+  return MBM_DATES[attendedKeys[0]] || attendedKeys[0];
+};
+
+// 마지막 컨택일 계산 (날짜 반환)
+const getLastContactDate = (salesActions: SalesAction[] | undefined): string | null => {
+  if (!salesActions || salesActions.length === 0) return null;
+  
+  const sortedActions = [...salesActions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  return sortedActions[0].date;
+};
+
+// 날짜를 YY-MM-DD 형식으로 포맷
+const formatDateShort = (dateStr: string | null): string => {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  const year = String(date.getFullYear()).slice(-2);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// 도입결정 단계 계산
+const getAdoptionStage = (adoption: Customer["adoptionDecision"]): string => {
+  if (adoption.contract) return "계약";
+  if (adoption.approval) return "승인";
+  if (adoption.quote) return "견적";
+  if (adoption.test) return "테스트";
+  return "-";
+};
+
+// 도입결정 단계 variant
+const getAdoptionStageVariant = (stage: string): "default" | "info" | "warning" | "success" | "purple" => {
+  switch (stage) {
+    case "계약": return "success";
+    case "승인": return "purple";
+    case "견적": return "info";
+    case "테스트": return "warning";
+    default: return "default";
+  }
+};
+
+// 도입결정 단계 레벨 (비교용)
+const getAdoptionStageLevel = (stage: string): number => {
+  switch (stage) {
+    case "계약": return 4;
+    case "승인": return 3;
+    case "견적": return 2;
+    case "테스트": return 1;
+    default: return 0;
   }
 };
 
@@ -363,6 +465,9 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     expectedMax: "",
     targetStart: "",
     targetEnd: "",
+    mbmPipeline: "all",
+    lastContactStart: "",
+    lastContactEnd: "",
     progress: {
       test: false,
       quote: false,
@@ -396,6 +501,11 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
       Array.from(
         new Set(data.map((c) => c.adoptionDecision.possibility))
       ).sort(),
+    [data]
+  );
+
+  const mbmPipelineStatuses = useMemo(
+    () => Array.from(new Set(data.map((c) => c.mbmPipelineStatus))).sort(),
     [data]
   );
 
@@ -463,6 +573,14 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         return false;
       }
 
+      // MBM 파이프라인 상태 컬럼 필터
+      if (
+        columnFilters.mbmPipeline !== "all" &&
+        customer.mbmPipelineStatus !== columnFilters.mbmPipeline
+      ) {
+        return false;
+      }
+
       if (
         (columnFilters.trustMin || columnFilters.trustMax) &&
         !matchesNumberRange(trustIndex, columnFilters.trustMin, columnFilters.trustMax)
@@ -504,6 +622,25 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         if (
           columnFilters.targetEnd &&
           target > new Date(columnFilters.targetEnd).getTime()
+        ) {
+          return false;
+        }
+      }
+
+      // 마지막 컨택일 필터
+      if (columnFilters.lastContactStart || columnFilters.lastContactEnd) {
+        const lastContactDate = getLastContactDate(customer.salesActions);
+        if (!lastContactDate) return false;
+        const lastContact = new Date(lastContactDate).getTime();
+        if (
+          columnFilters.lastContactStart &&
+          lastContact < new Date(columnFilters.lastContactStart).getTime()
+        ) {
+          return false;
+        }
+        if (
+          columnFilters.lastContactEnd &&
+          lastContact > new Date(columnFilters.lastContactEnd).getTime()
         ) {
           return false;
         }
@@ -911,6 +1048,13 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
           next.targetStart = COLUMN_FILTER_DEFAULTS.targetStart;
           next.targetEnd = COLUMN_FILTER_DEFAULTS.targetEnd;
           break;
+        case "mbmPipeline":
+          next.mbmPipeline = COLUMN_FILTER_DEFAULTS.mbmPipeline;
+          break;
+        case "lastContact":
+          next.lastContactStart = COLUMN_FILTER_DEFAULTS.lastContactStart;
+          next.lastContactEnd = COLUMN_FILTER_DEFAULTS.lastContactEnd;
+          break;
         case "progress":
           next.progress = { ...COLUMN_FILTER_DEFAULTS.progress };
           break;
@@ -1168,6 +1312,61 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
             {renderSortControls("targetDate")}
           </div>
         );
+      case "mbmPipeline":
+        return (
+          <div className={styles.modalField}>
+            <label>MBM 파이프라인 상태</label>
+            <select
+              className={styles.filterSelect}
+              value={columnFilters.mbmPipeline}
+              onChange={(e) =>
+                setColumnFilters((prev) => ({
+                  ...prev,
+                  mbmPipeline: e.target.value,
+                }))
+              }
+            >
+              <option value="all">전체</option>
+              {mbmPipelineStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {MBM_PIPELINE_LABELS[status]?.label || status}
+                </option>
+              ))}
+            </select>
+            {renderSortControls("mbmPipeline")}
+          </div>
+        );
+      case "lastContact":
+        return (
+          <div className={styles.modalField}>
+            <label>마지막 컨택일 구간</label>
+            <div className={styles.dateInputs}>
+              <input
+                type="date"
+                className={styles.filterInput}
+                value={columnFilters.lastContactStart}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    lastContactStart: e.target.value,
+                  }))
+                }
+              />
+              <input
+                type="date"
+                className={styles.filterInput}
+                value={columnFilters.lastContactEnd}
+                onChange={(e) =>
+                  setColumnFilters((prev) => ({
+                    ...prev,
+                    lastContactEnd: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            {renderSortControls("lastContact")}
+          </div>
+        );
       case "progress":
         return (
           <div className={styles.modalField}>
@@ -1216,33 +1415,34 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
           <table className={styles.table}>
             <thead>
               <tr>
+                {/* 1. 기업명 */}
                 <SortHeader filterTarget="company">
                   기업명
                 </SortHeader>
+                {/* 2. 기업 규모 */}
                 <SortHeader filterTarget="companySize">
                   기업 규모
                 </SortHeader>
-                <SortHeader filterTarget="manager">
-                  담당자
-                </SortHeader>
+                {/* 3. 카테고리 */}
                 <SortHeader filterTarget="category">
                   카테고리
                 </SortHeader>
-                <SortHeader filterTarget="trust">
-                  신뢰지수
+                {/* 4. 제품사용 */}
+                <th className={styles.th}>제품사용</th>
+                {/* 5. 담당자 */}
+                <SortHeader filterTarget="manager">
+                  담당자
                 </SortHeader>
+                {/* 6. 계약 금액 */}
                 <SortHeader filterTarget="contract">
                   계약금액
                 </SortHeader>
-                <SortHeader filterTarget="possibility">
-                  가능성
-                </SortHeader>
-                <SortHeader filterTarget="expected">
-                  예상매출
-                </SortHeader>
+                {/* 7. 최근 MBM */}
+                <th className={styles.th}>최근 MBM</th>
+                {/* 8. 도입결정 단계 */}
                 <th className={styles.th}>
                   <div className={styles.filterHeader}>
-                    <span>진행상태</span>
+                    <span>도입결정</span>
                     <button
                       className={styles.filterBtn}
                       onClick={(e) => {
@@ -1255,230 +1455,187 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     </button>
                   </div>
                 </th>
+                {/* 9. 마지막 컨택일 */}
+                <SortHeader filterTarget="lastContact">
+                  마지막 컨택
+                </SortHeader>
+                {/* 10. 신뢰지수 */}
+                <SortHeader filterTarget="trust">
+                  신뢰지수
+                </SortHeader>
+                {/* 11. 가능성 */}
+                <SortHeader filterTarget="possibility">
+                  가능성
+                </SortHeader>
+                {/* 12. 예상매출 */}
+                <SortHeader filterTarget="expected">
+                  예상매출
+                </SortHeader>
+                {/* 13. 목표일자 */}
                 <SortHeader filterTarget="targetDate">
                   목표일자
                 </SortHeader>
               </tr>
             </thead>
             <tbody>
-              {sortedData.map((customer) => (
-                <tr
-                  key={customer.no}
-                  className={`${styles.tr} ${styles.clickableRow}`}
-                  onClick={() => openCustomerDetail(customer)}
-                >
-                  <td className={styles.td}>
-                    <Text variant="body-sm" weight="medium">
-                      {customer.companyName}
-                    </Text>
-                  </td>
-                  <td className={styles.td}>
-                    <Text variant="body-sm">
-                      {customer.companySize || "미정"}
-                    </Text>
-                  </td>
-                  <td className={styles.td}>
-                    <Text variant="body-sm">{customer.manager}</Text>
-                  </td>
-                  <td className={styles.td}>
-                    <Badge
-                      variant={getCategoryVariant(customer.category)}
-                      size="sm"
-                    >
-                      {customer.category}
-                    </Badge>
-                  </td>
-                  <td className={styles.td}>
-                    <div className={styles.changeCell}>
-                      {customer._periodData?.pastTrustIndex !== null &&
-                      customer._periodData?.pastTrustIndex !==
-                        customer.trustIndex ? (
-                        <>
-                          <span className={styles.pastValue}>
-                            <Text variant="body-sm" mono>
-                              {customer._periodData?.pastTrustIndex}
-                            </Text>
-                          </span>
-                          <ArrowRight size={10} className={styles.arrowIcon} />
-                          <Text
-                            variant="body-sm"
-                            weight="semibold"
-                            mono
-                            color={
-                              customer.changeDirection === "up"
-                                ? "success"
-                                : customer.changeDirection === "down"
-                                ? "error"
-                                : "primary"
-                            }
-                          >
-                            {customer.trustIndex}
-                          </Text>
-                          <Badge
-                            variant={getTrustLevelVariant(customer.trustLevel)}
-                            size="sm"
-                          >
-                            {customer.trustLevel}
+              {sortedData.map((customer) => {
+                const productTags = parseProductUsage(customer.productUsage);
+                const lastMBM = getLastMBMDate(customer.attendance);
+                const lastContactDate = getLastContactDate(customer.salesActions);
+                const adoptionStage = getAdoptionStage(customer.adoptionDecision);
+                
+                return (
+                  <tr
+                    key={customer.no}
+                    className={`${styles.tr} ${styles.clickableRow}`}
+                    onClick={() => openCustomerDetail(customer)}
+                  >
+                    {/* 1. 기업명 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm" weight="medium">
+                        {customer.companyName}
+                      </Text>
+                    </td>
+                    {/* 2. 기업 규모 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm">
+                        {customer.companySize || "미정"}
+                      </Text>
+                    </td>
+                    {/* 3. 카테고리 */}
+                    <td className={styles.td}>
+                      <Badge
+                        variant={getCategoryVariant(customer.category)}
+                        size="sm"
+                      >
+                        {customer.category}
+                      </Badge>
+                    </td>
+                    {/* 4. 제품사용 (멀티태그) */}
+                    <td className={styles.td}>
+                      <div className={styles.tagGroup}>
+                        {productTags.map((tag, idx) => (
+                          <Badge key={idx} variant="default" size="sm">
+                            {tag}
                           </Badge>
-                        </>
-                      ) : (
-                        <>
-                          <Text variant="body-sm" mono>
-                            {customer.trustIndex}
-                          </Text>
-                          <Badge
-                            variant={getTrustLevelVariant(customer.trustLevel)}
-                            size="sm"
-                          >
-                            {customer.trustLevel}
-                          </Badge>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                  <td className={styles.td}>
-                    <Text variant="body-sm" mono>
-                      {formatCurrency(customer.contractAmount)}
-                    </Text>
-                  </td>
-                  <td className={styles.td}>
-                    <div className={styles.changeCell}>
-                      {customer._periodData &&
-                      customer._periodData.pastPossibility !==
-                        customer.adoptionDecision.possibility ? (
-                        <>
-                          <span className={styles.pastBadge}>
-                            <Badge
-                              variant={getPossibilityVariant(
-                                customer._periodData.pastPossibility
-                              )}
-                              size="sm"
-                            >
-                              {customer._periodData.pastPossibility}
-                            </Badge>
-                          </span>
-                          <ArrowRight size={10} className={styles.arrowIcon} />
-                          <Badge
-                            variant={getPossibilityVariant(
-                              customer.adoptionDecision.possibility
-                            )}
-                            size="sm"
-                          >
-                            {customer.adoptionDecision.possibility}
-                          </Badge>
-                        </>
-                      ) : (
-                        <Badge
-                          variant={getPossibilityVariant(
-                            customer.adoptionDecision.possibility
-                          )}
-                          size="sm"
-                        >
-                          {customer.adoptionDecision.possibility}
-                        </Badge>
-                      )}
-                    </div>
-                  </td>
-                  <td className={styles.td}>
-                    <div className={styles.changeCell}>
-                      {customer._periodData &&
-                      customer._periodData.pastExpectedRevenue !==
-                        customer._periodData.currentExpectedRevenue ? (
-                        <>
-                          <span className={styles.pastValue}>
-                            <Text variant="body-sm" mono>
-                              {formatCompactCurrency(
-                                customer._periodData.pastExpectedRevenue
-                              )}
-                            </Text>
-                          </span>
-                          <ArrowRight size={10} className={styles.arrowIcon} />
-                          <Text
-                            variant="body-sm"
-                            weight="semibold"
-                            mono
-                            color={
-                              customer._periodData.currentExpectedRevenue >
-                              customer._periodData.pastExpectedRevenue
-                                ? "success"
-                                : "error"
-                            }
-                          >
-                            {formatCompactCurrency(
-                              customer._periodData.currentExpectedRevenue
-                            )}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text
-                          variant="body-sm"
-                          mono
-                          color={
-                            customer._periodData?.currentExpectedRevenue
-                              ? "primary"
-                              : "tertiary"
-                          }
-                        >
-                          {formatCompactCurrency(
-                            customer._periodData?.currentExpectedRevenue
-                          )}
-                        </Text>
-                      )}
-                    </div>
-                  </td>
-                  {/* 진행상태 */}
-                  <td className={styles.td}>
-                    <div className={styles.progressStatus}>
-                      <span 
-                        className={`${styles.statusDot} ${customer.adoptionDecision.test ? styles.active : ''} ${
-                          customer._periodData && !customer._periodData.pastTest && customer.adoptionDecision.test ? styles.newlyActive : ''
-                        }`} 
-                        title="테스트"
-                      >T</span>
-                      <span 
-                        className={`${styles.statusDot} ${customer.adoptionDecision.quote ? styles.active : ''} ${
-                          customer._periodData && !customer._periodData.pastQuote && customer.adoptionDecision.quote ? styles.newlyActive : ''
-                        }`} 
-                        title="견적"
-                      >Q</span>
-                      <span 
-                        className={`${styles.statusDot} ${customer.adoptionDecision.approval ? styles.active : ''} ${
-                          customer._periodData && !customer._periodData.pastApproval && customer.adoptionDecision.approval ? styles.newlyActive : ''
-                        }`} 
-                        title="승인"
-                      >A</span>
-                      <span 
-                        className={`${styles.statusDot} ${customer.adoptionDecision.contract ? styles.active : ''} ${
-                          customer._periodData && !customer._periodData.pastContract && customer.adoptionDecision.contract ? styles.newlyActive : ''
-                        }`} 
-                        title="계약"
-                      >C</span>
-                    </div>
-                  </td>
-                  {/* 목표일자 */}
-                  <td className={styles.td}>
-                    <div className={styles.changeCell}>
-                      {customer._periodData && 
-                       customer._periodData.pastTargetDate !== customer.adoptionDecision.targetDate && 
-                       customer._periodData.pastTargetDate ? (
-                        <>
-                          <span className={styles.pastValue}>
-                            <Text variant="caption">{customer._periodData.pastTargetDate}</Text>
-                          </span>
-                          <ArrowRight size={10} className={styles.arrowIcon} />
-                          <Text variant="body-sm" color="primary">
-                            {customer.adoptionDecision.targetDate || '-'}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text variant="body-sm" color={customer.adoptionDecision.targetDate ? 'primary' : 'tertiary'}>
-                          {customer.adoptionDecision.targetDate || '-'}
-                        </Text>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        ))}
+                      </div>
+                    </td>
+                    {/* 5. 담당자 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm">{customer.manager}</Text>
+                    </td>
+                    {/* 6. 계약 금액 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm" mono>
+                        {formatCurrency(customer.contractAmount)}
+                      </Text>
+                    </td>
+                    {/* 7. 최근 MBM */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm" color={lastMBM ? "primary" : "tertiary"}>
+                        {lastMBM || "-"}
+                      </Text>
+                    </td>
+                    {/* 8. 도입결정 단계 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const pastStage = customer._periodData?.pastAdoptionStage || adoptionStage;
+                        const isImproved = getAdoptionStageLevel(adoptionStage) > getAdoptionStageLevel(pastStage);
+                        const isDeclined = getAdoptionStageLevel(adoptionStage) < getAdoptionStageLevel(pastStage);
+                        const changeType = isImproved ? "positive" : isDeclined ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{pastStage}</span>
+                            <ArrowRight size={10} />
+                            <span>{adoptionStage}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* 9. 마지막 컨택일 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm" color={lastContactDate ? "primary" : "tertiary"}>
+                        {formatDateShort(lastContactDate)}
+                      </Text>
+                    </td>
+                    {/* 10. 신뢰지수 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const past = customer._periodData?.pastTrustIndex ?? customer.trustIndex ?? 0;
+                        const current = customer.trustIndex ?? 0;
+                        const isPositive = current > past;
+                        const isNegative = current < past;
+                        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{past}</span>
+                            <ArrowRight size={10} />
+                            <span>{current}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* 11. 가능성 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const past = customer._periodData?.pastPossibility || customer.adoptionDecision.possibility;
+                        const current = customer.adoptionDecision.possibility;
+                        const isPositive = (POSSIBILITY_ORDER[current] ?? 0) > (POSSIBILITY_ORDER[past] ?? 0);
+                        const isNegative = (POSSIBILITY_ORDER[current] ?? 0) < (POSSIBILITY_ORDER[past] ?? 0);
+                        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{past}</span>
+                            <ArrowRight size={10} />
+                            <span>{current}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* 12. 예상매출 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const current = customer._periodData?.currentExpectedRevenue ?? 0;
+                        const past = customer._periodData?.pastExpectedRevenue ?? current;
+                        const isPositive = current > past;
+                        const isNegative = current < past;
+                        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{formatCompactCurrency(past)}</span>
+                            <ArrowRight size={10} />
+                            <span>{formatCompactCurrency(current)}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* 13. 목표일자 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const current = customer.adoptionDecision.targetDate || "-";
+                        const past = customer._periodData?.pastTargetDate || current;
+                        // 목표일자가 당겨지면 긍정적 (더 빨리 매출 발생), 늦춰지면 부정적
+                        const isPositive = past !== "-" && current !== "-" && new Date(current) < new Date(past);
+                        const isNegative = past !== "-" && current !== "-" && new Date(current) > new Date(past);
+                        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{past}</span>
+                            <ArrowRight size={10} />
+                            <span>{current}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

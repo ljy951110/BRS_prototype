@@ -5,6 +5,7 @@ import {
   Possibility,
   CustomerResponse,
   SalesAction,
+  MBMPipelineStatus,
 } from "@/types/customer";
 import type { TimePeriod } from "@/App";
 // 가능성 숫자 변환
@@ -266,6 +267,8 @@ export const getDataWithPeriodChange = (
         pastContract: pastAdoption.contract,
         // 목표일자 과거값
         pastTargetDate: pastAdoption.targetDate,
+        // 도입결정 단계 과거값
+        pastAdoptionStage: pastAdoption.contract ? "계약" : pastAdoption.approval ? "승인" : pastAdoption.quote ? "견적" : pastAdoption.test ? "테스트" : "-",
       },
     };
   });
@@ -407,6 +410,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 2000000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 8,
@@ -540,6 +544,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 4500000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 24,
@@ -692,6 +697,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 52200000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 25,
@@ -802,6 +808,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: null,
     },
+    mbmPipelineStatus: "participated",
   },
   {
     no: 30,
@@ -967,6 +974,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: null,
     },
+    mbmPipelineStatus: "stagnant",
   },
   {
     no: 43,
@@ -1057,6 +1065,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: null,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 217,
@@ -1173,6 +1182,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 5400000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 237,
@@ -1278,6 +1288,7 @@ export const mockData: Customer[] = [
       contract: true,
       simulation: 26640000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 240,
@@ -1387,6 +1398,7 @@ export const mockData: Customer[] = [
       contract: true,
       simulation: 27000000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 242,
@@ -1491,6 +1503,7 @@ export const mockData: Customer[] = [
       contract: true,
       simulation: 9027000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 272,
@@ -1620,6 +1633,7 @@ export const mockData: Customer[] = [
       contract: true,
       simulation: 3150000,
     },
+    mbmPipelineStatus: "closed",
   },
   {
     no: 299,
@@ -1733,6 +1747,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 4500000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 373,
@@ -1886,6 +1901,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 1350000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 468,
@@ -1990,6 +2006,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 5400000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 510,
@@ -2091,6 +2108,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 900000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 553,
@@ -2226,6 +2244,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 7200000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 597,
@@ -2358,6 +2377,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 1500000,
     },
+    mbmPipelineStatus: "stagnant",
   },
   {
     no: 708,
@@ -2482,6 +2502,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 3600000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 709,
@@ -2602,6 +2623,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 9000000,
     },
+    mbmPipelineStatus: "followup",
   },
   {
     no: 637,
@@ -2717,6 +2739,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: 21600000,
     },
+    mbmPipelineStatus: "stagnant",
   },
   {
     no: 1046,
@@ -2837,6 +2860,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: null,
     },
+    mbmPipelineStatus: "participated",
   },
   {
     no: 710,
@@ -2961,6 +2985,7 @@ export const mockData: Customer[] = [
       contract: false,
       simulation: null,
     },
+    mbmPipelineStatus: "participated",
   },
 ];
 // 유틸리티 함수들

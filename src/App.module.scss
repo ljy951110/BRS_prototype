@@ -93,6 +93,63 @@
   width: 100%;
 }
 
+.datePickerSection {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.datePickerWrapper {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  color: $color-text-secondary;
+}
+
+.dateInput {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $color-border-strong;
+  }
+
+  &:focus {
+    border-color: $color-accent-blue;
+    outline: none;
+  }
+}
+
+.dateSeparator {
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.datePresetBtn {
+  margin-left: $spacing-sm;
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    border-color: $color-accent-blue;
+    color: $color-accent-blue;
+  }
+}
+
 .viewToggleSection {
   width: 100%;
   display: flex;
@@ -253,6 +310,14 @@
 .contentSection {
   flex: 1;
   min-height: 400px;
+}
+
+// Table Filter Section (기업 테이블 상단 필터)
+.tableFilterSection {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: $spacing-md;
 }
 
 // Footer

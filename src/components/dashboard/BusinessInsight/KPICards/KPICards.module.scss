@@ -1,0 +1,378 @@
+@use "@/styles/variables" as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.kpiCard {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid $color-border;
+  background-color: $color-bg-secondary;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $color-border-strong;
+  }
+
+  &.warning {
+    border-color: $color-accent-orange;
+    background-color: rgba($color-accent-orange, 0.05);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: $color-accent-orange;
+}
+
+.cardBody {
+  margin-bottom: 12px;
+  
+  h2 {
+    margin-bottom: 4px;
+    font-size: 24px;
+    color: $color-text-primary;
+  }
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  &.up {
+    color: $color-accent-green;
+  }
+  
+  &.down {
+    color: $color-accent-red;
+  }
+}
+
+.modalContent {
+  padding: 16px 0;
+}
+
+.chartContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.summaryCard {
+  padding: 16px;
+  background-color: $color-bg-tertiary;
+  border-radius: 8px;
+  border: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  h3 {
+    font-size: 20px;
+  }
+
+  &.warning {
+    border-color: $color-accent-orange;
+    background-color: rgba($color-accent-orange, 0.08);
+  }
+
+  &.danger {
+    border-color: $color-accent-red;
+    background-color: rgba($color-accent-red, 0.08);
+  }
+}
+
+.chartRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.filterSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $color-border;
+}
+
+.filterButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid $color-border;
+  background-color: $color-bg-tertiary;
+  color: $color-text-secondary;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $color-border-strong;
+    background-color: $color-bg-hover;
+  }
+
+  &.active {
+    border-color: $color-accent-blue;
+    background-color: rgba($color-accent-blue, 0.1);
+    color: $color-accent-blue;
+  }
+}
+
+.filterRow {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterSelect {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid $color-border;
+  background-color: $color-bg-tertiary;
+  color: $color-text-primary;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 120px;
+
+  &:hover {
+    border-color: $color-border-strong;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-accent-blue;
+  }
+}
+
+.mbmStatusCards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+// 파이프라인 흐름 레이아웃
+.mbmPipelineFlow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.flowArrow {
+  font-size: 24px;
+  color: $color-text-tertiary;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+// 분기 그룹 (팔로업 진행 | 정체)
+.branchGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba($color-bg-tertiary, 0.5);
+  border: 1px dashed $color-border;
+  border-radius: 12px;
+}
+
+.branchDivider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.branchLine {
+  flex: 1;
+  height: 1px;
+  background-color: $color-border;
+}
+
+.branchOr {
+  font-size: 11px;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.mbmStatusCard {
+  padding: 16px 20px;
+  min-width: 100px;
+  background-color: $color-bg-tertiary;
+  border-radius: 8px;
+  border: 1px solid $color-border;
+  border-left-width: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  h3 {
+    font-size: 24px;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &.selected {
+    background-color: $color-bg-hover;
+    box-shadow: 0 0 0 2px rgba($color-accent-blue, 0.3);
+  }
+
+  &.branchCard {
+    min-width: 110px;
+    padding: 12px 16px;
+    
+    h3 {
+      font-size: 20px;
+    }
+  }
+}
+
+.companyListSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.companyTable {
+  background-color: $color-bg-tertiary;
+  border-radius: 8px;
+  border: 1px solid $color-border;
+  overflow: hidden;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid $color-border;
+    }
+
+    th {
+      background-color: $color-bg-secondary;
+      color: $color-text-secondary;
+      font-weight: 500;
+    }
+
+    td {
+      color: $color-text-primary;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: $color-bg-hover;
+    }
+  }
+}
+
+.chartSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  
+  & > p {
+    margin-bottom: 8px;
+  }
+}
+
+.insightBox {
+  padding: 12px 16px;
+  background-color: $color-bg-tertiary;
+  border-radius: 8px;
+  border-left: 3px solid $color-accent-blue;
+}
+
+.placeholderChart {
+  background-color: $color-bg-tertiary;
+  border-radius: 8px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.mockChart {
+  width: 80%;
+  height: 60%;
+  background: linear-gradient(180deg, rgba($color-accent-blue, 0.1) 0%, rgba($color-accent-blue, 0) 100%);
+  border-bottom: 2px solid $color-accent-blue;
+  margin-top: 16px;
+}
+
+.aiSection {
+  border-top: 1px solid $color-border;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.aiButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: $color-bg-tertiary;
+  border-radius: 20px;
+  cursor: pointer;
+  color: $color-accent-blue;
+  
+  &:hover {
+    background-color: $color-bg-hover;
+  }
+}

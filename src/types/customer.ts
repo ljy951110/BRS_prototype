@@ -147,6 +147,7 @@ export interface Customer {
   trustFormation: TrustFormation;
   valueRecognition: ValueRecognition;
   adoptionDecision: AdoptionDecision;
+  mbmPipelineStatus: MBMPipelineStatus; // MBM 파이프라인 상태
   _periodData?: PeriodData; // 기간별 변화 데이터
 }
 
@@ -155,6 +156,14 @@ export type PipelineStage =
   | "trustFormation"
   | "valueRecognition"
   | "adoptionDecision";
+
+// MBM 파이프라인 상태
+export type MBMPipelineStatus =
+  | "invited"      // 초대 완료
+  | "participated" // 참여
+  | "followup"     // 팔로업 진행
+  | "stagnant"     // 정체
+  | "closed";      // 종료
 
 // 필터 타입
 export interface Filters {
