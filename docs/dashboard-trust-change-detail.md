@@ -11,7 +11,6 @@ https://midasinfra-my.sharepoint.com/:x:/g/personal/ksi0921_jainwon_com/IQBYfGKN
 ## 타입 정의 (공유)
 
 ```ts
-export type TimePeriodType = "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR"; // 기간 필터
 export type CategoryType = "채용" | "공공" | "병원" | "성과"; // 카테고리
 export type CompanySizeType = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
 export type TrustLevelType = "P1" | "P2" | "P3" | null; // 신뢰 레벨
@@ -32,20 +31,20 @@ export type ContentActionType =
 
 ```ts
 export interface TrustChangeDetailRequest {
-  companyId: number;           // 조회할 기업 ID
-  period: TimePeriodType;      // 조회 기간 (신뢰지수 변동 계산 기준)
+  companyId: number;                                     // 조회할 기업 ID
+  dateRange: { startDate: string; endDate: string };     // 조회 기간 (YYYY-MM-DD)
 }
 ```
 
 ### 필드 설명 (Request)
 - `companyId`: 상세 정보를 조회할 기업의 ID
-- `period`: 신뢰지수 변동 계산 기간. 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공
+- `dateRange`: 신뢰지수 변동 계산 기간 (startDate ~ endDate 범위 내의 콘텐츠 소비 및 MBM 참석 이력 제공)
 
 ## 응답 (Response)
 
 ```ts
 export interface TrustChangeDetailResponse {
-  changeAmount: number;                  // 변화량
+  changeAmount: number;                  // 변화량(hubs Weekly snapshots)
   engagementItems: EngagementScore[];   // Engagement Score (이벤트 기반 활동, MBM 포함)
 }
 
@@ -63,11 +62,32 @@ export interface EngagementItem {
 ## API 엔드포인트 예시
 
 ```
-GET /dashboard/trust-change-detail?companyId=123&period=MONTH
+POST /dashboard/trust-change-detail
+Content-Type: application/json
 ```
 
 ### 요청 예시
 ```
-GET /dashboard/trust-change-detail?companyId=4&period=MONTH
+POST /dashboard/trust-change-detail
+Content-Type: application/json
+
+{
+  "companyId": 4,
+  "dateRange": {
+    "startDate": "2024-11-01",
+    "endDate": "2024-12-01"
+  }
+}
 ```
+
+---
+
+## 변경 이력
+
+### 2024-12-17: 조회 기간 타입 변경
+- **변경 전**: `period: TimePeriodType` ("WEEK" | "MONTH" | "HALF_YEAR" | "YEAR")
+- **변경 후**: `dateRange: { startDate: string; endDate: string }` (YYYY-MM-DD 형식)
+- **사유**: UI에서 RangePicker로 직접 날짜 범위를 선택하므로, API도 정확한 날짜 범위를 받도록 변경
+- **API 메서드 변경**: GET → POST (날짜 범위를 바디로 전달)
+- **필터링 방식**: startDate ~ endDate 범위 내의 콘텐츠 소비 및 MBM 참석 이력 반환
 

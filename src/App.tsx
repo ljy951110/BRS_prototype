@@ -440,7 +440,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
               <>
                 <div style={{ marginBottom: 16 }}>
                   <Space size="middle" align="center">
-                    <Typography.Text strong>조회 기간:</Typography.Text>
+                    <Typography.Text strong>조회 기간</Typography.Text>
                     <RangePicker
                       value={dateRange}
                       onChange={(dates) => {

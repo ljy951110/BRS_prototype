@@ -1,0 +1,41 @@
+# DashboardFilters
+
+대시보드 필터
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**companySizes** | [**Array&lt;CompanySize&gt;**](CompanySize.md) |  | [optional] [default to undefined]
+**managers** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**categories** | [**Array&lt;Category&gt;**](Category.md) |  | [optional] [default to undefined]
+**productUsages** | [**Array&lt;ProductType&gt;**](ProductType.md) |  | [optional] [default to undefined]
+**possibilities** | [**Array&lt;Possibility&gt;**](Possibility.md) |  | [optional] [default to undefined]
+**stages** | [**Array&lt;ProgressStage&gt;**](ProgressStage.md) |  | [optional] [default to undefined]
+**contractAmountRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
+**targetRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
+**expectedRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
+**targetMonths** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
+**lastContactDateRange** | [**DateRangeFilter**](DateRangeFilter.md) |  | [optional] [default to undefined]
+
+## Example
+
+```typescript
+import { DashboardFilters } from './api';
+
+const instance: DashboardFilters = {
+    companySizes,
+    managers,
+    categories,
+    productUsages,
+    possibilities,
+    stages,
+    contractAmountRange,
+    targetRevenueRange,
+    expectedRevenueRange,
+    targetMonths,
+    lastContactDateRange,
+};
+```
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

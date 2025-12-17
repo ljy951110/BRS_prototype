@@ -5,7 +5,6 @@
 ## 타입 정의 (공유)
 
 ```ts
-export type TimePeriodType = "WEEK" | "MONTH" | "HALF_YEAR" | "YEAR"; // 기간 필터
 export type SalesActionType = "CALL" | "MEETING"; // 영업 활동 유형
 export type PossibilityType = "90%" | "40%" | "0%"; // 계약 가능성
 ```
@@ -15,13 +14,13 @@ export type PossibilityType = "90%" | "40%" | "0%"; // 계약 가능성
 ```ts
 export interface SalesHistoryRequest {
   companyId: number;
-  period: TimePeriodType; // 기간 필터
+  dateRange: { startDate: string; endDate: string }; // 조회 기간 (YYYY-MM-DD)
 }
 ```
 
 ### 필드 설명 (Request)
 - `companyId`: 조회할 고객사 ID
-- `period`: 조회 기간 (해당 기간 내의 영업 액션만 반환)
+- `dateRange`: 조회 기간 (startDate ~ endDate 범위 내의 영업 액션만 반환)
 
 ## 응답 (Response)
 
@@ -96,17 +95,18 @@ export interface ActionState {
 - 타임라인 형태로 시각화
 
 ## API 엔드포인트 예시
-- `GET /dashboard/customer/:companyId/sales-history` → `SalesHistoryResponse`  
-  - 쿼리스트링: `?period=MONTH`
-  - 예시: `GET /dashboard/customer/123/sales-history?period=MONTH`
+- `POST /dashboard/customer/:companyId/sales-history` → `SalesHistoryResponse`  
+  - 요청 바디: `{ "dateRange": { "startDate": "2024-11-01", "endDate": "2024-12-01" } }`
+  - 예시: `POST /dashboard/customer/123/sales-history`
+  - 날짜 범위가 길어질 수 있으므로 POST 방식 권장
 
 ## 주요 규칙
 
-- 기간(`period`)에 따라 반환되는 영업 액션을 필터링합니다.
-  - `WEEK`: 최근 1주일 내 액션
-  - `MONTH`: 최근 1개월 내 액션
-  - `HALF_YEAR`: 최근 6개월 내 액션
-  - `YEAR`: 최근 1년 내 액션
+- **조회 기간 (`dateRange`)**:
+  - `startDate`와 `endDate` 범위 내의 영업 액션만 반환
+  - 날짜 형식: YYYY-MM-DD (예: "2024-11-01", "2024-12-01")
+  - 해당 기간에 수행된 액션만 필터링하여 반환
+  - 예시: `{ startDate: "2024-11-01", endDate: "2024-12-01" }`
 - 금액은 모두 **원 단위**로 응답합니다.
 - 날짜 형식:
   - `date`: "YYYY-MM-DD"
@@ -121,10 +121,28 @@ export interface ActionState {
   - 프론트엔드에서 before/after 비교하여 변화 시각화
 - 해당 기간에 영업 액션이 없으면 `salesActions`는 빈 배열 `[]`로 반환합니다.
 
+---
+
+## 변경 이력
+
+### 2024-12-17: 조회 기간 타입 변경
+- **변경 전**: `period: TimePeriodType` ("WEEK" | "MONTH" | "HALF_YEAR" | "YEAR")
+- **변경 후**: `dateRange: { startDate: string; endDate: string }` (YYYY-MM-DD 형식)
+- **사유**: UI에서 RangePicker로 직접 날짜 범위를 선택하므로, API도 정확한 날짜 범위를 받도록 변경
+- **API 메서드 변경**: GET → POST (날짜 범위를 바디로 전달)
+- **필터링 방식**: startDate ~ endDate 범위 내의 영업 액션만 반환
+
 ## 사용 예시
 
 ### 요청
 ```
-GET /dashboard/customer/123/sales-history?period=MONTH
-```
+POST /dashboard/customer/123/sales-history
+Content-Type: application/json
+
+{
+  "dateRange": {
+    "startDate": "2024-11-01",
+    "endDate": "2024-12-01"
+  }
+}
 ```

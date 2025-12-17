@@ -48,6 +48,46 @@ const formatMan = (val: number | null | undefined) => {
   return `${man}만`;
 };
 
+// 최근 MBM 날짜 계산
+const getLastMBMDate = (attendance: Customer["attendance"]): string | null => {
+  if (!attendance) return null;
+
+  const MBM_DATES: Record<string, string> = {
+    "1218": "2024-12-18",
+    "1209": "2024-12-09",
+    "1107": "2024-11-07",
+  };
+
+  // 가장 최근 MBM 참석 찾기 (키 역순으로 정렬)
+  const attendedKeys = Object.keys(attendance)
+    .filter(key => attendance[key as keyof typeof attendance])
+    .sort((a, b) => parseInt(b) - parseInt(a));
+
+  if (attendedKeys.length === 0) return null;
+  return MBM_DATES[attendedKeys[0]] || null;
+};
+
+// 마지막 컨택일 계산 (날짜 반환)
+const getLastContactDate = (salesActions: Customer["salesActions"]): string | null => {
+  if (!salesActions || salesActions.length === 0) return null;
+
+  const sortedActions = [...salesActions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  return sortedActions[0].date;
+};
+
+// 날짜를 YY-MM-DD 형식으로 포맷
+const formatDateShort = (dateStr: string | null): string => {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  const year = String(date.getFullYear()).slice(-2);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // 목표일자 문자열을 날짜로 변환
 const parseTargetDate = (dateStr: string | null | undefined): Date | null => {
   if (!dateStr || dateStr === "-") return null;
@@ -203,6 +243,8 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
   const [expectedRevenueMaxDraft, setExpectedRevenueMaxDraft] = useState<number | null>(null); // 만원 단위
   const [targetMonthsDraft, setTargetMonthsDraft] = useState<number[]>([]);
   const [companySearch, setCompanySearch] = useState("");
+  const [lastContactStart, setLastContactStart] = useState<string>("");
+  const [lastContactEnd, setLastContactEnd] = useState<string>("");
 
   // 정렬 state
   const [sortField, setSortField] = useState<string | null>(null);
@@ -302,6 +344,19 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           }
         }
 
+        // 마지막 컨택일 필터
+        if (lastContactStart || lastContactEnd) {
+          const lastContactDate = getLastContactDate(row.salesActions);
+          if (!lastContactDate) return false;
+          const lastContact = new Date(lastContactDate).getTime();
+          if (lastContactStart && lastContact < new Date(lastContactStart).getTime()) {
+            return false;
+          }
+          if (lastContactEnd && lastContact > new Date(lastContactEnd).getTime()) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -338,11 +393,18 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
             const bDate = new Date(b.adoptionDecision.targetDate || 0).getTime();
             return (aDate - bDate) * modifier;
           }
+          case "lastContact": {
+            const aContact = getLastContactDate(a.salesActions);
+            const bContact = getLastContactDate(b.salesActions);
+            const aTime = aContact ? new Date(aContact).getTime() : 0;
+            const bTime = bContact ? new Date(bContact).getTime() : 0;
+            return (aTime - bTime) * modifier;
+          }
           default:
             return 0;
         }
       });
-  }, [data, timePeriod, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch, sortField, sortOrder]);
+  }, [data, timePeriod, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch, lastContactStart, lastContactEnd, sortField, sortOrder]);
 
   const possibilityOptions = useMemo(
     () =>
@@ -437,7 +499,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
       filterIcon: (filtered) => (
         <FilterFilled style={{ color: filtered || companySearch || sortField === "companyName" ? token.colorPrimary : undefined }} />
       ),
-      width: 200,
+      minWidth: 200,
     },
     {
       title: "기업 규모",
@@ -504,74 +566,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled style={{ color: filtered || sortField === "companySize" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => (record.companySize || "미정") === value,
-      width: 240,
-    },
-    {
-      title: "담당자",
-      dataIndex: "manager",
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
-          <Select
-            mode="multiple"
-            allowClear
-            placeholder="담당자 선택"
-            style={{ width: "100%" }}
-            options={Array.from(new Set(tableData.map((d) => d.manager))).map((m) => ({ label: m, value: m }))}
-            value={selectedKeys as string[]}
-            onChange={(values) => setSelectedKeys(values)}
-          />
-          <Divider style={{ margin: "8px 0" }} />
-          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
-          <Space>
-            <Button
-              size="small"
-              type={sortField === "manager" && sortOrder === "asc" ? "primary" : "default"}
-              onClick={() => {
-                setSortField("manager");
-                setSortOrder("asc");
-                confirm({ closeDropdown: true });
-              }}
-            >
-              오름차순
-            </Button>
-            <Button
-              size="small"
-              type={sortField === "manager" && sortOrder === "desc" ? "primary" : "default"}
-              onClick={() => {
-                setSortField("manager");
-                setSortOrder("desc");
-                confirm({ closeDropdown: true });
-              }}
-            >
-              내림차순
-            </Button>
-          </Space>
-          <Divider style={{ margin: "8px 0" }} />
-          <Space>
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => confirm({ closeDropdown: true })}
-            >
-              적용
-            </Button>
-            <Button
-              size="small"
-              onClick={() => {
-                clearFilters?.();
-                confirm({ closeDropdown: true });
-              }}
-            >
-              초기화
-            </Button>
-          </Space>
-        </Space>
-      ),
-      filterIcon: (filtered) => (
-        <FilterFilled style={{ color: filtered || sortField === "manager" ? token.colorPrimary : undefined }} />
-      ),
-      onFilter: (value, record) => record.manager === value,
-      width: 180,
+      minWidth: 120,
     },
     {
       title: "카테고리",
@@ -638,7 +633,16 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled style={{ color: filtered || sortField === "category" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.category === value,
-      width: 240,
+      render: (category: string) => {
+        const colorMap: Record<string, string> = {
+          "채용": "blue",
+          "공공": "green",
+          "병원": "cyan",
+          "성과": "purple",
+        };
+        return <Tag color={colorMap[category] || "default"} bordered>{category}</Tag>;
+      },
+      minWidth: 100,
     },
     {
       title: "제품사용",
@@ -705,16 +709,92 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         <FilterFilled style={{ color: filtered || sortField === "productUsage" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.productUsage.includes(value as ProductType),
-      render: (products: string[]) => (
-        <div className={styles.tagGroup}>
-          {products.map((product) => (
-            <Tag key={product} color="blue" bordered>
-              {product}
-            </Tag>
-          ))}
-        </div>
+      render: (products: string[]) => {
+        const productColorMap: Record<string, string> = {
+          "ATS": "blue",
+          "역검SR": "purple",
+          "INHR+통합": "orange",
+          "역검": "green",
+          "이탈사": "red",
+        };
+        return (
+          <div className={styles.tagGroup}>
+            {products.map((product) => (
+              <Tag key={product} color={productColorMap[product] || "default"} bordered>
+                {product}
+              </Tag>
+            ))}
+          </div>
+        );
+      },
+      minWidth: 150,
+    },
+    {
+      title: "담당자",
+      dataIndex: "manager",
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="담당자 선택"
+            style={{ width: "100%" }}
+            options={Array.from(new Set(tableData.map((d) => d.manager))).map((m) => ({ label: m, value: m }))}
+            value={selectedKeys as string[]}
+            onChange={(values) => setSelectedKeys(values)}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "manager" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("manager");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "manager" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("manager");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
       ),
-      width: 180,
+      filterIcon: (filtered) => (
+        <FilterFilled style={{ color: filtered || sortField === "manager" ? token.colorPrimary : undefined }} />
+      ),
+      onFilter: (value, record) => record.manager === value,
+      minWidth: 100,
     },
     {
       title: "신뢰지수",
@@ -766,7 +846,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </div>
         );
       },
-      width: 150,
+      minWidth: 120,
     },
     {
       title: "계약금액",
@@ -867,7 +947,139 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
         />
       ),
       render: (val: number | null) => formatMan(val),
-      width: 150,
+      minWidth: 120,
+    },
+    {
+      title: "최근 MBM",
+      dataIndex: "attendance",
+      render: (attendance: Customer["attendance"]) => {
+        const lastMBM = getLastMBMDate(attendance);
+        const formattedDate = lastMBM ? formatDateShort(lastMBM) : "-";
+        return (
+          <span style={{ color: token.colorTextBase }}>
+            {formattedDate}
+          </span>
+        );
+      },
+      minWidth: 110,
+    },
+    {
+      title: "도입결정",
+      dataIndex: "progress",
+      filters: [
+        { text: "테스트", value: "test" },
+        { text: "견적", value: "quote" },
+        { text: "승인", value: "approval" },
+        { text: "계약", value: "contract" },
+      ],
+      onFilter: (value, record) => {
+        const levelMap: Record<string, number> = {
+          test: 0,
+          quote: 1,
+          approval: 2,
+          contract: 3,
+        };
+        const requiredLevel = levelMap[String(value)] ?? -1;
+        const currentLevel = getProgressLevel(record.adoptionDecision);
+        return currentLevel === requiredLevel;
+      },
+      render: (_, record) => renderProgressTags(record, true, progressColors),
+      minWidth: 140,
+    },
+    {
+      title: "마지막 컨택",
+      dataIndex: "salesActions",
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+          <Typography.Text strong style={{ fontSize: 12 }}>날짜 범위</Typography.Text>
+          <Input
+            type="date"
+            placeholder="시작일"
+            value={lastContactStart}
+            onChange={(e) => setLastContactStart(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <Input
+            type="date"
+            placeholder="종료일"
+            value={lastContactEnd}
+            onChange={(e) => setLastContactEnd(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <Divider style={{ margin: "8px 0" }} />
+          <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+          <Space>
+            <Button
+              size="small"
+              type={sortField === "lastContact" && sortOrder === "asc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("lastContact");
+                setSortOrder("asc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              오름차순
+            </Button>
+            <Button
+              size="small"
+              type={sortField === "lastContact" && sortOrder === "desc" ? "primary" : "default"}
+              onClick={() => {
+                setSortField("lastContact");
+                setSortOrder("desc");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              내림차순
+            </Button>
+          </Space>
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm({ closeDropdown: true })}
+            >
+              적용
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters?.();
+                setLastContactStart("");
+                setLastContactEnd("");
+                confirm({ closeDropdown: true });
+              }}
+            >
+              초기화
+            </Button>
+          </Space>
+        </Space>
+      ),
+      filterIcon: () => (
+        <FilterFilled
+          style={{
+            color:
+              lastContactStart || lastContactEnd || sortField === "lastContact"
+                ? token.colorPrimary
+                : undefined,
+          }}
+        />
+      ),
+      render: (salesActions: Customer["salesActions"]) => {
+        const lastContactDate = getLastContactDate(salesActions);
+        return (
+          <span style={{
+            color: lastContactDate ? token.colorTextBase : token.colorTextTertiary,
+            whiteSpace: 'nowrap'
+          }}>
+            {formatDateShort(lastContactDate)}
+          </span>
+        );
+      },
+      onCell: () => ({
+        style: { whiteSpace: 'nowrap' }
+      }),
+      minWidth: 110,
     },
     {
       title: "목표매출",
@@ -982,7 +1194,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </div>
         );
       },
-      width: 180,
+      minWidth: 140,
     },
     {
       title: "가능성",
@@ -1070,7 +1282,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </div>
         );
       },
-      width: 150,
+      minWidth: 110,
     },
     {
       title: "예상매출",
@@ -1186,30 +1398,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </div>
         );
       },
-      width: 180,
-    },
-    {
-      title: "진행상태",
-      dataIndex: "progress",
-      filters: [
-        { text: "테스트", value: "test" },
-        { text: "견적", value: "quote" },
-        { text: "승인", value: "approval" },
-        { text: "계약", value: "contract" },
-      ],
-      onFilter: (value, record) => {
-        const levelMap: Record<string, number> = {
-          test: 0,
-          quote: 1,
-          approval: 2,
-          contract: 3,
-        };
-        const requiredLevel = levelMap[String(value)] ?? -1;
-        const currentLevel = getProgressLevel(record.adoptionDecision);
-        return currentLevel === requiredLevel;
-      },
-      render: (_, record) => renderProgressTags(record, true, progressColors),
-      width: 180,
+      minWidth: 140,
     },
     {
       title: "목표일자",
@@ -1305,7 +1494,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           </div>
         );
       },
-      width: 150,
+      minWidth: 120,
     },
   ];
 
@@ -1321,7 +1510,7 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
           onClick: () => setSelectedCustomer(record),
           style: { cursor: "pointer" },
         })}
-        scroll={{ x: 1200 }}
+        scroll={{ x: 1800 }}
       />
 
       <Modal
@@ -1348,6 +1537,15 @@ export const CustomerTable = ({ data, timePeriod, loading }: CustomerTableProps)
                     </Descriptions.Item>
                     <Descriptions.Item label="기업규모">
                       {selectedCustomer.companySize || "미정"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="제품사용" span={2}>
+                      <Space size={4} wrap>
+                        {selectedCustomer.productUsage?.map((product, idx) => (
+                          <Tag key={idx} color="blue">
+                            {product}
+                          </Tag>
+                        )) || "-"}
+                      </Space>
                     </Descriptions.Item>
                     <Descriptions.Item label="가능성">
                       <Tag

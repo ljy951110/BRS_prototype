@@ -1,19 +1,55 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider, theme } from 'antd';
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+  type QueryClientConfig
+} from '@tanstack/react-query';
+import { ConfigProvider, message, theme } from 'antd';
 import 'antd/dist/reset.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './styles/global.scss';
 
-const queryClient = new QueryClient({
+// 전역 에러 핸들러
+const handleGlobalError = (error: Error) => {
+  const errorData = error as { message?: string };
+  const errorMsg = errorData?.message || '오류가 발생했습니다.';
+
+  message.error(errorMsg);
+  console.error('[React Query Error]:', error);
+};
+
+const queryClientConfig: QueryClientConfig = {
+  queryCache: new QueryCache({
+    onError: handleGlobalError,
+  }),
+  mutationCache: new MutationCache({
+    onError: handleGlobalError,
+  }),
   defaultOptions: {
     queries: {
-      retry: 1,
       refetchOnWindowFocus: false,
+      retry: (failureCount, error: Error) => {
+        // Axios 에러 타입 체크
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        switch (status) {
+          case 403:
+            return failureCount < 1; // 403 에러일 경우 재시도 1번
+          default:
+            return failureCount < 1; // 기본 재시도 1번
+        }
+      },
+      staleTime: 1000,
+    },
+    mutations: {
+      retry: false,
     },
   },
-});
+};
+
+const queryClient = new QueryClient(queryClientConfig);
 
 async function enableMocking() {
   if (!import.meta.env.DEV) {

@@ -1,0 +1,20 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "http://10.11.30.192:8001/openapi.json",
+  "outputDir": "src/repository/openapi",
+  "validateSpec": false,
+  "additionalProperties": {
+    "modelPackage": "model",
+    "apiPackage": "api",
+    "withSeparateModelsAndApi": true,
+    "enumPropertyNaming": "UPPERCASE",
+    "generateSourceCodeOnly": false,
+    "supportsES6": true,
+    "useSingleRequestParameter": true
+  },
+  "globalProperties": {
+    "models": "",
+    "apis": "",
+    "supportingFiles": ""
+  }
+}
