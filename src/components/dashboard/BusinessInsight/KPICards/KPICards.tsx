@@ -109,11 +109,11 @@ const modalData = {
   mbm_status: {
     title: "MBM 현황 상세",
     statusData: {
-      all: { invited: 45, participated: 120, followup: 85, stagnant: 35, closed: 65 },
-      "T0 (대기업)": { invited: 8, participated: 25, followup: 18, stagnant: 5, closed: 12 },
-      "T1 (중견)": { invited: 12, participated: 35, followup: 22, stagnant: 10, closed: 18 },
-      "T2 (중소)": { invited: 15, participated: 40, followup: 28, stagnant: 12, closed: 22 },
-      "T3 (소기업)": { invited: 10, participated: 20, followup: 17, stagnant: 8, closed: 13 },
+      all: { invited: 700, participated: 50, followup: 50, stagnant: 0, closed: 3 },
+      "T0 (대기업)": { invited: 120, participated: 10, followup: 10, stagnant: 0, closed: 1 },
+      "T1 (중견)": { invited: 180, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T2 (중소)": { invited: 250, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T3 (소기업)": { invited: 150, participated: 10, followup: 10, stagnant: 0, closed: 0 },
     },
     insight: "팔로업 진행 중인 고객이 가장 많으며, 정체 상태의 고객에 대한 관리가 필요합니다.",
   },
@@ -185,17 +185,19 @@ const TotalCustomersModalContent = () => {
     <div className={styles.chartContainer}>
       {/* 기업 규모 필터 */}
       <div className={styles.filterSection}>
-        <Text variant="body-sm" weight="medium" color="secondary">기업 규모 필터</Text>
-        <div className={styles.filterButtons}>
-          {COMPANY_SIZE_OPTIONS.map((option) => (
-            <button
-              key={option}
-              className={`${styles.filterBtn} ${sizeFilter === option ? styles.active : ""}`}
-              onClick={() => setSizeFilter(option)}
+        <div className={styles.filterRow}>
+          <div className={styles.filterGroup}>
+            <Text variant="body-sm" weight="medium" color="secondary">기업 규모</Text>
+            <select 
+              className={styles.filterSelect}
+              value={sizeFilter}
+              onChange={(e) => setSizeFilter(e.target.value)}
             >
-              {option}
-            </button>
-          ))}
+              {COMPANY_SIZE_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -280,28 +282,30 @@ const MBM_OPTIONS = ["전체 MBM", "11/7"];
 // MBM 단계별 기업 리스트 더미 데이터
 const mbmCompanyList = {
   invited: [
-    { companyName: "테크솔루션", companySize: "T1 (중견)", manager: "김민수", adoptionStage: "테스트" },
-    { companyName: "스마트팩토리", companySize: "T2 (중소)", manager: "이지은", adoptionStage: "견적" },
+    { companyName: "테크솔루션", companySize: "T1 (중견)", manager: "김민수", adoptionStage: "-" },
+    { companyName: "스마트팩토리", companySize: "T2 (중소)", manager: "이지은", adoptionStage: "-" },
     { companyName: "글로벌테크", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "이노베이션랩", companySize: "T3 (소기업)", manager: "최서연", adoptionStage: "테스트" },
+    { companyName: "이노베이션랩", companySize: "T3 (소기업)", manager: "최서연", adoptionStage: "-" },
   ],
   participated: [
-    { companyName: "비전바이오켐", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "견적" },
-    { companyName: "퓨처모빌리티", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "승인" },
-    { companyName: "넥스트젠AI", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "테스트" },
-    { companyName: "블루오션", companySize: "T1 (중견)", manager: "이지은", adoptionStage: "견적" },
-    { companyName: "그린에너지", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "승인" },
+    { companyName: "비전바이오켐", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "-" },
+    { companyName: "퓨처모빌리티", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "-" },
+    { companyName: "넥스트젠AI", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "-" },
+    { companyName: "블루오션", companySize: "T1 (중견)", manager: "이지은", adoptionStage: "-" },
+    { companyName: "그린에너지", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
   ],
   followup: [
-    { companyName: "스카이네트워크", companySize: "T2 (중소)", manager: "최서연", adoptionStage: "견적" },
-    { companyName: "메가시스템", companySize: "T1 (중견)", manager: "정현우", adoptionStage: "승인" },
-    { companyName: "알파테크", companySize: "T3 (소기업)", manager: "한지민", adoptionStage: "테스트" },
-    { companyName: "베타소프트", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "견적" },
+    { companyName: "스카이네트워크", companySize: "T2 (중소)", manager: "최서연", adoptionStage: "견적", lastContact: "2024.12.15" },
+    { companyName: "메가시스템", companySize: "T1 (중견)", manager: "정현우", adoptionStage: "품의", lastContact: "2024.12.14" },
+    { companyName: "알파테크", companySize: "T3 (소기업)", manager: "한지민", adoptionStage: "테스트", lastContact: "2024.12.16" },
+    { companyName: "베타소프트", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "견적", lastContact: "2024.12.10" },
+    { companyName: "델타시스템즈", companySize: "T0 (대기업)", manager: "이지은", adoptionStage: "품의", lastContact: "2024.12.13" },
+    { companyName: "오메가테크", companySize: "T1 (중견)", manager: "박준영", adoptionStage: "테스트", lastContact: "2024.12.12" },
   ],
   stagnant: [
-    { companyName: "레드플래닛", companySize: "T3 (소기업)", manager: "이지은", adoptionStage: "테스트" },
+    { companyName: "레드플래닛", companySize: "T3 (소기업)", manager: "이지은", adoptionStage: "-" },
     { companyName: "옐로우스톤", companySize: "T2 (중소)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "오렌지코퍼", companySize: "T1 (중견)", manager: "최서연", adoptionStage: "테스트" },
+    { companyName: "오렌지코퍼", companySize: "T1 (중견)", manager: "최서연", adoptionStage: "-" },
   ],
   closed: [
     { companyName: "다이아몬드그룹", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "계약" },
@@ -310,20 +314,40 @@ const mbmCompanyList = {
   ],
 };
 
+// 도입결정 필터 옵션
+const ADOPTION_STAGE_OPTIONS = ["전체", "테스트", "견적", "품의"];
+
 // MBM 현황 모달 콘텐츠
 const MBMStatusModalContent = () => {
   const [sizeFilter, setSizeFilter] = useState("전체");
   const [mbmFilter, setMbmFilter] = useState("전체 MBM");
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [adoptionFilter, setAdoptionFilter] = useState("전체");
   const data = modalData.mbm_status;
   
   const currentData = sizeFilter === "전체" 
     ? data.statusData.all 
     : data.statusData[sizeFilter as keyof typeof data.statusData] || data.statusData.all;
 
+  // 퍼널 단계 (정체 제외)
+  const funnelStages = [
+    { key: "invited", label: "전체 모수", color: "#71717a" },
+    { key: "participated", label: "참석", color: "#3b82f6" },
+    { key: "followup", label: "팔로업 진행", color: "#a855f7" },
+    { key: "closed", label: "계약완료", color: "#22c55e" },
+  ];
+
+  // 전환율 계산
+  const getConversionRate = (fromKey: string, toKey: string) => {
+    const fromValue = currentData[fromKey as keyof typeof currentData];
+    const toValue = currentData[toKey as keyof typeof currentData];
+    if (fromValue === 0) return 0;
+    return Math.round((toValue / fromValue) * 100);
+  };
+
   const statusLabels = [
-    { key: "invited", label: "참여전", color: "#71717a" },
-    { key: "participated", label: "참여", color: "#3b82f6" },
+    { key: "invited", label: "전체 모수", color: "#71717a" },
+    { key: "participated", label: "참석", color: "#3b82f6" },
     { key: "followup", label: "팔로업 진행", color: "#a855f7" },
     { key: "stagnant", label: "정체", color: "#f97316" },
     { key: "closed", label: "계약완료", color: "#22c55e" },
@@ -343,9 +367,14 @@ const MBMStatusModalContent = () => {
     : [];
 
   // 기업 규모 필터 적용
-  const filteredCompanies = sizeFilter === "전체"
+  let filteredCompanies = sizeFilter === "전체"
     ? selectedCompanies
     : selectedCompanies.filter(c => c.companySize === sizeFilter);
+
+  // 팔로업 진행 단계에서 도입결정 필터 적용
+  if (selectedStage === "followup" && adoptionFilter !== "전체") {
+    filteredCompanies = filteredCompanies.filter(c => c.adoptionStage === adoptionFilter);
+  }
 
   const handleStageClick = (stageKey: string) => {
     setSelectedStage(selectedStage === stageKey ? null : stageKey);
@@ -383,23 +412,29 @@ const MBMStatusModalContent = () => {
         </div>
       </div>
 
-      {/* 상태별 카드 (클릭 가능) */}
-      <div className={styles.mbmStatusCards}>
-        {statusLabels.map((status) => (
-          <div 
-            key={status.key} 
-            className={`${styles.mbmStatusCard} ${selectedStage === status.key ? styles.selected : ""}`} 
-            style={{ borderColor: status.color }}
-            onClick={() => handleStageClick(status.key)}
-          >
-            <Text variant="caption" color="secondary">{status.label}</Text>
-            <Text variant="h3" weight="bold" style={{ color: status.color }}>
-              {currentData[status.key as keyof typeof currentData]}
-            </Text>
-            <Text variant="caption" color="tertiary">
-              {((currentData[status.key as keyof typeof currentData] / total) * 100).toFixed(1)}%
-            </Text>
-          </div>
+      {/* 퍼널 구조 */}
+      <div className={styles.funnelContainer}>
+        {funnelStages.map((stage, index) => (
+          <React.Fragment key={stage.key}>
+            <div 
+              className={`${styles.funnelStage} ${selectedStage === stage.key ? styles.selected : ""}`}
+              style={{ borderColor: stage.color }}
+              onClick={() => handleStageClick(stage.key)}
+            >
+              <Text variant="caption" color="secondary">{stage.label}</Text>
+              <Text variant="h3" weight="bold" style={{ color: stage.color }}>
+                {currentData[stage.key as keyof typeof currentData]}
+              </Text>
+            </div>
+            {index < funnelStages.length - 1 && (
+              <div className={styles.funnelArrow}>
+                <span className={styles.arrowIcon}>▶</span>
+                <span className={styles.conversionRate}>
+                  {getConversionRate(stage.key, funnelStages[index + 1].key)}%
+                </span>
+              </div>
+            )}
+          </React.Fragment>
         ))}
       </div>
 
@@ -416,7 +451,24 @@ const MBMStatusModalContent = () => {
                   <th>기업명</th>
                   <th>기업 규모</th>
                   <th>담당자</th>
-                  <th>도입결정</th>
+                  {selectedStage === "followup" && (
+                    <>
+                      <th className={styles.filterableTh}>
+                        <select 
+                          className={styles.thFilterSelect}
+                          value={adoptionFilter}
+                          onChange={(e) => setAdoptionFilter(e.target.value)}
+                        >
+                          {ADOPTION_STAGE_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option === "전체" ? "도입결정" : option}
+                            </option>
+                          ))}
+                        </select>
+                      </th>
+                      <th>마지막 컨택</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -425,24 +477,29 @@ const MBMStatusModalContent = () => {
                     <td>{company.companyName}</td>
                     <td>{company.companySize}</td>
                     <td>{company.manager}</td>
-                    <td>
-                      <Badge 
-                        variant={
-                          company.adoptionStage === "계약" ? "success" :
-                          company.adoptionStage === "승인" ? "purple" :
-                          company.adoptionStage === "견적" ? "info" :
-                          company.adoptionStage === "테스트" ? "warning" : "default"
-                        } 
-                        size="sm"
-                      >
-                        {company.adoptionStage}
-                      </Badge>
-                    </td>
+                    {selectedStage === "followup" && (
+                      <>
+                        <td>
+                          <Badge 
+                            variant={
+                              company.adoptionStage === "계약" ? "success" :
+                              company.adoptionStage === "품의" ? "purple" :
+                              company.adoptionStage === "견적" ? "info" :
+                              company.adoptionStage === "테스트" ? "warning" : "default"
+                            } 
+                            size="sm"
+                          >
+                            {company.adoptionStage}
+                          </Badge>
+                        </td>
+                        <td>{company.lastContact || "-"}</td>
+                      </>
+                    )}
                   </tr>
                 ))}
                 {filteredCompanies.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', color: '#71717a' }}>
+                    <td colSpan={selectedStage === "followup" ? 5 : 3} style={{ textAlign: 'center', color: '#71717a' }}>
                       해당하는 기업이 없습니다.
                     </td>
                   </tr>
@@ -453,31 +510,8 @@ const MBMStatusModalContent = () => {
         </div>
       )}
 
-      {/* 막대 그래프 */}
-      {!selectedStage && (
-        <div className={styles.chartSection}>
-          <Text variant="body-sm" weight="medium" color="secondary">MBM 상태별 분포</Text>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-              <XAxis type="number" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 12 }} width={90} />
-              <Tooltip 
-                contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
-                labelStyle={{ color: '#fafafa' }}
-              />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
       <div className={styles.insightBox}>
-        <Text variant="body-sm" color="secondary">{data.insight}</Text>
+        <Text variant="body-sm" color="secondary">참석했으나, 팔로업 전인 고객 수가 가장 많습니다. 해당 고객에 대한 관리가 필요합니다.</Text>
       </div>
     </div>
   );
@@ -635,40 +669,40 @@ export const KPICards = () => {
   const kpiData = [
     {
       id: "total_customers",
-      title: "전체 고객 수",
-      value: "700",
-      subValue: "전월 대비 +12",
+      title: "전체 고객사",
+      value: "700사",
+      subValue: "",
       trend: "up" as const,
-      trendValue: "1.7%",
+      trendValue: "전주 대비 1.7%",
     },
     {
       id: "mbm_status",
-      title: "MBM 현황",
-      value: "350",
-      subValue: "참여 120 · 팔로업 85",
-      trend: "up" as const,
-      trendValue: "15.2%",
+      title: "MBM 참석사 계약 전환율",
+      value: "0.4%",
+      subValue: "",
+      trend: "" as const,
+      trendValue: "변화없음",
     },
     {
       id: "completeness",
       title: "완검화 진척도",
       value: "36.6%",
-      subValue: "128 / 350",
+      subValue: "",
       trend: "up" as const,
-      trendValue: "+8 (주간)",
+      trendValue: "전주 대비 8%",
     },
     {
       id: "target_vs_revenue",
       title: "목표 대비 예상 매출",
       value: "60.5%",
-      subValue: "₩1.57B / ₩2.6B",
+      subValue: "",
       trend: "down" as const,
-      trendValue: "39.5% 미달",
+      trendValue: "전주 대비 39.5%",
     },
     {
       id: "revenue_timing",
-      title: "예상 매출 발생 시기",
-      value: "12월 집중",
+      title: "최대 예상 매출 시기",
+      value: "12월",
     },
   ];
 
