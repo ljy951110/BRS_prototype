@@ -9,6 +9,7 @@ import { FilterFilled } from "@ant-design/icons";
 import {
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Divider,
   Input,
@@ -23,9 +24,10 @@ import {
   theme,
   Typography
 } from "antd";
+import dayjs from 'dayjs';
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Calendar, BookOpen } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 
@@ -227,7 +229,7 @@ const renderProgressTags = (
   );
 };
 
-export const CustomerTable = ({ data, timePeriod, loading, pagination: paginationProp, dateRange }: CustomerTableProps) => {
+export const CustomerTable = ({ data, timePeriod, loading, pagination: paginationProp }: CustomerTableProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -236,19 +238,33 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
     category: string;
     date: string;
   } | null>(null);
+  
+  // 각 탭별 조회 기간
+  const [summaryDateRange, setSummaryDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
+    dayjs().subtract(30, 'day'),
+    dayjs()
+  ]);
+  const [actionDateRange, setActionDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
+    dayjs().subtract(30, 'day'),
+    dayjs()
+  ]);
+  const [contentDateRange, setContentDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
+    dayjs().subtract(30, 'day'),
+    dayjs()
+  ]);
   const { token } = theme.useToken();
 
   // 고객 요약 정보 조회
   const { data: _customerSummary, isLoading: _isSummaryLoading } = useGetCustomerSummary(
     selectedCustomer?.no ?? 0,
     {
-      dateRange: dateRange || {
-        startDate: '2024-11-10',
-        endDate: '2024-12-10',
+      dateRange: {
+        startDate: summaryDateRange[0].format('YYYY-MM-DD'),
+        endDate: summaryDateRange[1].format('YYYY-MM-DD'),
       },
     },
     {
-      enabled: !!selectedCustomer && !!dateRange,
+      enabled: !!selectedCustomer,
     }
   );
 
@@ -256,13 +272,13 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
   const { data: salesHistoryData, isLoading: isSalesHistoryLoading } = useGetSalesHistory(
     selectedCustomer?.no ?? 0,
     {
-      dateRange: dateRange || {
-        startDate: '2024-11-10',
-        endDate: '2024-12-10',
+      dateRange: {
+        startDate: actionDateRange[0].format('YYYY-MM-DD'),
+        endDate: actionDateRange[1].format('YYYY-MM-DD'),
       },
     },
     {
-      enabled: !!selectedCustomer && !!dateRange,
+      enabled: !!selectedCustomer,
     }
   );
 
@@ -1575,9 +1591,29 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
             items={[
               {
                 key: "summary",
-                label: "요약",
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Building2 size={16} />
+                    <span>요약</span>
+                  </span>
+                ),
                 children: (
-                  <Descriptions bordered column={2} size="small">
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <Space>
+                        <span>조회 기간:</span>
+                        <DatePicker.RangePicker
+                          value={summaryDateRange}
+                          onChange={(dates) => {
+                            if (dates && dates[0] && dates[1]) {
+                              setSummaryDateRange([dates[0], dates[1]]);
+                            }
+                          }}
+                          format="YYYY-MM-DD"
+                        />
+                      </Space>
+                    </div>
+                    <Descriptions bordered column={2} size="small">
                     <Descriptions.Item label="담당자">
                       {selectedCustomer.manager}
                     </Descriptions.Item>
@@ -1739,15 +1775,37 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                       </Tag>
                     </Descriptions.Item>
                   </Descriptions>
+                  </>
                 ),
               },
               {
                 key: "actions",
-                label: "영업 히스토리",
-                children: isSalesHistoryLoading ? (
-                  <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
-                ) : (
-                  <SalesActionHistory
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={16} />
+                    <span>영업 히스토리</span>
+                  </span>
+                ),
+                children: (
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <Space>
+                        <span>조회 기간:</span>
+                        <DatePicker.RangePicker
+                          value={actionDateRange}
+                          onChange={(dates) => {
+                            if (dates && dates[0] && dates[1]) {
+                              setActionDateRange([dates[0], dates[1]]);
+                            }
+                          }}
+                          format="YYYY-MM-DD"
+                        />
+                      </Space>
+                    </div>
+                    {isSalesHistoryLoading ? (
+                      <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
+                    ) : (
+                      <SalesActionHistory
                     actions={(salesHistoryData?.data?.salesActions || []).map(action => ({
                       type: action.type.toLowerCase() as 'call' | 'meeting',
                       content: action.content,
@@ -1763,13 +1821,34 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                     }))}
                     customer={selectedCustomer}
                   />
+                    )}
+                  </>
                 ),
               },
               {
                 key: "content",
-                label: "콘텐츠/MBM",
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BookOpen size={16} />
+                    <span>콘텐츠/MBM</span>
+                  </span>
+                ),
                 children: (
                   <div>
+                    <div style={{ marginBottom: 16 }}>
+                      <Space>
+                        <span>조회 기간:</span>
+                        <DatePicker.RangePicker
+                          value={contentDateRange}
+                          onChange={(dates) => {
+                            if (dates && dates[0] && dates[1]) {
+                              setContentDateRange([dates[0], dates[1]]);
+                            }
+                          }}
+                          format="YYYY-MM-DD"
+                        />
+                      </Space>
+                    </div>
                     <Title level={5} style={{ marginBottom: 8 }}>
                       콘텐츠 조회 이력
                     </Title>

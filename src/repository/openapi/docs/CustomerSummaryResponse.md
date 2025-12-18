@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **contractAmount** | **number** |  | [optional] [default to undefined]
 **current** | [**CustomerDetailPeriodData**](CustomerDetailPeriodData.md) |  | [default to undefined]
 **previous** | [**CustomerDetailPeriodData**](CustomerDetailPeriodData.md) |  | [default to undefined]
+**hubspotUrl** | **string** |  | [default to undefined]
 
 ## Example
 
@@ -31,6 +32,7 @@ const instance: CustomerSummaryResponse = {
     contractAmount,
     current,
     previous,
+    hubspotUrl,
 };
 ```
 

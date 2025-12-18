@@ -19,6 +19,26 @@
     import { useGetCustomerSummary } from '@/repository/query/customerDetailApiController/queryHook';
     ```
 
+### OpenAPI 자동 생성 타입 사용 주의
+- **`ProductType`, `CompanySize` 타입은 `@/types/common`에서 import**
+  - OpenAPI Generator가 한글/특수문자를 잘못 처리하여 `src/repository/openapi/model/product-type.ts`, `company-size.ts`에 오류 발생
+  - 대신 `src/types/common.ts`에 정의된 타입 사용
+  
+  ❌ 나쁜 예:
+  ```typescript
+  import { ProductType, CompanySize } from '@/repository/openapi/model';
+  ```
+  
+  ✅ 좋은 예:
+  ```typescript
+  import { ProductType, CompanySize } from '@/types/common';
+  ```
+
+- **OpenAPI 생성 파일 제외 설정**:
+  - `src/repository/openapi/**` 디렉토리는 TypeScript, ESLint 검사에서 제외됨
+  - `tsconfig.json`의 `exclude`에 설정됨
+  - `eslint.config.js`의 `ignores`에 설정됨
+
 ---
 
 ## 🎨 스타일 규칙
