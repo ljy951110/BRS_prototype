@@ -760,6 +760,21 @@ export const mockData: Customer[] = [
         date: "2024-12-10",
         category: "BOFU",
       },
+      {
+        title: "공공기관 HR 디지털 전환 가이드",
+        date: "2024-12-16",
+        category: "MOFU",
+      },
+      {
+        title: "에너지 산업 채용 웨비나",
+        date: "2024-12-18",
+        category: "TOFU",
+      },
+      {
+        title: "큐레이터 도입 체크리스트",
+        date: "2024-12-19",
+        category: "BOFU",
+      },
     ],
     attendance: { "1107": true, "1218": false },
     trustFormation: {

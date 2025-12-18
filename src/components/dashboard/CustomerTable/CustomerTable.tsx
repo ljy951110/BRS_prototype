@@ -26,6 +26,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { Text, Card, Badge, Modal } from "@/components/common/atoms";
 import { SalesActionHistory } from "@/components/dashboard/SalesActionHistory";
@@ -2412,77 +2415,150 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     />
                   </div>
                   
-                  {/* 콘텐츠 퍼널별 조회수 */}
+                  {/* 콘텐츠 분석 차트 */}
                   <section className={styles.modalSection}>
-                    <Text variant="body-md" weight="semibold">
-                      콘텐츠 퍼널별 조회수
-                    </Text>
-                    {(() => {
-                      const filteredContentEngagements = filterByDateRange(
-                        selectedCustomer.contentEngagements,
-                        marketingDateRange
-                      );
-                      const funnelCounts: { [key: string]: number } = {};
-                      let total = 0;
-                      
-                      // 퍼널별 조회수 집계
-                      filteredContentEngagements.forEach((content) => {
-                        const category = content.category || "기타";
-                        funnelCounts[category] = (funnelCounts[category] || 0) + 1;
-                        total++;
-                      });
-                      
-                      // 퍼널 순서 정의
-                      const funnelOrder = ["TOFU", "MOFU", "BOFU", "기타"];
-                      
-                      return total > 0 ? (
-                        <table className={styles.funnelTable}>
-                          <thead>
-                            <tr>
-                              <th>퍼널</th>
-                              <th>조회수</th>
-                              <th>비율</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {funnelOrder.map((funnel) => {
-                              const count = funnelCounts[funnel] || 0;
-                              const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0";
-                              
-                              if (count === 0 && funnel === "기타") return null;
-                              
-                              return (
-                                <tr key={funnel}>
-                                  <td>
-                                    <Badge 
-                                      variant={
-                                        funnel === "TOFU" ? "info" :
-                                        funnel === "MOFU" ? "purple" :
-                                        funnel === "BOFU" ? "success" : "default"
-                                      } 
-                                      size="sm"
-                                    >
-                                      {funnel}
-                                    </Badge>
-                                  </td>
-                                  <td>{count}회</td>
-                                  <td>{percentage}%</td>
-                                </tr>
-                              );
-                            })}
-                            <tr className={styles.totalRow}>
-                              <td><strong>합계</strong></td>
-                              <td><strong>{total}회</strong></td>
-                              <td><strong>100%</strong></td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      ) : (
-                        <Text variant="body-sm" color="tertiary">
-                          콘텐츠 조회 이력이 없습니다.
+                    <div className={styles.chartsContainer}>
+                      {/* 콘텐츠 퍼널별 조회수 */}
+                      <div className={styles.chartBox}>
+                        <Text variant="body-md" weight="semibold">
+                          콘텐츠 퍼널별 조회수
                         </Text>
-                      );
-                    })()}
+                        {(() => {
+                          const filteredContentEngagements = filterByDateRange(
+                            selectedCustomer.contentEngagements,
+                            marketingDateRange
+                          );
+                          const funnelCounts: { [key: string]: number } = {};
+                          
+                          // 퍼널별 조회수 집계
+                          filteredContentEngagements.forEach((content) => {
+                            const category = content.category || "기타";
+                            funnelCounts[category] = (funnelCounts[category] || 0) + 1;
+                          });
+                          
+                          // 파이 차트 데이터 생성
+                          const funnelData = Object.entries(funnelCounts).map(([name, value]) => ({
+                            name,
+                            value,
+                          }));
+                          
+                          const FUNNEL_COLORS = {
+                            TOFU: "#3b82f6",
+                            MOFU: "#a855f7",
+                            BOFU: "#22c55e",
+                            "기타": "#71717a",
+                          };
+                          
+                          return funnelData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={250}>
+                              <PieChart>
+                                <Pie
+                                  data={funnelData}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                >
+                                  {funnelData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[entry.name as keyof typeof FUNNEL_COLORS] || "#71717a"} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  contentStyle={{
+                                    backgroundColor: "#18181b",
+                                    border: "1px solid #27272a",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelStyle={{ color: "#fafafa" }}
+                                  itemStyle={{ color: "#fafafa" }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <Text variant="body-sm" color="tertiary">
+                              데이터가 없습니다.
+                            </Text>
+                          );
+                        })()}
+                      </div>
+                      
+                      {/* 콘텐츠 유형별 조회수 */}
+                      <div className={styles.chartBox}>
+                        <Text variant="body-md" weight="semibold">
+                          콘텐츠 유형별 조회수
+                        </Text>
+                        {(() => {
+                          const filteredContentEngagements = filterByDateRange(
+                            selectedCustomer.contentEngagements,
+                            marketingDateRange
+                          );
+                          const typeCounts: { [key: string]: number } = {};
+                          
+                          // 콘텐츠 유형별 조회수 집계 (임시로 타이틀 기반 분류)
+                          filteredContentEngagements.forEach((content) => {
+                            let type = "아티클";
+                            if (content.title.includes("리포트") || content.title.includes("분석") || content.title.includes("백서")) {
+                              type = "리포트";
+                            } else if (content.title.includes("가이드") || content.title.includes("체크리스트")) {
+                              type = "툴즈";
+                            } else if (content.title.includes("웨비나") || content.title.includes("세미나") || content.title.includes("온라인")) {
+                              type = "온에어";
+                            }
+                            typeCounts[type] = (typeCounts[type] || 0) + 1;
+                          });
+                          
+                          // 파이 차트 데이터 생성
+                          const typeData = Object.entries(typeCounts).map(([name, value]) => ({
+                            name,
+                            value,
+                          }));
+                          
+                          const TYPE_COLORS = {
+                            "리포트": "#3b82f6",
+                            "아티클": "#22c55e",
+                            "툴즈": "#f59e0b",
+                            "온에어": "#ef4444",
+                          };
+                          
+                          return typeData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={250}>
+                              <PieChart>
+                                <Pie
+                                  data={typeData}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                >
+                                  {typeData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={TYPE_COLORS[entry.name as keyof typeof TYPE_COLORS] || "#71717a"} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  contentStyle={{
+                                    backgroundColor: "#18181b",
+                                    border: "1px solid #27272a",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelStyle={{ color: "#fafafa" }}
+                                  itemStyle={{ color: "#fafafa" }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <Text variant="body-sm" color="tertiary">
+                              데이터가 없습니다.
+                            </Text>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </section>
 
                   {/* 콘텐츠 소비 이력 */}
@@ -2504,6 +2580,16 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                             .map((content, idx) => {
                             const category = content.category || "MOFU";
                             const viewCount = content.viewCount || Math.floor(Math.random() * 20) + 1;
+                            
+                            // 콘텐츠 유형 판단
+                            let contentType = "아티클";
+                            if (content.title.includes("리포트") || content.title.includes("분석") || content.title.includes("백서")) {
+                              contentType = "리포트";
+                            } else if (content.title.includes("가이드") || content.title.includes("체크리스트")) {
+                              contentType = "툴즈";
+                            } else if (content.title.includes("웨비나") || content.title.includes("세미나") || content.title.includes("온라인")) {
+                              contentType = "온에어";
+                            }
                             
                             return (
                               <div key={idx} className={styles.contentItem}>
@@ -2531,6 +2617,18 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                       size="sm"
                                     >
                                       {category}
+                                    </Badge>
+                                    
+                                    {/* 콘텐츠 유형 배지 */}
+                                    <Badge 
+                                      variant={
+                                        contentType === "리포트" ? "info" :
+                                        contentType === "툴즈" ? "warning" :
+                                        contentType === "온에어" ? "error" : "success"
+                                      } 
+                                      size="sm"
+                                    >
+                                      {contentType}
                                     </Badge>
                                     
                                     {/* 2. 조회수 */}

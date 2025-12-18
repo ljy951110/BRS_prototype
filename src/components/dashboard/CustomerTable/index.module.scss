@@ -1750,3 +1750,22 @@
     color: $color-text-primary;
   }
 }
+
+// 차트 컨테이너
+.chartsContainer {
+  @include Flex(row, flex-start, stretch, $spacing-lg);
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.chartBox {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  flex: 1;
+  min-width: 0;
+  
+  .text {
+    margin-bottom: $spacing-sm;
+  }
+}
