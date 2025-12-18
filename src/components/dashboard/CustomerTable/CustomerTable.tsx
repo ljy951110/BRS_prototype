@@ -365,6 +365,24 @@ const WEEKS = [
   },
 ] as const;
 
+// 이번 주의 시작일(월요일)과 종료일(일요일) 계산
+const getCurrentWeekRange = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0(일) ~ 6(토)
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 월요일까지의 차이
+  
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  return {
+    start: monday.toISOString().split('T')[0],
+    end: sunday.toISOString().split('T')[0],
+  };
+};
+
 // MBM 이벤트 목록
 const MBM_EVENTS: Record<string, { 
   date: string; 
@@ -463,6 +481,11 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
   const [contentModalData, setContentModalData] =
     useState<ContentModalData | null>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  
+  // 탭별 날짜 필터 state - 이번 주차를 기본값으로 설정
+  const [infoDateRange, setInfoDateRange] = useState<{ start: string; end: string }>(() => getCurrentWeekRange());
+  const [salesDateRange, setSalesDateRange] = useState<{ start: string; end: string }>(() => getCurrentWeekRange());
+  const [marketingDateRange, setMarketingDateRange] = useState<{ start: string; end: string }>(() => getCurrentWeekRange());
   const [selectedContentDetail, setSelectedContentDetail] = useState<{
     title: string;
     category: ContentEngagement["category"];
@@ -760,6 +783,25 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
   const closeModal = () => {
     setModalOpen(false);
     setSelectedCustomer(null);
+  };
+
+  // 날짜 필터링 함수
+  const filterByDateRange = <T extends { date: string }>(
+    items: T[] | undefined,
+    dateRange: { start: string; end: string }
+  ): T[] => {
+    if (!items) return [];
+    if (!dateRange.start && !dateRange.end) return items;
+    
+    return items.filter((item) => {
+      const itemDate = new Date(item.date);
+      const startDate = dateRange.start ? new Date(dateRange.start) : null;
+      const endDate = dateRange.end ? new Date(dateRange.end) : null;
+      
+      if (startDate && itemDate < startDate) return false;
+      if (endDate && itemDate > endDate) return false;
+      return true;
+    });
   };
 
   // 액션 모달 열기
@@ -1745,6 +1787,23 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
             <div className={styles.tabContent}>
               {activeTab === "info" && (
                 <div className={styles.infoTab}>
+                  {/* Date Range Filter */}
+                  <div className={styles.dateRangeFilter}>
+                    <input
+                      type="date"
+                      value={infoDateRange.start}
+                      onChange={(e) => setInfoDateRange({ ...infoDateRange, start: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                    <span className={styles.dateSeparator}>~</span>
+                    <input
+                      type="date"
+                      value={infoDateRange.end}
+                      onChange={(e) => setInfoDateRange({ ...infoDateRange, end: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                  </div>
+                  
                   {/* Basic Info */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
@@ -2145,19 +2204,38 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
               {activeTab === "sales" && (
                 <div className={styles.salesTab}>
+                  {/* Date Range Filter */}
+                  <div className={styles.dateRangeFilter}>
+                    <input
+                      type="date"
+                      value={salesDateRange.start}
+                      onChange={(e) => setSalesDateRange({ ...salesDateRange, start: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                    <span className={styles.dateSeparator}>~</span>
+                    <input
+                      type="date"
+                      value={salesDateRange.end}
+                      onChange={(e) => setSalesDateRange({ ...salesDateRange, end: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                  </div>
+                  
                   {/* 견적 발소 완료 그래프 */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
                      팔로업 추이
                     </Text>
-                    {selectedCustomer.salesActions && selectedCustomer.salesActions.length > 0 ? (
-                      <div className={styles.weeklyChart}>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <ComposedChart
-                            data={selectedCustomer.salesActions
-                              .slice()
-                              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                              .map((action) => ({
+                    {(() => {
+                      const filteredSalesActions = filterByDateRange(selectedCustomer.salesActions, salesDateRange);
+                      return filteredSalesActions && filteredSalesActions.length > 0 ? (
+                        <div className={styles.weeklyChart}>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <ComposedChart
+                              data={filteredSalesActions
+                                .slice()
+                                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                .map((action) => ({
                                 date: action.date,
                                 possibility: action.possibility ? parseInt(action.possibility) : 0,
                                 targetRevenue: action.targetRevenue || null,
@@ -2228,16 +2306,17 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               name="예상 매출"
                               opacity={0.8}
                             />
-                          </ComposedChart>
-                        </ResponsiveContainer>
-                      </div>
-                    ) : (
-                      <div className={styles.chartPlaceholder}>
-                        <Text variant="body-sm" color="tertiary">
-                          영업 액션 데이터가 없습니다.
-                        </Text>
-                      </div>
-                    )}
+                            </ComposedChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className={styles.chartPlaceholder}>
+                          <Text variant="body-sm" color="tertiary">
+                            영업 액션 데이터가 없습니다.
+                          </Text>
+                        </div>
+                      );
+                    })()}
                   </section>
 
                   {/* 영업 액션 타임라인 */}
@@ -2245,12 +2324,14 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     <Text variant="body-md" weight="semibold">
                       영업 액션 타임라인
                     </Text>
-                    {selectedCustomer.salesActions && selectedCustomer.salesActions.length > 0 ? (
-                      <div className={styles.actionTimeline}>
-                        {selectedCustomer.salesActions
-                          .slice()
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .map((action, idx) => (
+                    {(() => {
+                      const filteredSalesActions = filterByDateRange(selectedCustomer.salesActions, salesDateRange);
+                      return filteredSalesActions && filteredSalesActions.length > 0 ? (
+                        <div className={styles.actionTimeline}>
+                          {filteredSalesActions
+                            .slice()
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .map((action, idx) => (
                             <div key={idx} className={styles.actionCard}>
                               <div className={styles.actionHeader}>
                                 <Text variant="body-sm" weight="semibold">
@@ -2299,31 +2380,53 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                   </Badge>
                                 )}
                               </div>
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <Text variant="body-sm" color="tertiary">
-                        영업 액션 이력이 없습니다.
-                      </Text>
-                    )}
+                              </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <Text variant="body-sm" color="tertiary">
+                          영업 액션 이력이 없습니다.
+                        </Text>
+                      );
+                    })()}
                   </section>
                 </div>
               )}
 
               {activeTab === "marketing" && (
                 <div className={styles.marketingTab}>
+                  {/* Date Range Filter */}
+                  <div className={styles.dateRangeFilter}>
+                    <input
+                      type="date"
+                      value={marketingDateRange.start}
+                      onChange={(e) => setMarketingDateRange({ ...marketingDateRange, start: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                    <span className={styles.dateSeparator}>~</span>
+                    <input
+                      type="date"
+                      value={marketingDateRange.end}
+                      onChange={(e) => setMarketingDateRange({ ...marketingDateRange, end: e.target.value })}
+                      className={styles.dateInput}
+                    />
+                  </div>
+                  
                   {/* 콘텐츠 퍼널별 조회수 */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
                       콘텐츠 퍼널별 조회수
                     </Text>
                     {(() => {
+                      const filteredContentEngagements = filterByDateRange(
+                        selectedCustomer.contentEngagements,
+                        marketingDateRange
+                      );
                       const funnelCounts: { [key: string]: number } = {};
                       let total = 0;
                       
                       // 퍼널별 조회수 집계
-                      selectedCustomer.contentEngagements?.forEach((content) => {
+                      filteredContentEngagements.forEach((content) => {
                         const category = content.category || "기타";
                         funnelCounts[category] = (funnelCounts[category] || 0) + 1;
                         total++;
@@ -2387,13 +2490,18 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     <Text variant="body-md" weight="semibold">
                       콘텐츠 소비 이력
                     </Text>
-                    {selectedCustomer.contentEngagements && selectedCustomer.contentEngagements.length > 0 ? (
-                      <div className={styles.contentList}>
-                        {selectedCustomer.contentEngagements
-                          .slice()
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .slice(0, 10)
-                          .map((content, idx) => {
+                    {(() => {
+                      const filteredContentEngagements = filterByDateRange(
+                        selectedCustomer.contentEngagements,
+                        marketingDateRange
+                      );
+                      return filteredContentEngagements && filteredContentEngagements.length > 0 ? (
+                        <div className={styles.contentList}>
+                          {filteredContentEngagements
+                            .slice()
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .slice(0, 10)
+                            .map((content, idx) => {
                             const category = content.category || "MOFU";
                             const viewCount = content.viewCount || Math.floor(Math.random() * 20) + 1;
                             
@@ -2450,14 +2558,15 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                   <ArrowUpRight />
                                 </a>
                               </div>
-                            );
-                          })}
-                      </div>
-                    ) : (
-                      <Text variant="body-sm" color="tertiary">
-                        콘텐츠 소비 이력이 없습니다.
-                      </Text>
-                    )}
+                              );
+                            })}
+                        </div>
+                      ) : (
+                        <Text variant="body-sm" color="tertiary">
+                          콘텐츠 소비 이력이 없습니다.
+                        </Text>
+                      );
+                    })()}
                   </section>
 
                   {/* MBM 참여 이력 */}
@@ -2465,17 +2574,30 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     <Text variant="body-md" weight="semibold">
                       MBM 참여 이력
                     </Text>
-                    {selectedCustomer.attendance && Object.values(selectedCustomer.attendance).some(Boolean) ? (
-                      <div className={styles.mbmList}>
-                        {Object.entries(selectedCustomer.attendance)
-                          .filter(([key, value]) => value && MBM_EVENTS[key])
-                          .sort((a, b) => {
-                            const eventA = MBM_EVENTS[a[0]];
-                            const eventB = MBM_EVENTS[b[0]];
-                            if (!eventA || !eventB) return 0;
-                            return new Date(eventB.date).getTime() - new Date(eventA.date).getTime();
-                          })
-                          .map(([key]) => {
+                    {(() => {
+                      const filteredMBMEntries = Object.entries(selectedCustomer.attendance || {})
+                        .filter(([key, value]) => {
+                          if (!value || !MBM_EVENTS[key]) return false;
+                          
+                          const event = MBM_EVENTS[key];
+                          const eventDate = new Date(event.date);
+                          const startDate = marketingDateRange.start ? new Date(marketingDateRange.start) : null;
+                          const endDate = marketingDateRange.end ? new Date(marketingDateRange.end) : null;
+                          
+                          if (startDate && eventDate < startDate) return false;
+                          if (endDate && eventDate > endDate) return false;
+                          return true;
+                        })
+                        .sort((a, b) => {
+                          const eventA = MBM_EVENTS[a[0]];
+                          const eventB = MBM_EVENTS[b[0]];
+                          if (!eventA || !eventB) return 0;
+                          return new Date(eventB.date).getTime() - new Date(eventA.date).getTime();
+                        });
+
+                      return filteredMBMEntries.length > 0 ? (
+                        <div className={styles.mbmList}>
+                          {filteredMBMEntries.map(([key]) => {
                             const event = MBM_EVENTS[key];
                             if (!event) return null;
                             return (
@@ -2545,14 +2667,15 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                   </a>
                                 )}
                               </div>
-                            );
-                          })}
-                      </div>
-                    ) : (
-                      <Text variant="body-sm" color="tertiary">
-                        MBM 참여 이력이 없습니다.
-                      </Text>
-                    )}
+                              );
+                            })}
+                        </div>
+                      ) : (
+                        <Text variant="body-sm" color="tertiary">
+                          MBM 참여 이력이 없습니다.
+                        </Text>
+                      );
+                    })()}
                   </section>
                 </div>
               )}

@@ -1699,3 +1699,54 @@
 .changeIndicator {
   @include Flex(row, flex-start, center, $spacing-xs);
 }
+
+// 날짜 필터
+.dateRangeFilter {
+  @include Flex(row, flex-end, center, $spacing-sm);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.dateInput {
+  padding: 8px 12px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg-primary;
+  color: $color-text-primary;
+  font-size: 14px;
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: $color-accent-blue;
+  }
+  
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+}
+
+.dateSeparator {
+  color: $color-text-tertiary;
+  font-size: 14px;
+}
+
+.resetButton {
+  padding: 8px 16px;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: $color-bg-secondary;
+    color: $color-text-primary;
+  }
+}
