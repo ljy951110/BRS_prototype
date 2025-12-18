@@ -8,14 +8,16 @@ import { useGetTrustChangeDetail } from "@/repository/query/trustChangeDetailApi
 import { Customer, PossibilityType, ProductType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
+  Alert,
   Button,
   Card,
+  Col,
   DatePicker,
   Divider,
   Input,
   InputNumber,
-  List,
   Modal,
+  Row,
   Select,
   Space,
   Table,
@@ -27,14 +29,17 @@ import {
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import dayjs from 'dayjs';
-import { ArrowRight, BookOpen, Building2, Calendar, CheckCircle2, Phone, Users, XCircle } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Calendar, CheckCircle2, ExternalLink, Eye, Phone, Users, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   CartesianGrid,
+  Cell,
   ComposedChart,
   Legend,
   Line,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -44,6 +49,21 @@ import styles from "./index.module.scss";
 
 import type { TimePeriodType } from "@/types/common";
 const { Title, Text: AntText } = Typography;
+
+// 다크모드 툴팁 스타일 (yjcopy 참고)
+const DARK_TOOLTIP_STYLE = {
+  contentStyle: {
+    backgroundColor: '#18181b',
+    border: '1px solid #27272a',
+    borderRadius: '8px',
+  },
+  labelStyle: {
+    color: '#fafafa',
+  },
+  itemStyle: {
+    color: '#fafafa',
+  },
+};
 
 interface CustomerTableProps {
   data: Customer[];
@@ -254,6 +274,7 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
       setActionDateRange(initialRange);
       setContentDateRange(initialRange);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCustomer]);
 
   // 고객 요약 정보 조회
@@ -1615,9 +1636,9 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                 ),
                 children: (
                   <>
-                    <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
-                        <span>조회 기간:</span>
+                        <span>조회 기간</span>
                         <DatePicker.RangePicker
                           value={summaryDateRange}
                           onChange={(dates) => {
@@ -1637,29 +1658,23 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                         <Table
                           dataSource={[
                             {
-                              key: 'manager',
-                              label: '담당자',
-                              value: selectedCustomer.manager
+                              key: 'row1',
+                              label1: '담당자',
+                              value1: selectedCustomer.manager,
+                              label2: '카테고리',
+                              value2: selectedCustomer.category
                             },
                             {
-                              key: 'category',
-                              label: '카테고리',
-                              value: selectedCustomer.category
+                              key: 'row2',
+                              label1: '기업 규모',
+                              value1: selectedCustomer.companySize || '미정',
+                              label2: '계약 금액',
+                              value2: formatMan(selectedCustomer.contractAmount)
                             },
                             {
-                              key: 'companySize',
-                              label: '기업 규모',
-                              value: selectedCustomer.companySize || '미정'
-                            },
-                            {
-                              key: 'contractAmount',
-                              label: '계약 금액',
-                              value: formatMan(selectedCustomer.contractAmount)
-                            },
-                            {
-                              key: 'productUsage',
-                              label: '제품 사용',
-                              value: (
+                              key: 'row3',
+                              label1: '제품 사용',
+                              value1: (
                                 <Space size={4} wrap>
                                   {selectedCustomer.productUsage?.map((product, idx) => (
                                     <Tag key={idx} color="blue">
@@ -1667,25 +1682,51 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                     </Tag>
                                   )) || "-"}
                                 </Space>
-                              )
+                              ),
+                              label2: '',
+                              value2: ''
                             },
                           ]}
                           columns={[
                             {
-                              dataIndex: 'label',
-                              key: 'label',
+                              dataIndex: 'label1',
+                              key: 'label1',
                               width: 120,
-                              onCell: () => ({
+                              onCell: (record) => ({
                                 style: {
-                                  backgroundColor: token.colorFillSecondary,
+                                  backgroundColor: token.colorFillAlter,
                                   fontWeight: 600
-                                }
+                                },
+                                ...(record.key === 'row3' ? { colSpan: 1 } : {})
                               }),
                               render: (text) => <AntText strong>{text}</AntText>
                             },
                             {
-                              dataIndex: 'value',
-                              key: 'value',
+                              dataIndex: 'value1',
+                              key: 'value1',
+                              onCell: (record) => ({
+                                ...(record.key === 'row3' ? { colSpan: 3 } : {})
+                              })
+                            },
+                            {
+                              dataIndex: 'label2',
+                              key: 'label2',
+                              width: 120,
+                              onCell: (record) => ({
+                                style: {
+                                  backgroundColor: token.colorFillAlter,
+                                  fontWeight: 600
+                                },
+                                ...(record.key === 'row3' ? { colSpan: 0 } : {})
+                              }),
+                              render: (text) => text ? <AntText strong>{text}</AntText> : null
+                            },
+                            {
+                              dataIndex: 'value2',
+                              key: 'value2',
+                              onCell: (record) => ({
+                                ...(record.key === 'row3' ? { colSpan: 0 } : {})
+                              })
                             }
                           ]}
                           pagination={false}
@@ -1720,8 +1761,27 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                   </div>
                                 );
                               })(),
-                              label2: '가능성',
+                              label2: '목표 매출',
                               value2: (() => {
+                                const past = selectedCustomer._periodData?.pastTargetRevenue ?? null;
+                                const current = selectedCustomer.adoptionDecision?.targetRevenue ?? 0;
+                                const isPositive = past !== null && current > past;
+                                const isNegative = past !== null && current < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{formatMan(past)}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{formatMan(current)}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                            {
+                              key: 'row2',
+                              label1: '가능성',
+                              value1: (() => {
                                 const past = selectedCustomer._periodData?.pastPossibility ?? null;
                                 const current = selectedCustomer.adoptionDecision?.possibility || "0%";
                                 const isPositive = past !== null &&
@@ -1735,25 +1795,6 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                     <span>{past ?? current}</span>
                                     <ArrowRight size={10} />
                                     <span>{current}</span>
-                                  </div>
-                                );
-                              })()
-                            },
-                            {
-                              key: 'row2',
-                              label1: '목표 매출',
-                              value1: (() => {
-                                const past = selectedCustomer._periodData?.pastTargetRevenue ?? null;
-                                const current = selectedCustomer.adoptionDecision?.targetRevenue ?? 0;
-                                const isPositive = past !== null && current > past;
-                                const isNegative = past !== null && current < past;
-                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-
-                                return (
-                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
-                                    <span>{formatMan(past)}</span>
-                                    <ArrowRight size={10} />
-                                    <span>{formatMan(current)}</span>
                                   </div>
                                 );
                               })(),
@@ -1833,7 +1874,7 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                               width: 120,
                               onCell: () => ({
                                 style: {
-                                  backgroundColor: token.colorFillSecondary,
+                                  backgroundColor: token.colorFillAlter,
                                   fontWeight: 600
                                 }
                               }),
@@ -1849,7 +1890,7 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                               width: 120,
                               onCell: () => ({
                                 style: {
-                                  backgroundColor: token.colorFillSecondary,
+                                  backgroundColor: token.colorFillAlter,
                                   fontWeight: 600
                                 }
                               }),
@@ -1872,9 +1913,8 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                     {_customerSummary?.data?.hubspotUrl && (
                       <div style={{ marginTop: 16 }}>
                         <Button
-                          type="default"
-                          icon={<ArrowRight size={16} />}
-                          iconPosition="end"
+                          type="primary"
+                          icon={<Building2 size={16} />}
                           href={_customerSummary.data.hubspotUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1897,9 +1937,9 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                 ),
                 children: (
                   <>
-                    <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
-                        <span>조회 기간:</span>
+                        <span>조회 기간</span>
                         <DatePicker.RangePicker
                           value={actionDateRange}
                           onChange={(dates) => {
@@ -1945,55 +1985,41 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                     })}
                                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                                 >
-                                  <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder} />
-                                  <XAxis
-                                    dataKey="date"
-                                    stroke={token.colorTextSecondary}
-                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
-                                  />
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="date" style={{ fontSize: 12 }} />
                                   <YAxis
                                     yAxisId="left"
-                                    stroke={token.colorTextSecondary}
-                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
-                                    label={{ value: "가능성 지수 (%)", angle: -90, position: "insideLeft", fill: token.colorTextSecondary }}
+                                    style={{ fontSize: 12 }}
                                     domain={[0, 100]}
                                     ticks={[0, 40, 90, 100]}
                                   />
                                   <YAxis
                                     yAxisId="right"
                                     orientation="right"
-                                    stroke={token.colorTextSecondary}
-                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
-                                    label={{ value: "매출 (만원)", angle: 90, position: "insideRight", fill: token.colorTextSecondary }}
+                                    style={{ fontSize: 12 }}
                                   />
-                                  <Tooltip
-                                    contentStyle={{
-                                      backgroundColor: token.colorBgElevated,
-                                      border: `1px solid ${token.colorBorder}`,
-                                      borderRadius: token.borderRadius,
-                                    }}
-                                  />
+                                  <Tooltip {...DARK_TOOLTIP_STYLE} />
                                   <Legend />
                                   <Line
                                     yAxisId="left"
                                     type="monotone"
                                     dataKey="possibilityIndex"
-                                    stroke={token.colorPrimary}
+                                    stroke="#3b82f6"
                                     strokeWidth={2}
                                     name="가능성 지수"
-                                    dot={{ fill: token.colorPrimary, r: 4 }}
+                                    dot={{ fill: '#3b82f6', r: 4 }}
                                   />
                                   <Bar
                                     yAxisId="right"
                                     dataKey="targetRevenue"
-                                    fill={token.colorWarning}
+                                    fill="#f97316"
                                     name="목표 매출"
                                     opacity={0.6}
                                   />
                                   <Bar
                                     yAxisId="right"
                                     dataKey="expectedRevenue"
-                                    fill={token.colorSuccess}
+                                    fill="#22c55e"
                                     name="예상 매출"
                                     opacity={0.8}
                                   />
@@ -2084,14 +2110,14 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <BookOpen size={16} />
-                    <span>콘텐츠/MBM</span>
+                    <span>마케팅 히스토리</span>
                   </span>
                 ),
                 children: (
                   <div>
-                    <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
-                        <span>조회 기간:</span>
+                        <span>조회 기간</span>
                         <DatePicker.RangePicker
                           value={contentDateRange}
                           onChange={(dates) => {
@@ -2108,86 +2134,296 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                       <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
                     ) : (
                       <>
-                        {/* 신뢰지수 변화량 표시 */}
-                        {trustChangeDetailData?.data?.changeAmount !== undefined && (
-                          <div style={{ marginBottom: 16, padding: '12px', backgroundColor: token.colorSuccessBg, borderRadius: token.borderRadius }}>
-                            <Space>
-                              <AntText strong>신뢰지수 변화:</AntText>
-                              <Tag color={trustChangeDetailData.data.changeAmount > 0 ? 'green' : trustChangeDetailData.data.changeAmount < 0 ? 'red' : 'default'}>
-                                {trustChangeDetailData.data.changeAmount > 0 ? '+' : ''}{trustChangeDetailData.data.changeAmount}
-                              </Tag>
-                            </Space>
+                        {/* 차트 영역 */}
+                        {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 && (
+                          <div style={{ marginBottom: 24 }}>
+                            <Row gutter={16}>
+                              {/* 콘텐츠 퍼널별 조회수 */}
+                              <Col span={12}>
+                                <Title level={5} style={{ marginBottom: 16 }}>
+                                  콘텐츠 퍼널별 조회수
+                                </Title>
+                                <ResponsiveContainer width="100%" height={250}>
+                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                    <Pie
+                                      data={(() => {
+                                        const funnelStats: Record<string, number> = {};
+                                        const colors: Record<string, string> = {
+                                          'TOFU': '#3b82f6',
+                                          'MOFU': '#a855f7',
+                                          'BOFU': '#22c55e',
+                                        };
+                                        trustChangeDetailData.data.engagementItems.forEach(item => {
+                                          if (item.funnelType && item.viewCount) {
+                                            funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(funnelStats).map(([name, value]) => ({
+                                          name,
+                                          value,
+                                          color: colors[name] || '#f97316'
+                                        }));
+                                      })()}
+                                      cx="50%"
+                                      cy="50%"
+                                      outerRadius={80}
+                                      paddingAngle={2}
+                                      dataKey="value"
+                                      label={(entry) => {
+                                        const data = (() => {
+                                          const funnelStats: Record<string, number> = {};
+                                          trustChangeDetailData.data.engagementItems.forEach(item => {
+                                            if (item.funnelType && item.viewCount) {
+                                              funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                            }
+                                          });
+                                          const total = Object.values(funnelStats).reduce((sum, val) => sum + val, 0);
+                                          return { total };
+                                        })();
+                                        const percent = ((entry.value / data.total) * 100).toFixed(0);
+                                        return `${entry.name} ${percent}%`;
+                                      }}
+                                      labelLine={false}
+                                    >
+                                      {(() => {
+                                        const funnelStats: Record<string, number> = {};
+                                        const colors: Record<string, string> = {
+                                          'TOFU': '#3b82f6',
+                                          'MOFU': '#a855f7',
+                                          'BOFU': '#22c55e',
+                                        };
+                                        trustChangeDetailData.data.engagementItems.forEach(item => {
+                                          if (item.funnelType && item.viewCount) {
+                                            funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(funnelStats).map(([type], index) => (
+                                          <Cell key={`cell-${index}`} fill={colors[type] || '#f97316'} />
+                                        ));
+                                      })()}
+                                    </Pie>
+                                    <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Col>
+
+                              {/* 콘텐츠 유형별 조회수 */}
+                              <Col span={12}>
+                                <Title level={5} style={{ marginBottom: 16 }}>
+                                  콘텐츠 유형별 조회수
+                                </Title>
+                                <ResponsiveContainer width="100%" height={250}>
+                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                    <Pie
+                                      data={(() => {
+                                        const contentStats: Record<string, number> = {};
+                                        const colors = ['#a855f7', '#ec4899', '#06b6d4', '#14b8a6', '#8b5cf6', '#f59e0b'];
+                                        trustChangeDetailData.data.engagementItems.forEach(item => {
+                                          if (item.contentType && item.viewCount) {
+                                            contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(contentStats).map(([name, value], index) => ({
+                                          name,
+                                          value,
+                                          color: colors[index % colors.length]
+                                        }));
+                                      })()}
+                                      cx="50%"
+                                      cy="50%"
+                                      outerRadius={80}
+                                      paddingAngle={2}
+                                      dataKey="value"
+                                      label={(entry) => {
+                                        const data = (() => {
+                                          const contentStats: Record<string, number> = {};
+                                          trustChangeDetailData.data.engagementItems.forEach(item => {
+                                            if (item.contentType && item.viewCount) {
+                                              contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                            }
+                                          });
+                                          const total = Object.values(contentStats).reduce((sum, val) => sum + val, 0);
+                                          return { total };
+                                        })();
+                                        const percent = ((entry.value / data.total) * 100).toFixed(0);
+                                        return `${entry.name} ${percent}%`;
+                                      }}
+                                      labelLine={false}
+                                    >
+                                      {(() => {
+                                        const contentStats: Record<string, number> = {};
+                                        const colors = ['#a855f7', '#ec4899', '#06b6d4', '#14b8a6', '#8b5cf6', '#f59e0b'];
+                                        trustChangeDetailData.data.engagementItems.forEach(item => {
+                                          if (item.contentType && item.viewCount) {
+                                            contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(contentStats).map(([_name], index) => (
+                                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                        ));
+                                      })()}
+                                    </Pie>
+                                    <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Col>
+                            </Row>
                           </div>
                         )}
 
-                        <Title level={5} style={{ marginBottom: 8 }}>
-                          콘텐츠/MBM 활동 이력
-                        </Title>
-                        <List
-                          bordered
-                          dataSource={
-                            trustChangeDetailData?.data?.engagementItems
-                              ? [...trustChangeDetailData.data.engagementItems].sort(
-                                (a, b) =>
-                                  new Date(b.date).getTime() -
-                                  new Date(a.date).getTime()
-                              )
-                              : []
-                          }
-                          locale={{ emptyText: "활동 이력이 없습니다." }}
-                          renderItem={(item) => {
-                            const isMbm = item.actionType === 'ATTENDED' || item.actionType === 'REGISTERED';
-                            return (
-                              <List.Item
-                                style={{ cursor: item.url ? "pointer" : "default" }}
-                                onClick={() => {
-                                  if (item.url) {
-                                    window.open(item.url, '_blank');
-                                  }
-                                }}
-                              >
-                                <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                                  <Space size={6}>
-                                    <Tag color={isMbm ? 'green' : 'blue'}>
-                                      {isMbm ? 'MBM' : '콘텐츠'}
-                                    </Tag>
-                                    <AntText strong>{item.title}</AntText>
-                                  </Space>
-                                  <AntText type="secondary" style={{ fontSize: 12 }}>
-                                    {item.date}
-                                  </AntText>
-                                  {item.introducedProduct && (
-                                    <AntText type="secondary" style={{ fontSize: 12 }}>
-                                      소개 제품: {item.introducedProduct}
-                                    </AntText>
-                                  )}
-                                  {item.url && (
-                                    <AntText type="secondary" style={{ fontSize: 12, color: token.colorPrimary }}>
-                                      🔗 링크 보기
-                                    </AntText>
-                                  )}
-                                </Space>
-                              </List.Item>
-                            );
-                          }}
-                        />
-
-                        {/* HubSpot Link */}
-                        {trustChangeDetailData?.data?.hubspotUrl && (
-                          <div style={{ marginTop: 16 }}>
-                            <Button
-                              type="default"
-                              icon={<ArrowRight size={16} />}
-                              iconPosition="end"
-                              href={trustChangeDetailData.data.hubspotUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              block
-                            >
-                              HubSpot Contact 보기
-                            </Button>
+                        {/* 콘텐츠 소비 이력 */}
+                        {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 && (
+                          <div style={{ marginBottom: 24 }}>
+                            <Title level={5} style={{ marginBottom: 16 }}>
+                              콘텐츠 소비 이력
+                            </Title>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
+                              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                                {[...trustChangeDetailData.data.engagementItems]
+                                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                  .map((item, index) => (
+                                    <Card
+                                      key={index}
+                                      size="small"
+                                      hoverable={!!item.url}
+                                      onClick={() => {
+                                        if (item.url) {
+                                          window.open(item.url, '_blank');
+                                        }
+                                      }}
+                                    >
+                                      <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                        <Space size={12}>
+                                          <BookOpen size={20} style={{ color: token.colorPrimary }} />
+                                          <Space direction="vertical" size={4}>
+                                            <Space size={8}>
+                                              <AntText strong style={{ fontSize: 15 }}>
+                                                {item.title}
+                                              </AntText>
+                                            </Space>
+                                            <Space size={8}>
+                                              {item.funnelType && (
+                                                <Tag
+                                                  color={
+                                                    item.funnelType === 'TOFU' ? 'blue' :
+                                                      item.funnelType === 'MOFU' ? 'purple' :
+                                                        item.funnelType === 'BOFU' ? 'green' :
+                                                          'default'
+                                                  }
+                                                  style={{ margin: 0 }}
+                                                >
+                                                  {item.funnelType}
+                                                </Tag>
+                                              )}
+                                              {item.contentType && (
+                                                <Tag
+                                                  color={
+                                                    item.contentType === '리포트' ? 'cyan' :
+                                                      item.contentType === '툴즈' ? 'orange' :
+                                                        item.contentType === '아티클' ? 'gold' :
+                                                          item.contentType === '온에어' ? 'magenta' :
+                                                            'default'
+                                                  }
+                                                  style={{ margin: 0 }}
+                                                >
+                                                  {item.contentType}
+                                                </Tag>
+                                              )}
+                                              {item.viewCount !== null && item.viewCount !== undefined && (
+                                                <Space size={4}>
+                                                  <Eye size={14} style={{ color: token.colorTextSecondary }} />
+                                                  <AntText type="secondary" style={{ fontSize: 12 }}>
+                                                    조회 {item.viewCount}회
+                                                  </AntText>
+                                                </Space>
+                                              )}
+                                            </Space>
+                                            <AntText type="secondary" style={{ fontSize: 12 }}>
+                                              최근 조회: {item.date}
+                                            </AntText>
+                                          </Space>
+                                        </Space>
+                                        {item.url && (
+                                          <ExternalLink size={18} style={{ color: token.colorPrimary }} />
+                                        )}
+                                      </Space>
+                                    </Card>
+                                  ))}
+                              </Space>
+                            </div>
                           </div>
                         )}
+
+                        {/* MBM 참여 이력 */}
+                        {trustChangeDetailData?.data?.marketingEvents && trustChangeDetailData.data.marketingEvents.length > 0 && (
+                          <div style={{ marginBottom: 24 }}>
+                            <Title level={5} style={{ marginBottom: 16 }}>
+                              MBM 참여 이력
+                            </Title>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
+                              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                                {[...trustChangeDetailData.data.marketingEvents]
+                                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                  .map((event, index) => {
+                                    const isAttended = new Date(event.date) < new Date();
+                                    return (
+                                      <Card
+                                        key={index}
+                                        size="small"
+                                        hoverable={!!event.event_url}
+                                        onClick={() => {
+                                          if (event.event_url) {
+                                            window.open(event.event_url, '_blank');
+                                          }
+                                        }}
+                                      >
+                                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                          <Space size={12}>
+                                            <Calendar size={20} style={{ color: '#f59e0b' }} />
+                                            <Space direction="vertical" size={4}>
+                                              <AntText strong style={{ fontSize: 15 }}>
+                                                {event.title}
+                                              </AntText>
+                                              <Space size={8}>
+                                                <Tag
+                                                  color={isAttended ? 'green' : 'orange'}
+                                                  style={{ margin: 0 }}
+                                                >
+                                                  {isAttended ? '참석' : '참석 예정'}
+                                                </Tag>
+                                                {event.event_type && (
+                                                  <Tag color="blue" style={{ margin: 0 }}>
+                                                    {event.event_type}
+                                                  </Tag>
+                                                )}
+                                              </Space>
+                                              <AntText type="secondary" style={{ fontSize: 12 }}>
+                                                진행일: {event.date}
+                                              </AntText>
+                                            </Space>
+                                          </Space>
+                                          {event.event_url && (
+                                            <ExternalLink size={18} style={{ color: token.colorPrimary }} />
+                                          )}
+                                        </Space>
+                                      </Card>
+                                    );
+                                  })}
+                              </Space>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 데이터 없음 */}
+                        {(!trustChangeDetailData?.data?.marketingEvents || trustChangeDetailData.data.marketingEvents.length === 0) &&
+                          (!trustChangeDetailData?.data?.engagementItems || trustChangeDetailData.data.engagementItems.length === 0) && (
+                            <Alert
+                              message="활동 이력이 없습니다"
+                              description="선택한 기간 동안의 MBM 참여 이력 및 콘텐츠 소비 이력이 없습니다."
+                              type="info"
+                              showIcon
+                            />
+                          )}
                       </>
                     )}
                   </div>

@@ -46,4 +46,7 @@ coverage/
 .vercel
 .env*.local
 
-copy
+yjcopy
+
+# OpenAPI 자동 생성 파일 (한글/특수문자 오류)
+src/repository/openapi/

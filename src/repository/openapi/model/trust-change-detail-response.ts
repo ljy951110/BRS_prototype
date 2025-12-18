@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { EngagementItem } from './engagement-item';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsTrustChangeDetailMarketingEvent } from './models-trust-change-detail-marketing-event';
 
 /**
  * 신뢰지수 변동 상세 응답
@@ -25,21 +28,15 @@ import type { EngagementItem } from './engagement-item';
 export interface TrustChangeDetailResponse {
     /**
      * 
-     * @type {number}
-     * @memberof TrustChangeDetailResponse
-     */
-    'changeAmount': number;
-    /**
-     * 
      * @type {Array<EngagementItem>}
      * @memberof TrustChangeDetailResponse
      */
     'engagementItems': Array<EngagementItem>;
     /**
      * 
-     * @type {string}
+     * @type {Array<ModelsTrustChangeDetailMarketingEvent>}
      * @memberof TrustChangeDetailResponse
      */
-    'hubspotUrl': string;
+    'marketingEvents': Array<ModelsTrustChangeDetailMarketingEvent>;
 }
 

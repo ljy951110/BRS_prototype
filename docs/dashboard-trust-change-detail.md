@@ -11,7 +11,7 @@ https://midasinfra-my.sharepoint.com/:x:/g/personal/ksi0921_jainwon_com/IQBYfGKN
 ## 타입 정의 (공유)
 
 ```ts
-export type CategoryType = "채용" | "공공" | "병원" | "성과"; // 카테고리
+export type CategoryType = "채용" | "공공" | "성과"; // 카테고리
 export type CompanySizeType = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
 export type TrustLevelType = "P1" | "P2" | "P3" | null; // 신뢰 레벨
 
@@ -44,17 +44,33 @@ export interface TrustChangeDetailRequest {
 
 ```ts
 export interface TrustChangeDetailResponse {
-  changeAmount: number;                  // 변화량(hubs Weekly snapshots)
   engagementItems: EngagementScore[];   // Engagement Score (이벤트 기반 활동, MBM 포함)
+  marketingEvents: MarketingEvent[];
+
 }
 
 export interface EngagementItem {
   title: string;                      // 콘텐츠/활동 제목
   date: string;                       // 액션 발생 날짜 (YYYY-MM-DD)
+  funnelType ?: any;                  // 컨텐츠별 퍼널 스테이지 타입(TOFU, MOFU, BOFU, null) - 확인 필요
+  contentType ?: any;                 // 아티클, 툴즈, 리포트, 온에어 ... - 확인 필요
+  viewCount:?number;                  //컨텐츠 조회 수 (컨택들의 총 뷰 합) - 확인 필요     
   url?: string;                       // 콘텐츠 URL 있으면 내려줌
-  actionType:ContentActionType;       // 액션 타입
-  introducedProduct?: string;         // 소개된 제품 (MBM 이벤트에서 사용)
 }
+
+export interface MarketingEvent {
+  date : string; //mbm 참날짜
+  title : string; // 제목 
+  event_url : //mbm 랜딩페이지 url 
+  product : //mbm 소개 제품
+  event_target :TargetType[]  신규 고가 공공 //대상
+  event_type:string;
+
+  // 추후 hubspot 데이터 쌓기 필요.
+  npsScore:number | null; //추후 contacts - Hubspot customObject 기준으로 조회(현재는 null)
+}
+
+export TargetType = '신규' | '고가' | '공공'
 
 ```
 
@@ -81,6 +97,13 @@ Content-Type: application/json
 ```
 
 ---
+
+## 규칙
+EngagementItem은 동일 컨텐츠가 여러개 조회될 경우 agreegate하여 가장 최근 조회일자와 총 조회수를 도출한다.
+
+
+
+
 
 ## 변경 이력
 

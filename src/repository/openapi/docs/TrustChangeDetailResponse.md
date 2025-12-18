@@ -6,9 +6,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**changeAmount** | **number** |  | [default to undefined]
 **engagementItems** | [**Array&lt;EngagementItem&gt;**](EngagementItem.md) |  | [default to undefined]
-**hubspotUrl** | **string** |  | [default to undefined]
+**marketingEvents** | [**Array&lt;ModelsTrustChangeDetailMarketingEvent&gt;**](ModelsTrustChangeDetailMarketingEvent.md) |  | [default to undefined]
 
 ## Example
 
@@ -16,9 +15,8 @@ Name | Type | Description | Notes
 import { TrustChangeDetailResponse } from './api';
 
 const instance: TrustChangeDetailResponse = {
-    changeAmount,
     engagementItems,
-    hubspotUrl,
+    marketingEvents,
 };
 ```
 
