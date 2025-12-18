@@ -1,8 +1,8 @@
-import { SalesActionHistory } from "@/components/dashboard/SalesActionHistory";
 import {
   calculateExpectedRevenue,
   getDataWithPeriodChange,
 } from "@/data/mockData";
+import type { SalesAction } from "@/repository/openapi/model";
 import { useGetCustomerSummary, useGetSalesHistory } from "@/repository/query/customerDetailApiController/queryHook";
 import { Customer, PossibilityType, ProductType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
@@ -26,8 +26,19 @@ import {
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import dayjs from 'dayjs';
-import { ArrowRight, BookOpen, Building2, Calendar } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Calendar, CheckCircle2, Phone, Users, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import styles from "./index.module.scss";
 
 import type { TimePeriodType } from "@/types/common";
@@ -227,6 +238,11 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
   const [summaryDateRange, setSummaryDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
   const [actionDateRange, setActionDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
   const [contentDateRange, setContentDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
+
+  // 영업 액션 상세 모달
+  const [selectedAction, setSelectedAction] = useState<SalesAction | null>(null);
+  const [isActionDetailModalOpen, setIsActionDetailModalOpen] = useState(false);
+
   const { token } = theme.useToken();
 
   // 모달이 닫힐 때 조회 기간 초기화
@@ -1880,25 +1896,170 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                         />
                       </Space>
                     </div>
+
                     {isSalesHistoryLoading ? (
                       <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
                     ) : (
-                      <SalesActionHistory
-                        actions={(salesHistoryData?.data?.salesActions || []).map(action => ({
-                          type: action.type.toLowerCase() as 'call' | 'meeting',
-                          content: action.content,
-                          date: action.date,
-                          possibility: action.stateChange?.after?.possibility as PossibilityType | undefined,
-                          customerResponse: undefined, // API에서 제공하지 않음
-                          targetRevenue: action.stateChange?.after?.targetRevenue ?? null,
-                          targetDate: action.stateChange?.after?.targetDate ?? null,
-                          test: action.stateChange?.after?.test ?? false,
-                          quote: action.stateChange?.after?.quote ?? false,
-                          approval: action.stateChange?.after?.approval ?? false,
-                          contract: action.stateChange?.after?.contract ?? false,
-                        }))}
-                        customer={selectedCustomer}
-                      />
+                      <>
+                        {/* 주차별 추이 그래프 */}
+                        <div style={{ marginBottom: 24 }}>
+                          <Title level={5} style={{ marginBottom: 12 }}>주차별 추이</Title>
+                          {salesHistoryData?.data?.salesActions && salesHistoryData.data.salesActions.length > 0 ? (
+                            <div style={{ width: '100%', height: 300 }}>
+                              <ResponsiveContainer>
+                                <ComposedChart
+                                  data={salesHistoryData.data.salesActions
+                                    .slice()
+                                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                    .map((action) => {
+                                      const possibility = action.stateChange?.after?.possibility;
+                                      const possibilityIndex = possibility
+                                        ? parseFloat(possibility.replace('%', ''))
+                                        : 0;
+
+                                      return {
+                                        date: action.date,
+                                        possibilityIndex,
+                                        targetRevenue: action.stateChange?.after?.targetRevenue
+                                          ? action.stateChange.after.targetRevenue / 10000
+                                          : null,
+                                        expectedRevenue: action.stateChange?.after?.targetRevenue && action.stateChange?.after?.possibility
+                                          ? (action.stateChange.after.targetRevenue * parseFloat(action.stateChange.after.possibility.replace('%', ''))) / 100 / 10000
+                                          : null,
+                                      };
+                                    })}
+                                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                >
+                                  <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder} />
+                                  <XAxis
+                                    dataKey="date"
+                                    stroke={token.colorTextSecondary}
+                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
+                                  />
+                                  <YAxis
+                                    yAxisId="left"
+                                    stroke={token.colorTextSecondary}
+                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
+                                    label={{ value: "가능성 지수 (%)", angle: -90, position: "insideLeft", fill: token.colorTextSecondary }}
+                                    domain={[0, 100]}
+                                    ticks={[0, 40, 90, 100]}
+                                  />
+                                  <YAxis
+                                    yAxisId="right"
+                                    orientation="right"
+                                    stroke={token.colorTextSecondary}
+                                    tick={{ fill: token.colorTextSecondary, fontSize: 12 }}
+                                    label={{ value: "매출 (만원)", angle: 90, position: "insideRight", fill: token.colorTextSecondary }}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: token.colorBgElevated,
+                                      border: `1px solid ${token.colorBorder}`,
+                                      borderRadius: token.borderRadius,
+                                    }}
+                                  />
+                                  <Legend />
+                                  <Line
+                                    yAxisId="left"
+                                    type="monotone"
+                                    dataKey="possibilityIndex"
+                                    stroke={token.colorPrimary}
+                                    strokeWidth={2}
+                                    name="가능성 지수"
+                                    dot={{ fill: token.colorPrimary, r: 4 }}
+                                  />
+                                  <Bar
+                                    yAxisId="right"
+                                    dataKey="targetRevenue"
+                                    fill={token.colorWarning}
+                                    name="목표 매출"
+                                    opacity={0.6}
+                                  />
+                                  <Bar
+                                    yAxisId="right"
+                                    dataKey="expectedRevenue"
+                                    fill={token.colorSuccess}
+                                    name="예상 매출"
+                                    opacity={0.8}
+                                  />
+                                </ComposedChart>
+                              </ResponsiveContainer>
+                            </div>
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                              영업 액션 데이터가 없습니다.
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 영업 액션 타임라인 */}
+                        <div>
+                          <Title level={5} style={{ marginBottom: 12 }}>영업 액션 타임라인</Title>
+                          {salesHistoryData?.data?.salesActions && salesHistoryData.data.salesActions.length > 0 ? (
+                            <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                {salesHistoryData.data.salesActions
+                                  .slice()
+                                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                  .map((action, idx) => (
+                                    <Card
+                                      key={idx}
+                                      size="small"
+                                      style={{ width: '100%', cursor: 'pointer' }}
+                                      hoverable
+                                      onClick={() => {
+                                        setSelectedAction(action);
+                                        setIsActionDetailModalOpen(true);
+                                      }}
+                                    >
+                                      <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                          <AntText strong>{action.date}</AntText>
+                                          <Tag color={action.type === 'CALL' ? 'blue' : 'green'}>
+                                            {action.type === 'CALL' ? '콜' : '미팅'}
+                                          </Tag>
+                                        </Space>
+                                        <AntText type="secondary" style={{ fontSize: 12 }}>
+                                          담당자: {selectedCustomer.manager}
+                                        </AntText>
+                                        <AntText>{action.content || '-'}</AntText>
+                                        <Space wrap size="small">
+                                          {action.stateChange?.after?.possibility && (
+                                            <Tag color="blue">
+                                              가능성: {action.stateChange.after.possibility}
+                                            </Tag>
+                                          )}
+                                          {(() => {
+                                            const after = action.stateChange?.after;
+                                            if (after?.contract) return <Tag color="cyan">도입결정: 클로징</Tag>;
+                                            if (after?.approval) return <Tag color="cyan">도입결정: 승인</Tag>;
+                                            if (after?.quote) return <Tag color="cyan">도입결정: 견적</Tag>;
+                                            if (after?.test) return <Tag color="cyan">도입결정: 테스트</Tag>;
+                                            return null;
+                                          })()}
+                                          {action.stateChange?.after?.targetRevenue && (
+                                            <Tag>
+                                              목표 매출: {formatMan(action.stateChange.after.targetRevenue)}
+                                            </Tag>
+                                          )}
+                                          {action.stateChange?.after?.targetDate && (
+                                            <Tag>
+                                              목표 일자: {action.stateChange.after.targetDate}
+                                            </Tag>
+                                          )}
+                                        </Space>
+                                      </Space>
+                                    </Card>
+                                  ))}
+                              </Space>
+                            </div>
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                              영업 액션 이력이 없습니다.
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </>
                 ),
@@ -2009,6 +2170,149 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
               <AntText type="secondary">{selectedContent.date}</AntText>
             </Space>
             <AntText>{selectedContent.title}</AntText>
+          </Space>
+        )}
+      </Modal>
+
+      {/* 영업 액션 상세 모달 */}
+      <Modal
+        open={isActionDetailModalOpen}
+        onCancel={() => {
+          setIsActionDetailModalOpen(false);
+          setSelectedAction(null);
+        }}
+        footer={null}
+        title="영업 액션 상세"
+        width={600}
+      >
+        {selectedAction && selectedCustomer && (
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            {/* 헤더 */}
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+              <Tag
+                color={selectedAction.type === 'CALL' ? 'cyan' : 'purple'}
+                icon={selectedAction.type === 'CALL' ? <Phone size={12} /> : <Users size={12} />}
+              >
+                {selectedAction.type === 'CALL' ? '콜' : '미팅'}
+              </Tag>
+              <Space size="small">
+                <Calendar size={14} style={{ color: token.colorTextSecondary }} />
+                <AntText type="secondary">{selectedAction.date}</AntText>
+              </Space>
+            </Space>
+
+            {/* 활동 내용 */}
+            <div>
+              <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                활동 내용
+              </AntText>
+              <AntText strong>{selectedAction.content}</AntText>
+            </div>
+
+            {/* 메타 정보 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div>
+                <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  담당자
+                </AntText>
+                <AntText>{selectedCustomer.manager}</AntText>
+              </div>
+              <div>
+                <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  가능성 변화
+                </AntText>
+                <Space size="small">
+                  {selectedAction.stateChange?.before?.possibility && (
+                    <>
+                      <Tag>{selectedAction.stateChange.before.possibility}</Tag>
+                      <ArrowRight size={12} style={{ color: token.colorTextSecondary }} />
+                    </>
+                  )}
+                  <Tag color={
+                    selectedAction.stateChange?.after?.possibility === '100%' ? 'blue' :
+                      selectedAction.stateChange?.after?.possibility === '90%' ? 'green' :
+                        selectedAction.stateChange?.after?.possibility === '40%' ? 'orange' : 'red'
+                  }>
+                    {selectedAction.stateChange?.after?.possibility || '-'}
+                  </Tag>
+                </Space>
+              </div>
+            </div>
+
+            {/* 목표 매출 및 일자 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div>
+                <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  목표 매출 변화
+                </AntText>
+                <Space size="small">
+                  {selectedAction.stateChange?.before?.targetRevenue && (
+                    <>
+                      <AntText type="secondary">{formatMan(selectedAction.stateChange.before.targetRevenue)}</AntText>
+                      <ArrowRight size={12} style={{ color: token.colorTextSecondary }} />
+                    </>
+                  )}
+                  <AntText strong>
+                    {selectedAction.stateChange?.after?.targetRevenue
+                      ? formatMan(selectedAction.stateChange.after.targetRevenue)
+                      : '-'}
+                  </AntText>
+                </Space>
+              </div>
+              <div>
+                <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  목표 일자
+                </AntText>
+                <AntText strong>
+                  {selectedAction.stateChange?.after?.targetDate || '-'}
+                </AntText>
+              </div>
+            </div>
+
+            {/* 진행 상태 */}
+            <div>
+              <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                진행 상태 변화
+              </AntText>
+              <Space size="middle">
+                <Space size="small">
+                  {selectedAction.stateChange?.after?.test ?
+                    <CheckCircle2 size={16} style={{ color: token.colorSuccess }} /> :
+                    <XCircle size={16} style={{ color: token.colorTextTertiary }} />
+                  }
+                  <AntText style={{ color: selectedAction.stateChange?.after?.test ? token.colorSuccess : token.colorTextTertiary }}>
+                    테스트
+                  </AntText>
+                </Space>
+                <Space size="small">
+                  {selectedAction.stateChange?.after?.quote ?
+                    <CheckCircle2 size={16} style={{ color: token.colorSuccess }} /> :
+                    <XCircle size={16} style={{ color: token.colorTextTertiary }} />
+                  }
+                  <AntText style={{ color: selectedAction.stateChange?.after?.quote ? token.colorSuccess : token.colorTextTertiary }}>
+                    견적
+                  </AntText>
+                </Space>
+                <Space size="small">
+                  {selectedAction.stateChange?.after?.approval ?
+                    <CheckCircle2 size={16} style={{ color: token.colorSuccess }} /> :
+                    <XCircle size={16} style={{ color: token.colorTextTertiary }} />
+                  }
+                  <AntText style={{ color: selectedAction.stateChange?.after?.approval ? token.colorSuccess : token.colorTextTertiary }}>
+                    품의
+                  </AntText>
+                </Space>
+                <Space size="small">
+                  {selectedAction.stateChange?.after?.contract ?
+                    <CheckCircle2 size={16} style={{ color: token.colorSuccess }} /> :
+                    <XCircle size={16} style={{ color: token.colorTextTertiary }} />
+                  }
+                  <AntText style={{ color: selectedAction.stateChange?.after?.contract ? token.colorSuccess : token.colorTextTertiary }}>
+                    계약
+                  </AntText>
+                </Space>
+              </Space>
+            </div>
           </Space>
         )}
       </Modal>

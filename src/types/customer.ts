@@ -4,7 +4,7 @@ export type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이�
 export type TrustLevelType = "P1" | "P2" | "P3" | null;
 export type ChangeDirectionType = "up" | "down" | "none" | null;
 export type CustomerResponseType = "상" | "중" | "하";
-export type PossibilityType = "90%" | "40%" | "0%";
+export type PossibilityType = "100%" | "90%" | "40%" | "0%";
 
 // 조회/참석 기업 상세 정보 (공통 컴포넌트용)
 export interface ViewerDetail {
