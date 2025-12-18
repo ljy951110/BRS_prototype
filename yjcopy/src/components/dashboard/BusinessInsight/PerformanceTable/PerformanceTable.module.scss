@@ -1,0 +1,71 @@
+@use "@/styles/variables" as *;
+
+.container {
+  padding: 24px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid $color-border;
+    color: $color-text-secondary;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  
+  td {
+    padding: 16px;
+    border-bottom: 1px solid $color-border;
+    font-size: 14px;
+    color: $color-text-primary;
+  }
+}
+
+.row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: $color-bg-hover;
+  }
+}
+
+.nameCell {
+  min-width: 200px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.normal {
+    background-color: $color-accent-green-subtle;
+    color: $color-accent-green;
+  }
+  
+  &.warning {
+    background-color: $color-accent-orange-subtle;
+    color: $color-accent-orange;
+  }
+  
+  &.danger {
+    background-color: $color-accent-red-subtle;
+    color: $color-accent-red;
+  }
+}

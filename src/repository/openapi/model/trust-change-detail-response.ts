@@ -15,22 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { Category } from './category';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ChangeDirection } from './change-direction';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { CompanySize } from './company-size';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { EngagementScore } from './engagement-score';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FitScore } from './fit-score';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { TrustLevel } from './trust-level';
+import type { EngagementItem } from './engagement-item';
 
 /**
  * 신뢰지수 변동 상세 응답
@@ -43,68 +28,12 @@ export interface TrustChangeDetailResponse {
      * @type {number}
      * @memberof TrustChangeDetailResponse
      */
-    'companyId': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof TrustChangeDetailResponse
-     */
-    'companyName': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TrustChangeDetailResponse
-     */
-    'manager'?: string | null;
-    /**
-     * 
-     * @type {Category}
-     * @memberof TrustChangeDetailResponse
-     */
-    'category'?: Category | null;
-    /**
-     * 
-     * @type {CompanySize}
-     * @memberof TrustChangeDetailResponse
-     */
-    'companySize'?: CompanySize | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof TrustChangeDetailResponse
-     */
-    'trustIndex'?: number | null;
-    /**
-     * 
-     * @type {TrustLevel}
-     * @memberof TrustChangeDetailResponse
-     */
-    'trustLevel'?: TrustLevel | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof TrustChangeDetailResponse
-     */
     'changeAmount': number;
     /**
      * 
-     * @type {ChangeDirection}
+     * @type {Array<EngagementItem>}
      * @memberof TrustChangeDetailResponse
      */
-    'changeDirection': ChangeDirection;
-    /**
-     * 
-     * @type {Array<EngagementScore>}
-     * @memberof TrustChangeDetailResponse
-     */
-    'engagementScores': Array<EngagementScore>;
-    /**
-     * 
-     * @type {Array<FitScore>}
-     * @memberof TrustChangeDetailResponse
-     */
-    'fitScores': Array<FitScore>;
+    'engagementItems': Array<EngagementItem>;
 }
-
-
 

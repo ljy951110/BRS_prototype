@@ -6,11 +6,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**companies** | [**Array&lt;AppsDashboardApiModelsHeatmapCompany&gt;**](AppsDashboardApiModelsHeatmapCompany.md) |  | [default to undefined]
-**weeks** | [**Array&lt;AppsDashboardApiModelsWeeklySnapshotWeek&gt;**](AppsDashboardApiModelsWeeklySnapshotWeek.md) |  | [default to undefined]
+**companies** | [**Array&lt;Company&gt;**](Company.md) |  | [default to undefined]
+**weeks** | [**Array&lt;Week&gt;**](Week.md) |  | [default to undefined]
 **scores** | [**Array&lt;TrustScore&gt;**](TrustScore.md) |  | [default to undefined]
-**events** | [**Array&lt;AppsDashboardApiModelsHeatmapMarketingEvent&gt;**](AppsDashboardApiModelsHeatmapMarketingEvent.md) |  | [default to undefined]
-**attendance** | [**Array&lt;AppsDashboardApiModelsHeatmapEventAttendance&gt;**](AppsDashboardApiModelsHeatmapEventAttendance.md) |  | [default to undefined]
+**events** | [**Array&lt;MarketingEvent&gt;**](MarketingEvent.md) |  | [default to undefined]
+**attendance** | [**Array&lt;EventAttendance&gt;**](EventAttendance.md) |  | [default to undefined]
 
 ## Example
 

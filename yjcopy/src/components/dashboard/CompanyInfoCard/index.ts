@@ -1,0 +1,2 @@
+export { CompanyInfoCard } from './CompanyInfoCard';
+

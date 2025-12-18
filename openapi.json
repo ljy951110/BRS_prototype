@@ -1,6 +1,6 @@
 {
   "generatorName": "typescript-axios",
-  "inputSpec": "http://10.11.30.192:8001/openapi.json",
+  "inputSpec": "https://dashboardapi-mu.vercel.app/openapi.json",
   "outputDir": "src/repository/openapi",
   "validateSpec": false,
   "additionalProperties": {

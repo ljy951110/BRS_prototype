@@ -1,0 +1,92 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  @include FlexCenter;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  animation: fadeIn $transition-fast;
+  z-index: $z-modal;
+}
+
+.modal {
+  @include Flex(column, flex-start, stretch);
+  max-height: 85vh;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  animation: slideUp $transition-normal;
+
+  &.size_sm {
+    width: 400px;
+  }
+
+  &.size_md {
+    width: 520px;
+  }
+
+  &.size_lg {
+    width: 680px;
+  }
+
+  &.size_xl {
+    width: 900px;
+    max-height: 90vh;
+  }
+}
+
+.header {
+  @include Flex(row, space-between, center);
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: 1px solid $color-border;
+}
+
+.closeButton {
+  @include FlexCenter;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+}
+
+.content {
+  overflow-y: auto;
+  padding: $spacing-xl;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+

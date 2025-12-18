@@ -540,7 +540,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         <Spin spinning={isLoading}>
           {viewMode === "table" && (
             <section className={styles.section}>
-              <SummaryCards data={filteredData} timePeriod={timePeriod} />
+              <SummaryCards />
             </section>
           )}
 

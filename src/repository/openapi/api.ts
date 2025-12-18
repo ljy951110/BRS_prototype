@@ -16,11 +16,9 @@
 
 export * from './api/customer-detail-api';
 export * from './api/dashboard-api';
-export * from './api/deal-stages-api';
 export * from './api/default-api';
 export * from './api/heatmap-api';
 export * from './api/timeline-api';
 export * from './api/trust-change-detail-api';
 export * from './api/trust-index-card-api';
-export * from './api/weekly-snapshots-api';
 

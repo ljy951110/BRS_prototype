@@ -1,0 +1,1420 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.tableCard {
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+}
+
+.th {
+  position: sticky;
+  top: 0;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border;
+  text-align: left;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.filterRow {
+  background: $color-bg-primary;
+}
+
+.filterTh {
+  position: sticky;
+  top: 46px;
+  padding: $spacing-sm $spacing-lg;
+  background: $color-bg-primary;
+  border-bottom: 1px solid $color-border;
+  z-index: 5;
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+
+  &:focus {
+    outline: 2px solid rgba($color-accent-blue, 0.3);
+    border-color: $color-accent-blue;
+  }
+}
+
+.filterSelect {
+  min-width: 140px;
+}
+
+.rangeInputs {
+  display: grid;
+  grid-template-columns: 1fr 16px 1fr;
+  align-items: center;
+  gap: $spacing-xxs;
+}
+
+.rangeDash {
+  text-align: center;
+  color: $color-text-muted;
+  font-size: 12px;
+}
+
+.dateInputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-xxs;
+}
+
+.filterBtn {
+  @include FlexCenter;
+  width: 24px;
+  height: 24px;
+  margin-left: $spacing-xs;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $color-accent-blue;
+    border-color: $color-accent-blue;
+    background: rgba($color-accent-blue, 0.1);
+  }
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.filterModalContent {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xxs;
+
+  label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.sortControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+}
+
+.sortLabel {
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+}
+
+.sortButtons {
+  display: flex;
+  gap: $spacing-xxs;
+}
+
+.sortBtn,
+.sortReset {
+  padding: 6px 10px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  color: $color-text-primary;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-blue;
+    color: $color-accent-blue;
+  }
+}
+
+.sortBtn.active {
+  border-color: $color-accent-blue;
+  color: $color-accent-blue;
+  background: rgba($color-accent-blue, 0.1);
+}
+
+.progressChecks {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xxs;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.resetBtn,
+.closeBtn {
+  padding: 8px 12px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  color: $color-text-primary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-blue;
+    color: $color-accent-blue;
+  }
+}
+
+.resetBtn {
+  color: $color-text-secondary;
+
+  &:hover {
+    color: $color-accent-blue;
+  }
+}
+
+.sortHeader {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  cursor: pointer;
+  user-select: none;
+  
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.sortActive {
+  color: $color-accent-blue;
+}
+
+.sortIndicator {
+  @include Flex(row, center, center, 2px);
+}
+
+.sortOrder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background: $color-accent-blue;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  color: white;
+}
+
+.tr {
+  border-bottom: 1px solid $color-border;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+
+  &.expanded {
+    background: $color-bg-secondary;
+  }
+
+  &.clickableRow {
+    cursor: pointer;
+    
+    &:hover {
+      background: $color-bg-hover;
+    }
+    
+    &:active {
+      background: $color-bg-tertiary;
+    }
+  }
+}
+
+.td {
+  padding: $spacing-md $spacing-lg;
+  vertical-align: middle;
+}
+
+.expandBtn {
+  @include FlexCenter;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+}
+
+.companyLink {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.trustCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.changeCell {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: nowrap;
+}
+
+.changeTag {
+  @include Flex(row, center, center, 4px);
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  
+  svg {
+    flex-shrink: 0;
+  }
+  
+  &.neutral {
+    background-color: $color-bg-tertiary;
+    color: $color-text-secondary;
+    border: 1px solid $color-border;
+  }
+  
+  &.positive {
+    background-color: rgba($color-accent-green, 0.15);
+    color: $color-accent-green;
+    border: 1px solid rgba($color-accent-green, 0.3);
+  }
+  
+  &.negative {
+    background-color: rgba($color-accent-red, 0.15);
+    color: $color-accent-red;
+    border: 1px solid rgba($color-accent-red, 0.3);
+  }
+}
+
+.tagGroup {
+  @include Flex(row, flex-start, center, $spacing-xxs);
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.arrowIcon {
+  color: $color-text-muted;
+  flex-shrink: 0;
+}
+
+.pastBadge {
+  opacity: 0.5;
+}
+
+.pastValue {
+  opacity: 0.5;
+}
+
+// 진행상태 (T Q A C)
+.progressStatus {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.statusDot {
+  position: relative;
+  @include FlexCenter;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-sm;
+  border: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  transition: all $transition-fast;
+
+  &.active {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.15);
+    color: $color-accent-green;
+  }
+
+  &.newlyActive {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.25);
+    color: $color-accent-green;
+    animation: pulse 1.5s ease-in-out infinite;
+
+    &::after {
+      content: 'N';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: $color-accent-green;
+      font-size: 6px;
+      font-weight: $font-weight-bold;
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4); }
+  50% { box-shadow: 0 0 0 3px rgba($color-accent-green, 0); }
+}
+
+.trendUp {
+  color: $color-accent-green;
+}
+
+.trendDown {
+  color: $color-accent-red;
+}
+
+.trendNone {
+  color: $color-text-muted;
+}
+
+// Expanded Row
+.expandedRow {
+  background: $color-bg-tertiary;
+  border-bottom: 1px solid $color-border;
+}
+
+.expandedContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-xl;
+  padding: $spacing-lg;
+}
+
+.detailSection {
+  @include Flex(column, flex-start, flex-start, $spacing-sm);
+}
+
+.interestBadges {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  margin-top: $spacing-xs;
+}
+
+.actionsList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.actionItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm;
+  background: $color-bg-secondary;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+}
+
+// Drawer Content
+.drawerContent {
+  @include Flex(column, flex-start, stretch, $spacing-xl);
+}
+
+.drawerSection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.infoItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+// Trust Info
+.trustInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.trustMain {
+  @include Flex(row, space-between, center);
+}
+
+.trustScore {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.trustChange {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+// Formation Info
+.formationInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.formationHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+// Adoption Info
+.adoptionInfo {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.adoptionHeader {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.revenueInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.progressSteps {
+  @include Flex(row, flex-start, center, $spacing-lg);
+  padding: $spacing-md 0;
+}
+
+.step {
+  @include Flex(column, center, center, $spacing-xs);
+  
+  .stepDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid $color-border;
+    background: $color-bg-secondary;
+    transition: all $transition-fast;
+  }
+
+  &.completed .stepDot {
+    border-color: $color-accent-green;
+    background: $color-accent-green;
+  }
+}
+
+// Timeline
+.actionsTimeline {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.timelineItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  position: relative;
+  padding-bottom: $spacing-md;
+  padding-left: $spacing-lg;
+
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    width: 2px;
+    height: calc(100% - 12px);
+    background: $color-border;
+  }
+}
+
+.timelineIcon {
+  @include FlexCenter;
+  position: absolute;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: $color-bg-tertiary;
+  border: 2px solid $color-border;
+  color: $color-text-secondary;
+}
+
+.timelineContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+// Content List
+.contentList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.contentItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+.contentHeader {
+  @include Flex(row, space-between, center);
+  width: 100%;
+}
+
+// Attendance
+.attendanceList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.attendanceItem {
+  @include Flex(row, space-between, center);
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-sm;
+}
+
+// Modal Content
+.modalContent {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.tabNav {
+  @include Flex(row, flex-start, center, 0);
+  margin-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.tabButton {
+  @include Flex(row, center, center, $spacing-sm);
+  padding: $spacing-md $spacing-xl;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $color-text-primary;
+    background: $color-bg-hover;
+  }
+
+  &.active {
+    border-bottom-color: $color-accent-blue;
+    color: $color-accent-blue;
+  }
+}
+
+.tabContent {
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.infoTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.modalSection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+// Timeline Tab
+.timelineTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.activityTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.activityList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activityItem {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.activityBadge {
+  flex-shrink: 0;
+}
+
+.activityInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.activitySummary {
+  @include Flex(row, space-around, center, $spacing-md);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+}
+
+.summaryItem {
+  @include Flex(column, center, center, $spacing-xs);
+  text-align: center;
+}
+
+.periodBadge {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+  text-align: center;
+}
+
+.timelineHeader {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.weekHeader {
+  @include Flex(column, flex-start, center, $spacing-xs);
+  text-align: center;
+  padding: $spacing-sm;
+  min-height: 80px;
+  border-radius: $radius-sm;
+  
+  &.mbmWeek {
+    background: rgba($color-accent-blue, 0.1);
+  }
+
+  &.currentWeek {
+    background: rgba($color-accent-green, 0.1);
+    border: 1px solid rgba($color-accent-green, 0.3);
+  }
+}
+
+.mbmBadge {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs;
+  color: $color-accent-blue;
+}
+
+.timelineCells {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: $spacing-sm;
+  padding: $spacing-md 0;
+}
+
+.timelineCell {
+  @include Flex(column, flex-start, center, $spacing-sm);
+  align-items: stretch;
+  padding: $spacing-md;
+  min-height: 120px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  
+  &.currentCell {
+    border-color: $color-accent-green;
+    background: rgba($color-accent-green, 0.05);
+  }
+}
+
+.mbmAttendedBadge {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  background: rgba($color-accent-blue, 0.1);
+  border-radius: $radius-sm;
+  color: $color-accent-blue;
+}
+
+.trustCell {
+  @include Flex(column, center, center, $spacing-xs);
+}
+
+.trustValue {
+  @include Flex(row, center, center, $spacing-xs);
+}
+
+.trustChangeIndicator {
+  @include Flex(row, center, center, $spacing-xs);
+  font-size: $font-size-xs;
+  
+  &.up {
+    color: $color-accent-green;
+  }
+  
+  &.down {
+    color: $color-accent-red;
+  }
+}
+
+.trustChangeButton {
+  @include Flex(row, center, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  cursor: default;
+  transition: all $transition-fast;
+  
+  &.up {
+    color: $color-accent-green;
+  }
+  
+  &.down {
+    color: $color-accent-red;
+  }
+  
+  &.clickable {
+    cursor: pointer;
+    background: rgba($color-accent-green, 0.1);
+    
+    &:hover {
+      background: rgba($color-accent-green, 0.2);
+    }
+  }
+  
+  &:disabled:not(.clickable) {
+    opacity: 0.7;
+  }
+}
+
+.cellActions {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  width: 100%;
+}
+
+.cellAction {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  &.call {
+    background: rgba($color-accent-cyan, 0.1);
+    color: $color-accent-cyan;
+    
+    &:hover {
+      background: rgba($color-accent-cyan, 0.2);
+    }
+  }
+  
+  &.meeting {
+    background: rgba($color-accent-purple, 0.1);
+    color: $color-accent-purple;
+    
+    &:hover {
+      background: rgba($color-accent-purple, 0.2);
+    }
+  }
+}
+
+.attendanceSummary {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+// 영업활동 히스토리
+.salesHistorySection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+.salesHistoryList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.salesHistoryItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.salesHistoryLeft {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  min-width: 80px;
+}
+
+.salesHistoryContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+}
+
+.salesHistoryMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+// Action Modal
+.actionModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.actionModalHeader {
+  @include Flex(row, space-between, center);
+}
+
+.actionDate {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  color: $color-text-secondary;
+}
+
+.actionModalContent {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.actionModalMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border;
+}
+
+.metaItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.possibilityChange {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.arrowIcon {
+  color: $color-text-tertiary;
+}
+
+// 진행 상태 체크리스트
+.progressChecklist {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.checklistItems {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.checkItem {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  color: $color-text-tertiary;
+  background: $color-bg-secondary;
+
+  &.checked {
+    color: $color-accent-green;
+    background: $color-accent-green-subtle;
+  }
+
+  &.newlyChecked {
+    position: relative;
+    border: 1px solid $color-accent-green;
+    animation: pulse 1s ease-in-out infinite;
+
+    &::after {
+      content: "N";
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: $color-accent-green;
+      @include FontStyle(caption);
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($color-accent-green, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba($color-accent-green, 0);
+  }
+}
+
+// Content Modal
+.contentModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.contentModalHeader {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.periodBadge {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.contentStats {
+  @include Flex(row, flex-start, center, $spacing-xl);
+}
+
+.statItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.contentModalList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.contentModalItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+.contentIcon {
+  @include FlexCenter;
+  width: 32px;
+  height: 32px;
+  background: $color-bg-secondary;
+  border-radius: $radius-sm;
+  color: $color-accent-blue;
+  flex-shrink: 0;
+}
+
+.contentInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.contentMeta {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+}
+
+.emptyContent {
+  @include FlexCenter;
+  padding: $spacing-xl;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+}
+
+// 콘텐츠 상세 모달 (SummaryCards 스타일)
+.contentDetailModal {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.contentDetailHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.contentDetailStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+}
+
+.contentStatItem {
+  @include Flex(column, flex-start, center, $spacing-xs);
+  padding: $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  text-align: center;
+
+  svg {
+    color: $color-accent-blue;
+  }
+}
+
+.viewerList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.viewerItem {
+  @include Flex(row, space-between, center, $spacing-sm);
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+}
+
+.viewerMain {
+  @include Flex(column, flex-start, flex-start, 2px);
+}
+
+.viewerMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+}
+
+// 타임라인 하단 상세 정보
+.timelineDetails {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+}
+
+.detailSection {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.timelineItem {
+  @include Flex(row, flex-start, flex-start, $spacing-md);
+  padding: $spacing-sm 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.timelineIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+}
+
+.timelineContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.timelineItemHeader {
+  @include Flex(row, flex-start, center, $spacing-sm);
+  flex-wrap: wrap;
+}
+
+.progressDots {
+  @include Flex(row, flex-start, center, 2px);
+  margin-left: $spacing-xs;
+}
+
+.progressDot {
+  @include FlexCenter;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background: $color-bg-tertiary;
+  font-size: 9px;
+  font-weight: $font-weight-medium;
+  color: $color-text-tertiary;
+
+  &.active {
+    background: $color-accent-green;
+    color: white;
+  }
+}
+
+.mbmList {
+  @include Flex(column, flex-start, stretch, 0);
+}
+
+.mbmItem {
+  @include Flex(row, flex-start, center, $spacing-md);
+  padding: $spacing-sm 0;
+}
+
+.mbmIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-yellow, 0.15);
+  color: $color-accent-yellow;
+}
+
+.mbmContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.summarySection {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  padding: $spacing-lg;
+  background: $color-bg-tertiary;
+  border-radius: $radius-lg;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+.summaryItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-sm;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+}
+
+.trustScoreSummary {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.changeIndicator {
+  @include Flex(row, flex-start, center, $spacing-xs);
+}
+
+.hubspotButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  background: $color-accent-blue;
+  color: white;
+  border-radius: $radius-md;
+  text-decoration: none;
+  transition: all $transition-fast;
+  
+  &:hover {
+    background: darken($color-accent-blue, 10%);
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.salesTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.marketingTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.chartPlaceholder {
+  padding: $spacing-xl;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  text-align: center;
+  border: 1px dashed $color-border;
+}
+
+.weeklyChart {
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+}
+
+.actionTimeline {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.actionCard {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  transition: all $transition-fast;
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+  }
+}
+
+.actionHeader {
+  @include Flex(row, space-between, center, $spacing-sm);
+}
+
+.actionTags {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  margin-top: $spacing-xs;
+}
+
+.actionDescription {
+  margin-top: $spacing-xs;
+}
+
+.contentList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.contentItem {
+  @include Flex(column, flex-start, stretch, $spacing-xs);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  text-decoration: none;
+  transition: all $transition-fast;
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+  }
+}
+
+.contentHeader {
+  @include Flex(row, space-between, center, $spacing-sm);
+}
+
+.mbmList {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+}
+
+.mbmItem {
+  @include Flex(row, flex-start, center, $spacing-md);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  text-decoration: none;
+  transition: all $transition-fast;
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+  }
+}
+
+.mbmIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-yellow, 0.15);
+  color: $color-accent-yellow;
+}
+
+.mbmContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.summaryItem {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+}
+
+.changeTag {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  
+  span {
+    font-size: 14px;
+  }
+  
+  &.positive {
+    color: $color-accent-green;
+  }
+  
+  &.negative {
+    color: $color-accent-red;
+  }
+  
+  &.neutral {
+    color: $color-text-secondary;
+  }
+}

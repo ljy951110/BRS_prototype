@@ -24,7 +24,7 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { HTTPValidationError } from '../model';
 // @ts-ignore
-import type { TimePeriod } from '../model';
+import type { TrustChangeDetailRequest } from '../model';
 // @ts-ignore
 import type { TrustChangeDetailResponse } from '../model';
 /**
@@ -34,16 +34,15 @@ import type { TrustChangeDetailResponse } from '../model';
 export const TrustChangeDetailApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **period**: 조회 기간 (WEEK | MONTH | HALF_YEAR | YEAR)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - companyId: 기업 ID         - companyName: 기업명         - manager: 담당 영업사원         - category: 카테고리 (채용/공공/병원/성과)         - companySize: 기업 규모 (T0/T1/T3/T5/T9/T10)         - trustIndex: 현재 신뢰지수         - trustLevel: 신뢰레벨 (P1/P2/P3)         - changeAmount: 신뢰지수 변화량 (절댓값)         - changeDirection: 변화 방향 (up/down/none)         - engagementScores: Engagement Score 목록 (이벤트 기반 활동)         - fitScores: Fit Score 목록 (속성 기반 점수)
+         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **dateRange**: 조회 기간 (startDate ~ endDate, YYYY-MM-DD 형식)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - changeAmount: 신뢰지수 변화량         - engagementItems: Engagement 목록 (이벤트 기반 활동)
          * @summary Get Trust Change Detail
-         * @param {number} companyId 조회할 기업 ID
-         * @param {TimePeriod} [period] 조회 기간
+         * @param {TrustChangeDetailRequest} trustChangeDetailRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTrustChangeDetailApiV1DashboardTrustChangeDetailGet: async (companyId: number, period?: TimePeriod, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'companyId' is not null or undefined
-            assertParamExists('getTrustChangeDetailApiV1DashboardTrustChangeDetailGet', 'companyId', companyId)
+        getTrustChangeDetailApiV1DashboardTrustChangeDetailPost: async (trustChangeDetailRequest: TrustChangeDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'trustChangeDetailRequest' is not null or undefined
+            assertParamExists('getTrustChangeDetailApiV1DashboardTrustChangeDetailPost', 'trustChangeDetailRequest', trustChangeDetailRequest)
             const localVarPath = `/api/v1/dashboard/trust-change-detail`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -52,23 +51,18 @@ export const TrustChangeDetailApiAxiosParamCreator = function (configuration?: C
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            if (companyId !== undefined) {
-                localVarQueryParameter['companyId'] = companyId;
-            }
-
-            if (period !== undefined) {
-                localVarQueryParameter['period'] = period;
-            }
-
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(trustChangeDetailRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -86,17 +80,16 @@ export const TrustChangeDetailApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = TrustChangeDetailApiAxiosParamCreator(configuration)
     return {
         /**
-         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **period**: 조회 기간 (WEEK | MONTH | HALF_YEAR | YEAR)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - companyId: 기업 ID         - companyName: 기업명         - manager: 담당 영업사원         - category: 카테고리 (채용/공공/병원/성과)         - companySize: 기업 규모 (T0/T1/T3/T5/T9/T10)         - trustIndex: 현재 신뢰지수         - trustLevel: 신뢰레벨 (P1/P2/P3)         - changeAmount: 신뢰지수 변화량 (절댓값)         - changeDirection: 변화 방향 (up/down/none)         - engagementScores: Engagement Score 목록 (이벤트 기반 활동)         - fitScores: Fit Score 목록 (속성 기반 점수)
+         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **dateRange**: 조회 기간 (startDate ~ endDate, YYYY-MM-DD 형식)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - changeAmount: 신뢰지수 변화량         - engagementItems: Engagement 목록 (이벤트 기반 활동)
          * @summary Get Trust Change Detail
-         * @param {number} companyId 조회할 기업 ID
-         * @param {TimePeriod} [period] 조회 기간
+         * @param {TrustChangeDetailRequest} trustChangeDetailRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(companyId: number, period?: TimePeriod, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TrustChangeDetailResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(companyId, period, options);
+        async getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(trustChangeDetailRequest: TrustChangeDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TrustChangeDetailResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(trustChangeDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['TrustChangeDetailApi.getTrustChangeDetailApiV1DashboardTrustChangeDetailGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['TrustChangeDetailApi.getTrustChangeDetailApiV1DashboardTrustChangeDetailPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -110,37 +103,30 @@ export const TrustChangeDetailApiFactory = function (configuration?: Configurati
     const localVarFp = TrustChangeDetailApiFp(configuration)
     return {
         /**
-         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **period**: 조회 기간 (WEEK | MONTH | HALF_YEAR | YEAR)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - companyId: 기업 ID         - companyName: 기업명         - manager: 담당 영업사원         - category: 카테고리 (채용/공공/병원/성과)         - companySize: 기업 규모 (T0/T1/T3/T5/T9/T10)         - trustIndex: 현재 신뢰지수         - trustLevel: 신뢰레벨 (P1/P2/P3)         - changeAmount: 신뢰지수 변화량 (절댓값)         - changeDirection: 변화 방향 (up/down/none)         - engagementScores: Engagement Score 목록 (이벤트 기반 활동)         - fitScores: Fit Score 목록 (속성 기반 점수)
+         * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **dateRange**: 조회 기간 (startDate ~ endDate, YYYY-MM-DD 형식)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - changeAmount: 신뢰지수 변화량         - engagementItems: Engagement 목록 (이벤트 기반 활동)
          * @summary Get Trust Change Detail
-         * @param {TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest} requestParameters Request parameters.
+         * @param {TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(requestParameters: TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<TrustChangeDetailResponse> {
-            return localVarFp.getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(requestParameters.companyId, requestParameters.period, options).then((request) => request(axios, basePath));
+        getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(requestParameters: TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<TrustChangeDetailResponse> {
+            return localVarFp.getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(requestParameters.trustChangeDetailRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * Request parameters for getTrustChangeDetailApiV1DashboardTrustChangeDetailGet operation in TrustChangeDetailApi.
+ * Request parameters for getTrustChangeDetailApiV1DashboardTrustChangeDetailPost operation in TrustChangeDetailApi.
  * @export
- * @interface TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest
+ * @interface TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest
  */
-export interface TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest {
+export interface TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest {
     /**
-     * 조회할 기업 ID
-     * @type {number}
-     * @memberof TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGet
+     * 
+     * @type {TrustChangeDetailRequest}
+     * @memberof TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPost
      */
-    readonly companyId: number
-
-    /**
-     * 조회 기간
-     * @type {TimePeriod}
-     * @memberof TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGet
-     */
-    readonly period?: TimePeriod
+    readonly trustChangeDetailRequest: TrustChangeDetailRequest
 }
 
 /**
@@ -151,15 +137,15 @@ export interface TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChan
  */
 export class TrustChangeDetailApi extends BaseAPI {
     /**
-     * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **period**: 조회 기간 (WEEK | MONTH | HALF_YEAR | YEAR)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - companyId: 기업 ID         - companyName: 기업명         - manager: 담당 영업사원         - category: 카테고리 (채용/공공/병원/성과)         - companySize: 기업 규모 (T0/T1/T3/T5/T9/T10)         - trustIndex: 현재 신뢰지수         - trustLevel: 신뢰레벨 (P1/P2/P3)         - changeAmount: 신뢰지수 변화량 (절댓값)         - changeDirection: 변화 방향 (up/down/none)         - engagementScores: Engagement Score 목록 (이벤트 기반 활동)         - fitScores: Fit Score 목록 (속성 기반 점수)
+     * 신뢰지수 변동 상세 조회  신뢰지수 변동 기업 리스트에서 특정 기업 카드를 클릭했을 때 표시되는 상세 모달 데이터입니다.  - **companyId**: 조회할 기업 ID (필수) - **dateRange**: 조회 기간 (startDate ~ endDate, YYYY-MM-DD 형식)     - 해당 기간 내의 콘텐츠 소비 및 MBM 참석 이력 제공  Returns:     TrustChangeDetailResponse:         - changeAmount: 신뢰지수 변화량         - engagementItems: Engagement 목록 (이벤트 기반 활동)
      * @summary Get Trust Change Detail
-     * @param {TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest} requestParameters Request parameters.
+     * @param {TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TrustChangeDetailApi
      */
-    public getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(requestParameters: TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailGetRequest, options?: RawAxiosRequestConfig) {
-        return TrustChangeDetailApiFp(this.configuration).getTrustChangeDetailApiV1DashboardTrustChangeDetailGet(requestParameters.companyId, requestParameters.period, options).then((request) => request(this.axios, this.basePath));
+    public getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(requestParameters: TrustChangeDetailApiGetTrustChangeDetailApiV1DashboardTrustChangeDetailPostRequest, options?: RawAxiosRequestConfig) {
+        return TrustChangeDetailApiFp(this.configuration).getTrustChangeDetailApiV1DashboardTrustChangeDetailPost(requestParameters.trustChangeDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

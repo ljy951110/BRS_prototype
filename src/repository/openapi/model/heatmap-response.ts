@@ -15,19 +15,19 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { AppsDashboardApiModelsHeatmapCompany } from './apps-dashboard-api-models-heatmap-company';
+import type { Company } from './company';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { AppsDashboardApiModelsHeatmapEventAttendance } from './apps-dashboard-api-models-heatmap-event-attendance';
+import type { EventAttendance } from './event-attendance';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { AppsDashboardApiModelsHeatmapMarketingEvent } from './apps-dashboard-api-models-heatmap-marketing-event';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { AppsDashboardApiModelsWeeklySnapshotWeek } from './apps-dashboard-api-models-weekly-snapshot-week';
+import type { MarketingEvent } from './marketing-event';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { TrustScore } from './trust-score';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { Week } from './week';
 
 /**
  * 히트맵 API 응답
@@ -37,16 +37,16 @@ import type { TrustScore } from './trust-score';
 export interface HeatmapResponse {
     /**
      * 
-     * @type {Array<AppsDashboardApiModelsHeatmapCompany>}
+     * @type {Array<Company>}
      * @memberof HeatmapResponse
      */
-    'companies': Array<AppsDashboardApiModelsHeatmapCompany>;
+    'companies': Array<Company>;
     /**
      * 
-     * @type {Array<AppsDashboardApiModelsWeeklySnapshotWeek>}
+     * @type {Array<Week>}
      * @memberof HeatmapResponse
      */
-    'weeks': Array<AppsDashboardApiModelsWeeklySnapshotWeek>;
+    'weeks': Array<Week>;
     /**
      * 
      * @type {Array<TrustScore>}
@@ -55,15 +55,15 @@ export interface HeatmapResponse {
     'scores': Array<TrustScore>;
     /**
      * 
-     * @type {Array<AppsDashboardApiModelsHeatmapMarketingEvent>}
+     * @type {Array<MarketingEvent>}
      * @memberof HeatmapResponse
      */
-    'events': Array<AppsDashboardApiModelsHeatmapMarketingEvent>;
+    'events': Array<MarketingEvent>;
     /**
      * 
-     * @type {Array<AppsDashboardApiModelsHeatmapEventAttendance>}
+     * @type {Array<EventAttendance>}
      * @memberof HeatmapResponse
      */
-    'attendance': Array<AppsDashboardApiModelsHeatmapEventAttendance>;
+    'attendance': Array<EventAttendance>;
 }
 
