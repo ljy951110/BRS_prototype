@@ -25,6 +25,8 @@ interface ChartsProps {
   data: Customer[];
 }
 
+type TimePeriodType = '1w' | '1m' | '6m' | '1y';
+
 const COLORS = {
   primary: '#3b82f6',
   secondary: '#8b5cf6',
@@ -53,6 +55,7 @@ const PERIOD_WEEKS: Record<TimePeriodType, number> = {
 };
 
 export const Charts = ({ data }: ChartsProps) => {
+  const timePeriod: TimePeriodType = '1m'; // 기본값 1개월
   const periodData = data;
   // 담당자별 계약금액
   const revenueByManager = useMemo(() => {

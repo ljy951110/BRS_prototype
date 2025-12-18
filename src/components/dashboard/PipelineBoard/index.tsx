@@ -39,8 +39,6 @@ const getCategoryVariant = (category: string) => {
 };
 
 export const PipelineBoard = ({ data }: PipelineBoardProps) => {
-  void timePeriod; // 기간 필터 (데이터는 이미 App에서 처리됨)
-  
   // 진행 상태별로 고객 분류
   const stageData = useMemo(() => {
     const stages: Record<DealStage, Customer[]> = {
