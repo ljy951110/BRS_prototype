@@ -28,7 +28,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '2025 채용 트렌드 가이드',
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 3,
@@ -36,7 +36,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '역량검사 활용 사례집',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -44,7 +44,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: 'ATS 도입 가이드',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'BOFU',
         contentType: '툴즈',
         viewCount: 1,
@@ -52,7 +52,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '2025 채용 트렌드 가이드',
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 3,
@@ -60,7 +60,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '역량검사 활용 사례집',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -68,7 +68,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: 'ATS 도입 가이드',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'BOFU',
         contentType: '툴즈',
         viewCount: 1,
@@ -76,7 +76,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '2025 채용 트렌드 가이드',
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 3,
@@ -84,7 +84,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '역량검사 활용 사례집',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -92,7 +92,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: 'ATS 도입 가이드',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'BOFU',
         contentType: '툴즈',
         viewCount: 1,
@@ -101,7 +101,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         title: '채용 플랫폼 도입 설명회',
         event_url: 'https://example.com/mbm-event-2025-12',
         product: 'ATS, 역량검사',
@@ -124,7 +124,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '대기업 맞춤형 채용 솔루션',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'BOFU',
         contentType: '툴즈',
         viewCount: 1,
@@ -132,7 +132,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '대기업 맞춤형 채용 솔루션',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'TOFU',
         contentType: '아티클',
         viewCount: 1,
@@ -140,7 +140,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '대기업 맞춤형 채용 솔루션',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'TOFU',
         contentType: '온에어',
         viewCount: 1,
@@ -148,7 +148,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '대기업 맞춤형 채용 솔루션',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'TOFU',
         contentType: '아티클',
         viewCount: 1,
@@ -180,7 +180,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '역량 기반 채용의 중요성',
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         funnelType: 'BOFU',
         contentType: 'ARTICLE',
         viewCount: 2,
@@ -204,7 +204,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '유통업 채용 트렌드',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 1,
@@ -218,7 +218,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '제조업 인재 채용 전략',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'MOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -240,7 +240,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '브랜드 이미지 제고를 위한 채용 마케팅',
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         funnelType: 'MOFU',
         contentType: 'ARTICLE',
         viewCount: 1,
@@ -264,7 +264,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '제조업 채용 디지털화',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -272,7 +272,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '기술 인력 채용 가이드',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 1,
@@ -281,7 +281,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         title: '기술 인력 채용 고도화 워크샵',
         event_url: 'https://example.com/tech-workshop',
         product: '역량검사',
@@ -296,7 +296,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '중소기업 채용 가이드',
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         funnelType: 'MOFU',
         contentType: '툴즈',
         viewCount: 2,
@@ -305,7 +305,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         title: '중소기업 채용 지원 설명회',
         event_url: 'https://example.com/sme-info',
         product: 'ATS',
@@ -320,7 +320,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '금융업 채용 트렌드',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'MOFU',
         contentType: 'ARTICLE',
         viewCount: 1,
@@ -334,7 +334,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '스타트업 채용 가이드',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 2,
@@ -372,7 +372,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '전문직 채용 전략',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -381,7 +381,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         title: '건축업 인재 채용 워크샵',
         event_url: 'https://example.com/architecture-workshop',
         product: 'ATS',
@@ -396,7 +396,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '제조업 채용 프로세스 개선',
-        date: '2025-12-11',
+        latestViewDate: '2025-12-11',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 1,
@@ -410,7 +410,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '비영리 채용 가이드',
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         funnelType: 'BOFU',
         contentType: '툴즈',
         viewCount: 2,
@@ -418,7 +418,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '채용 솔루션 소개',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'MOFU',
         contentType: 'ARTICLE',
         viewCount: 1,
@@ -427,7 +427,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         title: '비영리 단체 채용 세미나',
         event_url: 'https://example.com/nonprofit-seminar',
         product: 'ATS, 역량검사',
@@ -442,7 +442,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '역량 기반 채용 가이드',
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         funnelType: 'BOFU',
         contentType: '아티클',
         viewCount: 2,
@@ -451,7 +451,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     ],
     marketingEvents: [
       {
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         title: '금융권 채용 혁신 포럼',
         event_url: 'https://example.com/finance-forum',
         product: '역량검사',
@@ -474,7 +474,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: '역량검사 활용 사례',
-        date: '2025-12-12',
+        latestViewDate: '2025-12-12',
         funnelType: 'MOFU',
         contentType: '온에어',
         viewCount: 2,
@@ -498,7 +498,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '부동산업 채용 가이드',
-        date: '2025-12-14',
+        latestViewDate: '2025-12-14',
         funnelType: 'MOFU',
         contentType: '툴즈',
         viewCount: 1,
@@ -512,7 +512,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
     engagementItems: [
       {
         title: '스타트업 채용 전략',
-        date: '2025-12-13',
+        latestViewDate: '2025-12-13',
         funnelType: 'BOFU',
         contentType: 'ARTICLE',
         viewCount: 2,
@@ -534,7 +534,7 @@ const MOCK_ENGAGEMENT_DATA: Record<
       },
       {
         title: 'ATS 도입 사례',
-        date: '2025-12-15',
+        latestViewDate: '2025-12-15',
         funnelType: 'DECISION',
         contentType: '아티클',
         viewCount: 2,
