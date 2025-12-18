@@ -1,5 +1,5 @@
 /* tslint:disable */
-/* eslint-disable */
+
 /**
  * Trust Score Dashboard API
  * 기업별 신뢰 점수 시계열 데이터 API

@@ -35,5 +35,11 @@ export interface TrustChangeDetailResponse {
      * @memberof TrustChangeDetailResponse
      */
     'engagementItems': Array<EngagementItem>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TrustChangeDetailResponse
+     */
+    'hubspotUrl': string;
 }
 
