@@ -2365,7 +2365,6 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                 {[...trustChangeDetailData.data.marketingEvents]
                                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                                   .map((event, index) => {
-                                    const isAttended = new Date(event.date) < new Date();
                                     return (
                                       <Card
                                         key={index}
@@ -2384,16 +2383,36 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                                               <AntText strong style={{ fontSize: 15 }}>
                                                 {event.title}
                                               </AntText>
-                                              <Space size={8}>
-                                                <Tag
-                                                  color={isAttended ? 'green' : 'orange'}
-                                                  style={{ margin: 0 }}
-                                                >
-                                                  {isAttended ? '참석' : '참석 예정'}
-                                                </Tag>
+                                              <Space size={8} wrap>
                                                 {event.event_type && (
                                                   <Tag color="blue" style={{ margin: 0 }}>
                                                     {event.event_type}
+                                                  </Tag>
+                                                )}
+                                                {event.product && (
+                                                  <Tag color="purple" style={{ margin: 0 }}>
+                                                    {event.product}
+                                                  </Tag>
+                                                )}
+                                                {event.event_target && event.event_target.length > 0 && (
+                                                  <>
+                                                    {event.event_target.map((target, idx) => (
+                                                      <Tag key={idx} color="cyan" style={{ margin: 0 }}>
+                                                        {target}
+                                                      </Tag>
+                                                    ))}
+                                                  </>
+                                                )}
+                                                {event.npsScore !== undefined && event.npsScore !== null && (
+                                                  <Tag
+                                                    color={
+                                                      event.npsScore >= 9 ? 'green' :
+                                                        event.npsScore >= 7 ? 'lime' :
+                                                          event.npsScore >= 5 ? 'gold' : 'orange'
+                                                    }
+                                                    style={{ margin: 0 }}
+                                                  >
+                                                    NPS {event.npsScore}
                                                   </Tag>
                                                 )}
                                               </Space>
