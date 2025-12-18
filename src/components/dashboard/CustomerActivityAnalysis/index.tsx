@@ -1467,32 +1467,32 @@ export const CustomerActivityAnalysis = ({
                 <div className={styles.progressDots}>
                   <span
                     className={`${styles.dot} ${selectedMbm.progressCounts.test > 0
-                        ? styles.dotActive
-                        : ""
+                      ? styles.dotActive
+                      : ""
                       }`}
                   >
                     T:{selectedMbm.progressCounts.test}
                   </span>
                   <span
                     className={`${styles.dot} ${selectedMbm.progressCounts.quote > 0
-                        ? styles.dotActive
-                        : ""
+                      ? styles.dotActive
+                      : ""
                       }`}
                   >
                     Q:{selectedMbm.progressCounts.quote}
                   </span>
                   <span
                     className={`${styles.dot} ${selectedMbm.progressCounts.approval > 0
-                        ? styles.dotActive
-                        : ""
+                      ? styles.dotActive
+                      : ""
                       }`}
                   >
                     A:{selectedMbm.progressCounts.approval}
                   </span>
                   <span
                     className={`${styles.dot} ${selectedMbm.progressCounts.contract > 0
-                        ? styles.dotActive
-                        : ""
+                      ? styles.dotActive
+                      : ""
                       }`}
                   >
                     C:{selectedMbm.progressCounts.contract}
