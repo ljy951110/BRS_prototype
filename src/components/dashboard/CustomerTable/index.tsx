@@ -10,7 +10,6 @@ import {
   Button,
   Card,
   DatePicker,
-  Descriptions,
   Divider,
   Input,
   InputNumber,
@@ -24,10 +23,10 @@ import {
   theme,
   Typography
 } from "antd";
-import dayjs from 'dayjs';
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { FilterDropdownProps } from "antd/es/table/interface";
-import { ArrowRight, Building2, Calendar, BookOpen } from "lucide-react";
+import dayjs from 'dayjs';
+import { ArrowRight, BookOpen, Building2, Calendar } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 
@@ -127,28 +126,6 @@ const parseTargetDate = (dateStr: string | null | undefined): Date | null => {
   return null;
 };
 
-const targetDateColor = (
-  past: string | null | undefined,
-  current: string | null | undefined
-) => {
-  if (!past || !current || past === "-" || current === "-") return "default";
-
-  const pastDate = parseTargetDate(past);
-  const currentDate = parseTargetDate(current);
-
-  if (!pastDate || !currentDate) return "default";
-
-  // 일자가 줄어들었으면 (더 가까운 미래) → 초록
-  // 일자가 늘어났으면 (더 먼 미래) → 빨강
-  if (currentDate.getTime() < pastDate.getTime()) {
-    return "green"; // 줄어듦
-  } else if (currentDate.getTime() > pastDate.getTime()) {
-    return "red"; // 늘어남
-  }
-
-  return "default";
-};
-
 const renderProgressTags = (
   record: TableRow | Customer,
   showNew: boolean | undefined,
@@ -229,7 +206,7 @@ const renderProgressTags = (
   );
 };
 
-export const CustomerTable = ({ data, timePeriod, loading, pagination: paginationProp }: CustomerTableProps) => {
+export const CustomerTable = ({ data, timePeriod, loading, pagination: paginationProp, dateRange }: CustomerTableProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -238,21 +215,29 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
     category: string;
     date: string;
   } | null>(null);
-  
-  // 각 탭별 조회 기간
-  const [summaryDateRange, setSummaryDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().subtract(30, 'day'),
-    dayjs()
-  ]);
-  const [actionDateRange, setActionDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().subtract(30, 'day'),
-    dayjs()
-  ]);
-  const [contentDateRange, setContentDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().subtract(30, 'day'),
-    dayjs()
-  ]);
+
+  // 각 탭별 조회 기간 (전체 현황의 조회 기간을 초기값으로 사용)
+  const getInitialDateRange = (): [dayjs.Dayjs, dayjs.Dayjs] => {
+    if (dateRange?.startDate && dateRange?.endDate) {
+      return [dayjs(dateRange.startDate), dayjs(dateRange.endDate)];
+    }
+    return [dayjs().subtract(30, 'day'), dayjs()];
+  };
+
+  const [summaryDateRange, setSummaryDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
+  const [actionDateRange, setActionDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
+  const [contentDateRange, setContentDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
   const { token } = theme.useToken();
+
+  // 모달이 닫힐 때 조회 기간 초기화
+  useEffect(() => {
+    if (!selectedCustomer) {
+      const initialRange = getInitialDateRange();
+      setSummaryDateRange(initialRange);
+      setActionDateRange(initialRange);
+      setContentDateRange(initialRange);
+    }
+  }, [selectedCustomer]);
 
   // 고객 요약 정보 조회
   const { data: _customerSummary, isLoading: _isSummaryLoading } = useGetCustomerSummary(
@@ -1613,168 +1598,261 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                         />
                       </Space>
                     </div>
-                    <Descriptions bordered column={2} size="small">
-                    <Descriptions.Item label="담당자">
-                      {selectedCustomer.manager}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="카테고리">
-                      {selectedCustomer.category}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="기업규모">
-                      {selectedCustomer.companySize || "미정"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="제품사용" span={2}>
-                      <Space size={4} wrap>
-                        {selectedCustomer.productUsage?.map((product, idx) => (
-                          <Tag key={idx} color="blue">
-                            {product}
-                          </Tag>
-                        )) || "-"}
-                      </Space>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="가능성">
-                      <Tag
-                        color={
-                          selectedCustomer._periodData?.pastPossibility !==
-                            undefined &&
-                            Number(
-                              (selectedCustomer.adoptionDecision?.possibility || "0%").replace(
-                                "%",
-                                ""
+
+                    {/* 기본 정보 */}
+                    <div style={{ marginBottom: 24 }}>
+                      <Title level={5} style={{ marginBottom: 12 }}>기본 정보</Title>
+                      <div style={{ overflow: 'hidden', borderRadius: token.borderRadius }}>
+                        <Table
+                          dataSource={[
+                            {
+                              key: 'manager',
+                              label: '담당자',
+                              value: selectedCustomer.manager
+                            },
+                            {
+                              key: 'category',
+                              label: '카테고리',
+                              value: selectedCustomer.category
+                            },
+                            {
+                              key: 'companySize',
+                              label: '기업 규모',
+                              value: selectedCustomer.companySize || '미정'
+                            },
+                            {
+                              key: 'contractAmount',
+                              label: '계약 금액',
+                              value: formatMan(selectedCustomer.contractAmount)
+                            },
+                            {
+                              key: 'productUsage',
+                              label: '제품 사용',
+                              value: (
+                                <Space size={4} wrap>
+                                  {selectedCustomer.productUsage?.map((product, idx) => (
+                                    <Tag key={idx} color="blue">
+                                      {product}
+                                    </Tag>
+                                  )) || "-"}
+                                </Space>
                               )
-                            ) >
-                            Number(
-                              selectedCustomer._periodData.pastPossibility.replace(
-                                "%",
-                                ""
-                              )
-                            )
-                            ? "green"
-                            : selectedCustomer._periodData?.pastPossibility !==
-                              undefined &&
-                              Number(
-                                (selectedCustomer.adoptionDecision?.possibility || "0%").replace(
-                                  "%",
-                                  ""
-                                )
-                              ) <
-                              Number(
-                                selectedCustomer._periodData.pastPossibility.replace(
-                                  "%",
-                                  ""
-                                )
-                              )
-                              ? "red"
-                              : "default"
-                        }
-                      >
-                        {selectedCustomer._periodData?.pastPossibility ?? "-"} →{" "}
-                        {selectedCustomer.adoptionDecision?.possibility || "0%"}
-                      </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="계약금액">
-                      {formatMan(selectedCustomer.contractAmount)}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="신뢰지수">
-                      <Tag
-                        color={
-                          selectedCustomer._periodData?.pastTrustIndex !==
-                            undefined &&
-                            (selectedCustomer.trustIndex || 0) >
-                            (selectedCustomer._periodData?.pastTrustIndex || 0)
-                            ? "green"
-                            : selectedCustomer._periodData?.pastTrustIndex !==
-                              undefined &&
-                              (selectedCustomer.trustIndex || 0) <
-                              (selectedCustomer._periodData?.pastTrustIndex ||
-                                0)
-                              ? "red"
-                              : "default"
-                        }
-                      >
-                        {selectedCustomer._periodData?.pastTrustIndex ?? "-"} →{" "}
-                        {selectedCustomer.trustIndex}
-                      </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="목표매출" span={2}>
-                      <Tag
-                        color={
-                          selectedCustomer._periodData?.pastTargetRevenue !==
-                            undefined &&
-                            (selectedCustomer.adoptionDecision?.targetRevenue || 0) >
-                            (selectedCustomer._periodData?.pastTargetRevenue || 0)
-                            ? "green"
-                            : selectedCustomer._periodData?.pastTargetRevenue !==
-                              undefined &&
-                              (selectedCustomer.adoptionDecision?.targetRevenue || 0) <
-                              (selectedCustomer._periodData?.pastTargetRevenue || 0)
-                              ? "red"
-                              : "default"
-                        }
-                      >
-                        {formatMan(
-                          selectedCustomer._periodData?.pastTargetRevenue
-                        )}{" "}
-                        →{" "}
-                        {formatMan(
-                          selectedCustomer.adoptionDecision?.targetRevenue
-                        )}
-                      </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="예상매출" span={2}>
-                      <Tag
-                        color={
-                          selectedCustomer._periodData?.pastExpectedRevenue !==
-                            undefined &&
-                            (selectedCustomer._periodData
-                              ?.currentExpectedRevenue || 0) >
-                            (selectedCustomer._periodData
-                              ?.pastExpectedRevenue || 0)
-                            ? "green"
-                            : selectedCustomer._periodData
-                              ?.pastExpectedRevenue !== undefined &&
-                              (selectedCustomer._periodData
-                                ?.currentExpectedRevenue || 0) <
-                              (selectedCustomer._periodData
-                                ?.pastExpectedRevenue || 0)
-                              ? "red"
-                              : "default"
-                        }
-                      >
-                        {formatMan(
-                          selectedCustomer._periodData?.pastExpectedRevenue
-                        )}{" "}
-                        →{" "}
-                        {formatMan(
-                          selectedCustomer._periodData
-                            ?.currentExpectedRevenue ??
-                          calculateExpectedRevenue(
-                            selectedCustomer.adoptionDecision?.targetRevenue,
-                            selectedCustomer.adoptionDecision?.possibility
-                          )
-                        )}
-                      </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="진행상태" span={2}>
-                      {renderProgressTags(
-                        selectedCustomer,
-                        true,
-                        progressColors
-                      )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="목표일자" span={2}>
-                      <Tag
-                        color={targetDateColor(
-                          selectedCustomer._periodData?.pastTargetDate,
-                          selectedCustomer.adoptionDecision?.targetDate
-                        )}
-                      >
-                        {(selectedCustomer._periodData?.pastTargetDate || "-") +
-                          " → " +
-                          (selectedCustomer.adoptionDecision?.targetDate || "-")}
-                      </Tag>
-                    </Descriptions.Item>
-                  </Descriptions>
+                            },
+                          ]}
+                          columns={[
+                            {
+                              dataIndex: 'label',
+                              key: 'label',
+                              width: 120,
+                              onCell: () => ({
+                                style: {
+                                  backgroundColor: token.colorFillSecondary,
+                                  fontWeight: 600
+                                }
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value',
+                              key: 'value',
+                            }
+                          ]}
+                          pagination={false}
+                          size="small"
+                          showHeader={false}
+                          bordered
+                        />
+                      </div>
+                    </div>
+
+                    {/* 상태 변화 */}
+                    <div>
+                      <Title level={5} style={{ marginBottom: 12 }}>상태 변화</Title>
+                      <div style={{ overflow: 'hidden', borderRadius: token.borderRadius }}>
+                        <Table
+                          dataSource={[
+                            {
+                              key: 'row1',
+                              label1: '신뢰 점수',
+                              value1: (() => {
+                                const past = selectedCustomer._periodData?.pastTrustIndex ?? null;
+                                const current = selectedCustomer.trustIndex || 0;
+                                const isPositive = past !== null && current > past;
+                                const isNegative = past !== null && current < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{past ?? current}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{current}</span>
+                                  </div>
+                                );
+                              })(),
+                              label2: '가능성',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastPossibility ?? null;
+                                const current = selectedCustomer.adoptionDecision?.possibility || "0%";
+                                const isPositive = past !== null &&
+                                  Number(current.replace("%", "")) > Number(past.replace("%", ""));
+                                const isNegative = past !== null &&
+                                  Number(current.replace("%", "")) < Number(past.replace("%", ""));
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{past ?? current}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{current}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                            {
+                              key: 'row2',
+                              label1: '목표 매출',
+                              value1: (() => {
+                                const past = selectedCustomer._periodData?.pastTargetRevenue ?? null;
+                                const current = selectedCustomer.adoptionDecision?.targetRevenue ?? 0;
+                                const isPositive = past !== null && current > past;
+                                const isNegative = past !== null && current < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{formatMan(past)}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{formatMan(current)}</span>
+                                  </div>
+                                );
+                              })(),
+                              label2: '예상 매출',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastExpectedRevenue ?? null;
+                                const current = selectedCustomer._periodData?.currentExpectedRevenue ??
+                                  calculateExpectedRevenue(
+                                    selectedCustomer.adoptionDecision?.targetRevenue,
+                                    selectedCustomer.adoptionDecision?.possibility
+                                  );
+                                const isPositive = past !== null && (current || 0) > past;
+                                const isNegative = past !== null && (current || 0) < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{formatMan(past)}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{formatMan(current)}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                            {
+                              key: 'row3',
+                              label1: '도입 결정 단계',
+                              value1: renderProgressTags(selectedCustomer, true, progressColors),
+                              label2: '목표 일자',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastTargetDate || null;
+                                const current = selectedCustomer.adoptionDecision?.targetDate || null;
+
+                                // 날짜를 월로 변환하는 함수
+                                const toMonth = (dateStr: string | null): string => {
+                                  if (!dateStr || dateStr === '-') return '-';
+                                  const match = dateStr.match(/(\d{4})-(\d{2})/);
+                                  if (match) {
+                                    return `${match[2]}월`;
+                                  }
+                                  return dateStr;
+                                };
+
+                                if (!past && !current) {
+                                  return <span>-</span>;
+                                }
+
+                                const pastMonth = toMonth(past);
+                                const currentMonth = toMonth(current);
+
+                                // 날짜 비교 (앞당겨지면 positive, 늦춰지면 negative)
+                                let changeType = "neutral";
+                                if (past && current && past !== '-' && current !== '-') {
+                                  const pastDate = new Date(past);
+                                  const currentDate = new Date(current);
+                                  if (currentDate < pastDate) {
+                                    changeType = "positive"; // 앞당겨짐
+                                  } else if (currentDate > pastDate) {
+                                    changeType = "negative"; // 늦춰짐
+                                  }
+                                }
+
+                                return (
+                                  <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                                    <span>{pastMonth}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{currentMonth}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                          ]}
+                          columns={[
+                            {
+                              dataIndex: 'label1',
+                              key: 'label1',
+                              width: 120,
+                              onCell: () => ({
+                                style: {
+                                  backgroundColor: token.colorFillSecondary,
+                                  fontWeight: 600
+                                }
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value1',
+                              key: 'value1',
+                            },
+                            {
+                              dataIndex: 'label2',
+                              key: 'label2',
+                              width: 120,
+                              onCell: () => ({
+                                style: {
+                                  backgroundColor: token.colorFillSecondary,
+                                  fontWeight: 600
+                                }
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value2',
+                              key: 'value2',
+                            }
+                          ]}
+                          pagination={false}
+                          size="small"
+                          showHeader={false}
+                          bordered
+                        />
+                      </div>
+                    </div>
+
+                    {/* HubSpot Link */}
+                    {_customerSummary?.data?.hubspotUrl && (
+                      <div style={{ marginTop: 16 }}>
+                        <Button
+                          type="default"
+                          icon={<ArrowRight size={16} />}
+                          iconPosition="end"
+                          href={_customerSummary.data.hubspotUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          block
+                        >
+                          HubSpot Company 보기
+                        </Button>
+                      </div>
+                    )}
                   </>
                 ),
               },
@@ -1806,21 +1884,21 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                       <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
                     ) : (
                       <SalesActionHistory
-                    actions={(salesHistoryData?.data?.salesActions || []).map(action => ({
-                      type: action.type.toLowerCase() as 'call' | 'meeting',
-                      content: action.content,
-                      date: action.date,
-                      possibility: action.stateChange?.after?.possibility as PossibilityType | undefined,
-                      customerResponse: undefined, // API에서 제공하지 않음
-                      targetRevenue: action.stateChange?.after?.targetRevenue ?? null,
-                      targetDate: action.stateChange?.after?.targetDate ?? null,
-                      test: action.stateChange?.after?.test ?? false,
-                      quote: action.stateChange?.after?.quote ?? false,
-                      approval: action.stateChange?.after?.approval ?? false,
-                      contract: action.stateChange?.after?.contract ?? false,
-                    }))}
-                    customer={selectedCustomer}
-                  />
+                        actions={(salesHistoryData?.data?.salesActions || []).map(action => ({
+                          type: action.type.toLowerCase() as 'call' | 'meeting',
+                          content: action.content,
+                          date: action.date,
+                          possibility: action.stateChange?.after?.possibility as PossibilityType | undefined,
+                          customerResponse: undefined, // API에서 제공하지 않음
+                          targetRevenue: action.stateChange?.after?.targetRevenue ?? null,
+                          targetDate: action.stateChange?.after?.targetDate ?? null,
+                          test: action.stateChange?.after?.test ?? false,
+                          quote: action.stateChange?.after?.quote ?? false,
+                          approval: action.stateChange?.after?.approval ?? false,
+                          contract: action.stateChange?.after?.contract ?? false,
+                        }))}
+                        customer={selectedCustomer}
+                      />
                     )}
                   </>
                 ),
