@@ -20,6 +20,23 @@ import styles from "./index.module.scss";
 
 const { Text } = Typography;
 
+// 다크모드 툴팁 스타일 (고정)
+const DARK_TOOLTIP_STYLE = {
+  contentStyle: {
+    backgroundColor: '#1e1e21',
+    border: '1px solid #3f3f46',
+    borderRadius: '6px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.4)',
+  },
+  labelStyle: {
+    color: '#a1a1aa',
+    fontWeight: 500,
+  },
+  itemStyle: {
+    color: '#fafafa',
+  },
+};
+
 interface KPICardProps {
   title: string;
   value: string;
@@ -254,7 +271,7 @@ const TotalCustomersModalContent = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip {...DARK_TOOLTIP_STYLE} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -266,7 +283,7 @@ const TotalCustomersModalContent = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" style={{ fontSize: 12 }} />
               <YAxis style={{ fontSize: 12 }} />
-              <Tooltip />
+              <Tooltip {...DARK_TOOLTIP_STYLE} />
               <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -282,7 +299,7 @@ const TotalCustomersModalContent = () => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="week" style={{ fontSize: 11 }} />
             <YAxis style={{ fontSize: 12 }} domain={['dataMin - 10', 'dataMax + 10']} />
-            <Tooltip />
+            <Tooltip {...DARK_TOOLTIP_STYLE} />
             <Line
               type="monotone"
               dataKey={getTrendDataKey()}
@@ -481,7 +498,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
-                <Tooltip />
+                <Tooltip {...DARK_TOOLTIP_STYLE} />
                 <Legend />
                 <Line type="monotone" dataKey="target" stroke="#71717a" strokeWidth={2} strokeDasharray="5 5" name="목표" />
                 <Line type="monotone" dataKey="actual" stroke="#3b82f6" strokeWidth={2} name="실제" dot={{ fill: '#3b82f6' }} />
@@ -526,6 +543,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
                 <Tooltip
+                  {...DARK_TOOLTIP_STYLE}
                   formatter={(value: number, name: string) => [
                     `₩${value}M`,
                     name === 'target' ? '목표' : '예상 매출'
@@ -574,6 +592,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <XAxis dataKey="month" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
                 <Tooltip
+                  {...DARK_TOOLTIP_STYLE}
                   formatter={(value: number) => [`₩${value}M`, '예상 매출']}
                 />
                 <Bar dataKey="amount" fill="#06b6d4" radius={[4, 4, 0, 0]}>

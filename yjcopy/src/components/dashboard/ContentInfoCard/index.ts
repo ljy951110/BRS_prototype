@@ -1,2 +1,0 @@
-export { ContentInfoCard } from './ContentInfoCard';
-
