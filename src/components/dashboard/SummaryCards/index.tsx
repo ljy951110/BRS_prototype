@@ -1,21 +1,21 @@
-import React, { useState, useMemo } from "react";
-import { ArrowUpOutlined, ArrowDownOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { ArrowDownOutlined, ArrowUpOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { Badge, Card, Modal, Select, Table, Typography } from "antd";
+import React, { useState } from "react";
 import {
-  BarChart,
   Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { Card, Typography, Modal, Badge, Select, Table } from "antd";
 import styles from "./index.module.scss";
 
 const { Text } = Typography;
@@ -75,9 +75,6 @@ const KPICardItem = ({
     </Card>
   );
 };
-
-// 차트 색상
-const COLORS = ["#3b82f6", "#22c55e", "#f97316", "#a855f7", "#06b6d4", "#eab308"];
 
 // 기업 규모 옵션
 const COMPANY_SIZE_OPTIONS = ["전체", "T0 (대기업)", "T1 (중견)", "T2 (중소)", "T3 (소기업)"];
@@ -207,7 +204,7 @@ const ADOPTION_STAGE_OPTIONS = ["전체", "테스트", "견적", "품의"];
 const TotalCustomersModalContent = () => {
   const [sizeFilter, setSizeFilter] = useState("전체");
   const data = modalData.total_customers;
-  
+
   const getTrendDataKey = () => {
     switch (sizeFilter) {
       case "T0 (대기업)": return "t0";
@@ -217,9 +214,9 @@ const TotalCustomersModalContent = () => {
       default: return "total";
     }
   };
-  
-  const filteredCompanySizeData = sizeFilter === "전체" 
-    ? data.companySizeData 
+
+  const filteredCompanySizeData = sizeFilter === "전체"
+    ? data.companySizeData
     : data.companySizeData.filter(d => d.name === sizeFilter);
 
   return (
@@ -228,7 +225,7 @@ const TotalCustomersModalContent = () => {
         <div className={styles.filterRow}>
           <div className={styles.filterGroup}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>기업 규모</Text>
-            <Select 
+            <Select
               className={styles.filterSelect}
               value={sizeFilter}
               onChange={(val) => setSizeFilter(val)}
@@ -286,12 +283,12 @@ const TotalCustomersModalContent = () => {
             <XAxis dataKey="week" style={{ fontSize: 11 }} />
             <YAxis style={{ fontSize: 12 }} domain={['dataMin - 10', 'dataMax + 10']} />
             <Tooltip />
-            <Line 
-              type="monotone" 
-              dataKey={getTrendDataKey()} 
-              stroke="#3b82f6" 
-              strokeWidth={2} 
-              dot={{ fill: '#3b82f6' }} 
+            <Line
+              type="monotone"
+              dataKey={getTrendDataKey()}
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={{ fill: '#3b82f6' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -311,9 +308,9 @@ const MBMStatusModalContent = () => {
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [adoptionFilter, setAdoptionFilter] = useState("전체");
   const data = modalData.mbm_status;
-  
-  const currentData = sizeFilter === "전체" 
-    ? data.statusData.all 
+
+  const currentData = sizeFilter === "전체"
+    ? data.statusData.all
     : data.statusData[sizeFilter as keyof typeof data.statusData] || data.statusData.all;
 
   const funnelStages = [
@@ -330,7 +327,7 @@ const MBMStatusModalContent = () => {
     return Math.round((toValue / fromValue) * 100);
   };
 
-  const selectedCompanies = selectedStage 
+  const selectedCompanies = selectedStage
     ? mbmCompanyList[selectedStage as keyof typeof mbmCompanyList] || []
     : [];
 
@@ -346,46 +343,46 @@ const MBMStatusModalContent = () => {
     setSelectedStage(selectedStage === stageKey ? null : stageKey);
   };
 
-  const tableColumns = selectedStage === "followup" 
+  const tableColumns = selectedStage === "followup"
     ? [
-        { title: "기업명", dataIndex: "companyName", key: "companyName" },
-        { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
-        { title: "담당자", dataIndex: "manager", key: "manager" },
-        {
-          title: (
-            <Select
-              value={adoptionFilter}
-              onChange={(val) => setAdoptionFilter(val)}
-              options={ADOPTION_STAGE_OPTIONS.map(option => ({ 
-                label: option === "전체" ? "도입결정" : option, 
-                value: option 
-              }))}
-              style={{ width: '100%' }}
-              bordered={false}
-              size="small"
-            />
-          ),
-          dataIndex: "adoptionStage",
-          key: "adoptionStage",
-          render: (stage: string) => (
-            <Badge 
-              color={
-                stage === "계약" ? "green" :
+      { title: "기업명", dataIndex: "companyName", key: "companyName" },
+      { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
+      { title: "담당자", dataIndex: "manager", key: "manager" },
+      {
+        title: (
+          <Select
+            value={adoptionFilter}
+            onChange={(val) => setAdoptionFilter(val)}
+            options={ADOPTION_STAGE_OPTIONS.map(option => ({
+              label: option === "전체" ? "도입결정" : option,
+              value: option
+            }))}
+            style={{ width: '100%' }}
+            bordered={false}
+            size="small"
+          />
+        ),
+        dataIndex: "adoptionStage",
+        key: "adoptionStage",
+        render: (stage: string) => (
+          <Badge
+            color={
+              stage === "계약" ? "green" :
                 stage === "품의" ? "purple" :
-                stage === "견적" ? "blue" :
-                stage === "테스트" ? "orange" : "default"
-              }
-              text={stage}
-            />
-          ),
-        },
-        { title: "마지막 컨택", dataIndex: "lastContact", key: "lastContact", render: (text: string) => text || "-" },
-      ]
+                  stage === "견적" ? "blue" :
+                    stage === "테스트" ? "orange" : "default"
+            }
+            text={stage}
+          />
+        ),
+      },
+      { title: "마지막 컨택", dataIndex: "lastContact", key: "lastContact", render: (text: string) => text || "-" },
+    ]
     : [
-        { title: "기업명", dataIndex: "companyName", key: "companyName" },
-        { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
-        { title: "담당자", dataIndex: "manager", key: "manager" },
-      ];
+      { title: "기업명", dataIndex: "companyName", key: "companyName" },
+      { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
+      { title: "담당자", dataIndex: "manager", key: "manager" },
+    ];
 
   return (
     <div className={styles.chartContainer}>
@@ -393,7 +390,7 @@ const MBMStatusModalContent = () => {
         <div className={styles.filterRow}>
           <div className={styles.filterGroup}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>MBM 필터</Text>
-            <Select 
+            <Select
               value={mbmFilter}
               onChange={(val) => setMbmFilter(val)}
               options={MBM_OPTIONS.map(option => ({ label: option, value: option }))}
@@ -402,7 +399,7 @@ const MBMStatusModalContent = () => {
           </div>
           <div className={styles.filterGroup}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>기업 규모</Text>
-            <Select 
+            <Select
               value={sizeFilter}
               onChange={(val) => setSizeFilter(val)}
               options={COMPANY_SIZE_OPTIONS.map(option => ({ label: option, value: option }))}
@@ -415,7 +412,7 @@ const MBMStatusModalContent = () => {
       <div className={styles.funnelContainer}>
         {funnelStages.map((stage, index) => (
           <React.Fragment key={stage.key}>
-            <div 
+            <div
               className={`${styles.funnelStage} ${selectedStage === stage.key ? styles.selected : ""}`}
               style={{ borderColor: stage.color }}
               onClick={() => handleStageClick(stage.key)}
@@ -463,7 +460,7 @@ const MBMStatusModalContent = () => {
 // 모달 콘텐츠 컴포넌트
 const ModalContent = ({ cardId }: { cardId: string }) => {
   const data = modalData[cardId as keyof typeof modalData];
-  
+
   if (!data) return null;
 
   switch (cardId) {
@@ -473,13 +470,14 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
     case "mbm_status":
       return <MBMStatusModalContent />;
 
-    case "completeness":
+    case "completeness": {
+      const completenessData = data as typeof modalData.completeness;
       return (
         <div className={styles.chartContainer}>
           <div className={styles.chartSection}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>목표 vs 실제 진척도</Text>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={data.data}>
+              <LineChart data={completenessData.data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
@@ -491,12 +489,13 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
             </ResponsiveContainer>
           </div>
           <div className={styles.insightBox}>
-            <Text type="warning" style={{ fontSize: 13 }}>{data.insight}</Text>
+            <Text type="warning" style={{ fontSize: 13 }}>{completenessData.insight}</Text>
           </div>
         </div>
       );
+    }
 
-    case "target_vs_revenue":
+    case "target_vs_revenue": {
       const targetData = data as typeof modalData.target_vs_revenue;
       return (
         <div className={styles.chartContainer}>
@@ -518,7 +517,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
               <Text style={{ fontSize: 20, fontWeight: 700, color: '#ef4444' }}>₩{Math.abs(targetData.summary.gap)}M</Text>
             </div>
           </div>
-          
+
           <div className={styles.chartSection}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>주차별 목표 vs 예상 매출 (단위: 백만원)</Text>
             <ResponsiveContainer width="100%" height={280}>
@@ -526,29 +525,29 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number, name: string) => [
-                    `₩${value}M`, 
+                    `₩${value}M`,
                     name === 'target' ? '목표' : '예상 매출'
                   ]}
                 />
-                <Legend 
+                <Legend
                   formatter={(value) => value === 'target' ? '목표' : '예상 매출'}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="#71717a" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5" 
+                <Line
+                  type="monotone"
+                  dataKey="target"
+                  stroke="#71717a"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
                   dot={{ fill: '#71717a', r: 4 }}
                   name="target"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="expected" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2} 
+                <Line
+                  type="monotone"
+                  dataKey="expected"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
                   dot={{ fill: '#3b82f6', r: 4 }}
                   activeDot={{ r: 6 }}
                   name="expected"
@@ -561,25 +560,27 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
           </div>
         </div>
       );
+    }
 
-    case "revenue_timing":
+    case "revenue_timing": {
+      const revenueTimingData = data as typeof modalData.revenue_timing;
       return (
         <div className={styles.chartContainer}>
           <div className={styles.chartSection}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>월별 매출 발생 분포 (단위: 백만원)</Text>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={data.data}>
+              <BarChart data={revenueTimingData.data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [`₩${value}M`, '예상 매출']}
                 />
                 <Bar dataKey="amount" fill="#06b6d4" radius={[4, 4, 0, 0]}>
-                  {data.data.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.amount === Math.max(...data.data.map(d => d.amount)) ? '#3b82f6' : '#06b6d4'} 
+                  {revenueTimingData.data.map((entry: { month: string; amount: number }, index: number) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.amount === Math.max(...revenueTimingData.data.map((d: { month: string; amount: number }) => d.amount)) ? '#3b82f6' : '#06b6d4'}
                     />
                   ))}
                 </Bar>
@@ -587,10 +588,11 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
             </ResponsiveContainer>
           </div>
           <div className={styles.insightBox}>
-            <Text type="secondary" style={{ fontSize: 13 }}>{data.insight}</Text>
+            <Text type="secondary" style={{ fontSize: 13 }}>{revenueTimingData.insight}</Text>
           </div>
         </div>
       );
+    }
 
     default:
       return null;
@@ -667,7 +669,7 @@ export const SummaryCards = () => {
       >
         <div className={styles.modalContent}>
           {selectedCard && <ModalContent cardId={selectedCard} />}
-          
+
           <div className={styles.aiSection}>
             <div className={styles.aiButton}>
               <QuestionCircleOutlined style={{ fontSize: 16 }} />

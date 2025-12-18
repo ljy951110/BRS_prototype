@@ -1,19 +1,19 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { Badge, Card, Modal, Text } from "@/components/common/atoms";
+import { CompanyInfoCard } from "@/components/dashboard/CompanyInfoCard";
+import { ContentInfoCard } from "@/components/dashboard/ContentInfoCard";
+import type { TimePeriodType } from "@/types/common";
+import { Customer, ProductType } from "@/types/customer";
 import {
-  Eye,
-  Users,
-  ArrowUpDown,
   ArrowRight,
-  TrendingUp,
+  ArrowUpDown,
   Calendar,
   ChevronDown,
   ChevronUp,
+  Eye,
+  TrendingUp,
+  Users,
 } from "lucide-react";
-import { Text, Card, Badge, Modal } from "@/components/common/atoms";
-import { CompanyInfoCard } from "@/components/dashboard/CompanyInfoCard";
-import { ContentInfoCard } from "@/components/dashboard/ContentInfoCard";
-import { Customer } from "@/types/customer";
-import type { TimePeriodType } from "@/types/common";
+import { useMemo, useState, type ReactNode } from "react";
 import styles from "./index.module.scss";
 
 interface ContentAnalysisProps {
@@ -81,6 +81,7 @@ interface ContentViewer {
   date: string;
   category: string;
   companySize: string | null;
+  productUsage: ProductType[];
   manager: string;
   contractAmount: number;
   targetRevenue: number;
@@ -114,6 +115,7 @@ interface MbmAttendee {
   companyName: string;
   category: string;
   companySize: string | null;
+  productUsage: ProductType[];
   manager: string;
   contractAmount: number;
   targetRevenue: number;
@@ -346,6 +348,7 @@ export const CustomerActivityAnalysis = ({
             date: content.date,
             category: customer.category,
             companySize: customer.companySize,
+            productUsage: customer.productUsage || [],
             manager: customer.manager,
             contractAmount: customer.contractAmount ?? 0,
             targetRevenue: adoption?.targetRevenue ?? 0,
@@ -415,6 +418,7 @@ export const CustomerActivityAnalysis = ({
             companyName: customer.companyName,
             category: customer.category,
             companySize: customer.companySize,
+            productUsage: customer.productUsage || [],
             manager: customer.manager,
             contractAmount: customer.contractAmount ?? 0,
             targetRevenue: adoption?.targetRevenue ?? 0,
@@ -640,18 +644,16 @@ export const CustomerActivityAnalysis = ({
         <div className={styles.headerRight}>
           <div className={styles.tabs}>
             <button
-              className={`${styles.tab} ${
-                activeTab === "content" ? styles.activeTab : ""
-              }`}
+              className={`${styles.tab} ${activeTab === "content" ? styles.activeTab : ""
+                }`}
               onClick={() => setActiveTab("content")}
             >
               <Eye size={16} />
               콘텐츠 조회
             </button>
             <button
-              className={`${styles.tab} ${
-                activeTab === "mbm" ? styles.activeTab : ""
-              }`}
+              className={`${styles.tab} ${activeTab === "mbm" ? styles.activeTab : ""
+                }`}
               onClick={() => setActiveTab("mbm")}
             >
               <Calendar size={16} />
@@ -848,9 +850,8 @@ export const CustomerActivityAnalysis = ({
               return (
                 <Card
                   key={category}
-                  className={`${styles.summaryCard} ${styles[config.bg]} ${
-                    styles.clickableCard
-                  }`}
+                  className={`${styles.summaryCard} ${styles[config.bg]} ${styles.clickableCard
+                    }`}
                   padding="lg"
                   onClick={() =>
                     openCategoryModal(category as "TOFU" | "MOFU" | "BOFU")
@@ -1031,9 +1032,8 @@ export const CustomerActivityAnalysis = ({
                 ([category, content]) => (
                   <Card
                     key={category}
-                    className={`${styles.topContentCard} ${
-                      content ? styles.clickable : ""
-                    }`}
+                    className={`${styles.topContentCard} ${content ? styles.clickable : ""
+                      }`}
                     padding="md"
                     onClick={() => content && openContentDetail(content)}
                   >
@@ -1157,9 +1157,8 @@ export const CustomerActivityAnalysis = ({
                       </div>
                     </th>
                     <th
-                      className={`${styles.th} ${styles.progressTh} ${
-                        styles.sortable
-                      } ${sortField === "test" ? styles.sortActive : ""}`}
+                      className={`${styles.th} ${styles.progressTh} ${styles.sortable
+                        } ${sortField === "test" ? styles.sortActive : ""}`}
                       onClick={() => handleSort("test")}
                     >
                       <div className={styles.progressThContent}>
@@ -1175,9 +1174,8 @@ export const CustomerActivityAnalysis = ({
                       </div>
                     </th>
                     <th
-                      className={`${styles.th} ${styles.progressTh} ${
-                        styles.sortable
-                      } ${sortField === "quote" ? styles.sortActive : ""}`}
+                      className={`${styles.th} ${styles.progressTh} ${styles.sortable
+                        } ${sortField === "quote" ? styles.sortActive : ""}`}
                       onClick={() => handleSort("quote")}
                     >
                       <div className={styles.progressThContent}>
@@ -1193,9 +1191,8 @@ export const CustomerActivityAnalysis = ({
                       </div>
                     </th>
                     <th
-                      className={`${styles.th} ${styles.progressTh} ${
-                        styles.sortable
-                      } ${sortField === "approval" ? styles.sortActive : ""}`}
+                      className={`${styles.th} ${styles.progressTh} ${styles.sortable
+                        } ${sortField === "approval" ? styles.sortActive : ""}`}
                       onClick={() => handleSort("approval")}
                     >
                       <div className={styles.progressThContent}>
@@ -1211,9 +1208,8 @@ export const CustomerActivityAnalysis = ({
                       </div>
                     </th>
                     <th
-                      className={`${styles.th} ${styles.progressTh} ${
-                        styles.sortable
-                      } ${sortField === "contract" ? styles.sortActive : ""}`}
+                      className={`${styles.th} ${styles.progressTh} ${styles.sortable
+                        } ${sortField === "contract" ? styles.sortActive : ""}`}
                       onClick={() => handleSort("contract")}
                     >
                       <div className={styles.progressThContent}>
@@ -1470,38 +1466,34 @@ export const CustomerActivityAnalysis = ({
                 </Text>
                 <div className={styles.progressDots}>
                   <span
-                    className={`${styles.dot} ${
-                      selectedMbm.progressCounts.test > 0
+                    className={`${styles.dot} ${selectedMbm.progressCounts.test > 0
                         ? styles.dotActive
                         : ""
-                    }`}
+                      }`}
                   >
                     T:{selectedMbm.progressCounts.test}
                   </span>
                   <span
-                    className={`${styles.dot} ${
-                      selectedMbm.progressCounts.quote > 0
+                    className={`${styles.dot} ${selectedMbm.progressCounts.quote > 0
                         ? styles.dotActive
                         : ""
-                    }`}
+                      }`}
                   >
                     Q:{selectedMbm.progressCounts.quote}
                   </span>
                   <span
-                    className={`${styles.dot} ${
-                      selectedMbm.progressCounts.approval > 0
+                    className={`${styles.dot} ${selectedMbm.progressCounts.approval > 0
                         ? styles.dotActive
                         : ""
-                    }`}
+                      }`}
                   >
                     A:{selectedMbm.progressCounts.approval}
                   </span>
                   <span
-                    className={`${styles.dot} ${
-                      selectedMbm.progressCounts.contract > 0
+                    className={`${styles.dot} ${selectedMbm.progressCounts.contract > 0
                         ? styles.dotActive
                         : ""
-                    }`}
+                      }`}
                   >
                     C:{selectedMbm.progressCounts.contract}
                   </span>
