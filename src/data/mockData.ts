@@ -1,14 +1,14 @@
+import type { TimePeriodType } from "@/types/common";
 import {
+  ChangeDirectionType,
   Customer,
-  TrustHistory,
-  ChangeDirection,
-  Possibility,
-  CustomerResponse,
+  CustomerResponseType,
+  PossibilityType,
   SalesAction,
+  TrustHistory,
 } from "@/types/customer";
-import type { TimePeriod } from "@/App";
 // 가능성 숫자 변환
-export const POSSIBILITY_VALUE: Record<Possibility, number> = {
+export const POSSIBILITY_VALUE: Record<PossibilityType, number> = {
   "90%": 0.9,
   "40%": 0.4,
   "0%": 0,
@@ -16,13 +16,13 @@ export const POSSIBILITY_VALUE: Record<Possibility, number> = {
 // 예상 매출 계산 (목표매출 * 가능성)
 export const calculateExpectedRevenue = (
   targetRevenue: number | null | undefined,
-  possibility: Possibility
+  possibility: PossibilityType
 ): number => {
   if (!targetRevenue) return 0;
   return Math.round(targetRevenue * POSSIBILITY_VALUE[possibility]);
 };
 // 기간에 따른 일수 매핑
-const PERIOD_DAYS: Record<TimePeriod, number> = {
+const PERIOD_DAYS: Record<TimePeriodType, number> = {
   "1w": 7,
   "1m": 30,
   "6m": 180,
@@ -30,8 +30,8 @@ const PERIOD_DAYS: Record<TimePeriod, number> = {
 };
 // salesActions에서 기간 내 가장 최신 액션의 가능성/고객반응 가져오기
 interface PastAdoptionData {
-  possibility: Possibility;
-  customerResponse: CustomerResponse;
+  possibility: PossibilityType;
+  customerResponse: CustomerResponseType;
   targetRevenue: number | null;
   targetDate: string | null;
   test: boolean;
@@ -43,17 +43,31 @@ interface PastAdoptionData {
 const getAdoptionFromSalesActions = (
   salesActions: SalesAction[] | undefined,
   currentAdoption: {
-    possibility: Possibility;
-    customerResponse: CustomerResponse;
+    possibility: PossibilityType;
+    customerResponse: CustomerResponseType;
     targetRevenue?: number | null;
     targetDate?: string | null;
     test?: boolean;
     quote?: boolean;
     approval?: boolean;
     contract?: boolean;
-  },
-  period: TimePeriod
+  } | undefined,
+  period: TimePeriodType
 ): PastAdoptionData => {
+  // currentAdoption이 undefined인 경우 기본값 반환
+  if (!currentAdoption) {
+    return {
+      possibility: "0%",
+      customerResponse: "하",
+      targetRevenue: null,
+      targetDate: null,
+      test: false,
+      quote: false,
+      approval: false,
+      contract: false,
+    };
+  }
+
   const defaultResult: PastAdoptionData = {
     possibility: currentAdoption.possibility,
     customerResponse: currentAdoption.customerResponse,
@@ -130,7 +144,7 @@ const getSortedHistoryKeys = (history: TrustHistory | undefined): string[] => {
     });
 };
 // 기간에 따른 주 수 매핑
-const PERIOD_WEEKS: Record<TimePeriod, number> = {
+const PERIOD_WEEKS: Record<TimePeriodType, number> = {
   "1w": 1,
   "1m": 4,
   "6m": 26,
@@ -140,8 +154,8 @@ const PERIOD_WEEKS: Record<TimePeriod, number> = {
 export const calculateChangeForPeriod = (
   history: TrustHistory | undefined,
   currentIndex: number | null | undefined,
-  period: TimePeriod
-): { changeAmount: number; changeDirection: ChangeDirection } => {
+  period: TimePeriodType
+): { changeAmount: number; changeDirection: ChangeDirectionType } => {
   if (!history || currentIndex === null || currentIndex === undefined) {
     return { changeAmount: 0, changeDirection: "none" };
   }
@@ -167,7 +181,7 @@ export const calculateChangeForPeriod = (
 const getPastTrustIndex = (
   history: TrustHistory | undefined,
   currentIndex: number | null | undefined,
-  period: TimePeriod
+  period: TimePeriodType
 ): number | null => {
   if (!history || currentIndex === null || currentIndex === undefined) {
     return null;
@@ -186,7 +200,7 @@ const getPastTrustIndex = (
 // 기간에 맞게 데이터 변환
 export const getDataWithPeriodChange = (
   data: Customer[],
-  period: TimePeriod
+  period: TimePeriodType
 ): Customer[] => {
   return data.map((customer) => {
     const { changeAmount, changeDirection } = calculateChangeForPeriod(
@@ -194,6 +208,28 @@ export const getDataWithPeriodChange = (
       customer.trustIndex,
       period
     );
+    // adoptionDecision이 없는 경우 기본값 처리
+    if (!customer.adoptionDecision) {
+      return {
+        ...customer,
+        _periodData: {
+          pastTrustIndex: customer.trustIndex ?? null,
+          pastPossibility: "0%",
+          pastCustomerResponse: "하",
+          pastTargetRevenue: null,
+          pastExpectedRevenue: 0,
+          currentExpectedRevenue: 0,
+          possibilityChange: "none",
+          responseChange: "none",
+          pastTest: false,
+          pastQuote: false,
+          pastApproval: false,
+          pastContract: false,
+          pastTargetDate: null,
+        },
+      };
+    }
+
     // salesActions에서 기간 시작 시점의 가능성/고객반응 가져오기
     const pastAdoption = getAdoptionFromSalesActions(
       customer.salesActions,
@@ -226,7 +262,7 @@ export const getDataWithPeriodChange = (
       POSSIBILITY_VALUE[currentAdoption.possibility] -
       POSSIBILITY_VALUE[pastAdoption.possibility];
     // 고객반응 변화 계산
-    const responseOrder: Record<CustomerResponse, number> = {
+    const responseOrder: Record<CustomerResponseType, number> = {
       상: 3,
       중: 2,
       하: 1,
@@ -249,14 +285,15 @@ export const getDataWithPeriodChange = (
         pastTrustIndex,
         pastPossibility: pastAdoption.possibility,
         pastCustomerResponse: pastAdoption.customerResponse,
+        pastTargetRevenue: pastAdoption.targetRevenue,
         pastExpectedRevenue,
         currentExpectedRevenue,
         possibilityChange:
           possibilityChange > 0
             ? "up"
             : possibilityChange < 0
-            ? "down"
-            : "none",
+              ? "down"
+              : "none",
         responseChange:
           responseChange > 0 ? "up" : responseChange < 0 ? "down" : "none",
         // 진행상태 과거값
@@ -276,7 +313,7 @@ export const mockData: Customer[] = [
     companyName: "비전바이오켐",
     companySize: "T0",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "25.10.18",
     contractAmount: 11000000,
@@ -298,7 +335,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 영상면접 큐레이터 관심 표명",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -311,7 +348,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "관심 확인 콜, 내부 검토 중",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 5000000,
@@ -324,7 +361,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "예산 확보, 1월 중 계약 목표로 변경",
-        date: "2024-12-03",
+        date: "2025-12-16",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 5000000,
@@ -337,7 +374,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "품의 진행 확정, 내부 승인 프로세스 시작",
-        date: "2024-12-09",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -351,27 +388,27 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "영상면접 도입 기업 사례집",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "MOFU",
       },
       {
         title: "AI 채용의 미래: 2025 전망",
-        date: "2024-11-22",
+        date: "2025-12-15",
         category: "TOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-12-03",
+        date: "2025-12-16",
         category: "MOFU",
       },
       {
         title: "영상면접 도입 ROI 분석 리포트",
-        date: "2024-12-08",
+        date: "2025-12-17",
         category: "BOFU",
       },
     ],
@@ -413,7 +450,7 @@ export const mockData: Customer[] = [
     companyName: "도쿄일렉트론코리아",
     companySize: "T9",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "26.03.31",
     contractAmount: 50000000,
@@ -435,7 +472,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 영상면접 큐레이터 도입 적극 관심",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 3000000,
@@ -448,7 +485,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "견적 요청, 구체적 논의 진행",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -461,7 +498,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "견적 발송 완료, 계약 진행 중",
-        date: "2024-12-02",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -474,7 +511,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "계약서 서명 완료! 1월 도입 확정",
-        date: "2024-12-09",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -488,22 +525,22 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 채용 시장 동향 분석",
-        date: "2024-11-09",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "영상면접 큐레이터 ROI 분석",
-        date: "2024-11-16",
+        date: "2025-12-13",
         category: "BOFU",
       },
       {
         title: "반도체 업계 채용 혁신 사례",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "MOFU",
       },
       {
         title: "대기업 영상면접 도입 가이드",
-        date: "2024-12-05",
+        date: "2025-12-17",
         category: "MOFU",
       },
       { title: "2025 채용 트렌드 전망", date: "2024-12-09", category: "TOFU" },
@@ -546,7 +583,7 @@ export const mockData: Customer[] = [
     companyName: "서울도시가스",
     companySize: "T5",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "26.06.30",
     contractAmount: 41250000,
@@ -568,7 +605,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 큐레이터 관심 높음. 조기재계약 논의 시작",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 40000000,
@@ -581,7 +618,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "조기재계약 검토, 견적 요청",
-        date: "2024-11-18",
+        date: "2025-12-14",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 55000000,
@@ -594,7 +631,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "계약 조건 협의, 승인 대기",
-        date: "2024-12-05",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 58000000,
@@ -607,7 +644,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "최종 계약 체결 완료!",
-        date: "2024-12-10",
+        date: "2025-12-18",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 58000000,
@@ -621,43 +658,43 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "영상면접 도입 기업 사례집",
-        date: "2024-11-12",
+        date: "2025-12-12",
         category: "MOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-18",
+        date: "2025-12-14",
         category: "MOFU",
       },
       {
         title: "AI 면접 평가 정확도 백서",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "TOFU",
       },
       {
         title: "도입 프로세스 및 일정 안내",
-        date: "2024-12-02",
+        date: "2025-12-16",
         category: "BOFU",
       },
       {
         title: "에너지 기업 AI 채용 사례",
-        date: "2024-12-06",
+        date: "2025-12-17",
         category: "MOFU",
       },
       { title: "큐레이터 가격 안내서", date: "2024-12-09", category: "BOFU" },
       {
         title: "에너지 산업 HR 디지털 전환",
-        date: "2024-12-08",
+        date: "2025-12-17",
         category: "TOFU",
       },
       {
         title: "영상면접 큐레이터 가격 안내서",
-        date: "2024-12-10",
+        date: "2025-12-18",
         category: "BOFU",
       },
     ],
@@ -698,7 +735,7 @@ export const mockData: Customer[] = [
     companyName: "AJ네트웍스",
     companySize: "T9",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "25.12.31",
     contractAmount: 62400000,
@@ -721,7 +758,7 @@ export const mockData: Customer[] = [
         type: "meeting",
         content:
           "MBM 세미나 참석, 뉴로우 온보딩 프로세스 관리 도구로 관심 표명",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -734,7 +771,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "뉴로우 관심 확인, 내부 검토 요청",
-        date: "2024-11-20",
+        date: "2025-12-14",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -747,7 +784,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "12/18 MBM 참석, 솔루션 전반 긍정적 인식",
-        date: "2024-12-18",
+        date: "2025-12-18",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -761,12 +798,12 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "뉴로우 온보딩 솔루션 소개",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       {
         title: "온보딩 프로세스 자동화 가이드",
-        date: "2024-12-05",
+        date: "2025-12-17",
         category: "MOFU",
       },
     ],
@@ -808,7 +845,7 @@ export const mockData: Customer[] = [
     companyName: "(주)도루코",
     companySize: "T1",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "28.03.06",
     contractAmount: 15200000,
@@ -830,7 +867,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 역검 SR + 큐레이터 사용 중",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "상",
         targetRevenue: 10000000,
@@ -843,7 +880,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "팀장 미팅, AI 도입 희망하나 팀장 망설임",
-        date: "2024-11-12",
+        date: "2025-12-12",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -856,7 +893,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "AI 도입 관련 추가 자료 요청",
-        date: "2024-11-22",
+        date: "2025-12-15",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -869,7 +906,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "AI 도입 관련 팀장 설득 진행 상황 확인",
-        date: "2024-12-10",
+        date: "2025-12-18",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -882,7 +919,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "12/18 MBM 참석, 내부 검토 진행 중",
-        date: "2024-12-18",
+        date: "2025-12-18",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -896,42 +933,42 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "역량검사 SR 활용 가이드",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       {
         title: "AI 채용의 미래: 2025 전망",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "TOFU",
       },
       {
         title: "제조업 AI 채용 도입 사례",
-        date: "2024-11-20",
+        date: "2025-12-14",
         category: "MOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "MOFU",
       },
       {
         title: "AI 면접 평가 정확도 백서",
-        date: "2024-12-01",
+        date: "2025-12-16",
         category: "TOFU",
       },
       {
         title: "역량검사 결과 해석 매뉴얼",
-        date: "2024-12-05",
+        date: "2025-12-17",
         category: "MOFU",
       },
       {
         title: "도입 프로세스 및 일정 안내",
-        date: "2024-12-10",
+        date: "2025-12-18",
         category: "BOFU",
       },
     ],
@@ -973,7 +1010,7 @@ export const mockData: Customer[] = [
     companyName: "대한제분",
     companySize: "T1",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이정호",
     renewalDate: "26.02.28",
     contractAmount: 10000000,
@@ -995,7 +1032,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 역검 사용 만족도 확인",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 5000000,
@@ -1008,7 +1045,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "인사임원 면담, 예산 축소 방침 확인",
-        date: "2024-11-18",
+        date: "2025-12-14",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -1022,7 +1059,7 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 채용 시장 동향 분석",
-        date: "2024-11-09",
+        date: "2025-12-11",
         category: "TOFU",
       },
     ],
@@ -1063,7 +1100,7 @@ export const mockData: Customer[] = [
     companyName: "한국컴패션",
     companySize: "T1",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "윤상준",
     renewalDate: null,
     contractAmount: 6300000,
@@ -1085,7 +1122,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 뉴로우 솔루션 관심",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 3000000,
@@ -1098,7 +1135,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "트라이얼 및 견적 안내 완료",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -1111,7 +1148,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 검토 진행, 1월로 목표 변경",
-        date: "2024-12-03",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -1124,7 +1161,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "품의 완료, 12월 내 계약 확정!",
-        date: "2024-12-09",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 6000000,
@@ -1138,7 +1175,7 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "비영리단체 채용 혁신 사례",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
     ],
@@ -1179,7 +1216,7 @@ export const mockData: Customer[] = [
     companyName: "빙그레",
     companySize: "T5",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이지훈",
     renewalDate: "25년 12월",
     contractAmount: 33000000,
@@ -1201,7 +1238,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 재계약 프로모션 문의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 20000000,
@@ -1214,7 +1251,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "큐레이터 프로모션 조건 안내",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 28000000,
@@ -1227,7 +1264,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "계약 조건 협의, 계약 확정",
-        date: "2024-12-02",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 29600000,
@@ -1241,7 +1278,7 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-09",
+        date: "2025-12-11",
         category: "TOFU",
       },
       { title: "큐레이터 프로모션 안내", date: "2024-11-18", category: "BOFU" },
@@ -1284,7 +1321,7 @@ export const mockData: Customer[] = [
     companyName: "유라코포레이션",
     companySize: "T9",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이지훈",
     renewalDate: "25년 12월",
     contractAmount: 30000000,
@@ -1306,7 +1343,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 큐레이터 프로모션 관심",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 20000000,
@@ -1319,7 +1356,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "프로모션 조건 상세 안내",
-        date: "2024-11-12",
+        date: "2025-12-12",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 28000000,
@@ -1332,7 +1369,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "계약 조건 최종 협의, 계약 확정",
-        date: "2024-12-04",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 30000000,
@@ -1346,12 +1383,12 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "자동차 부품업계 HR 혁신",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "MOFU",
       },
       { title: "큐레이터 프로모션 안내", date: "2024-11-22", category: "BOFU" },
@@ -1393,7 +1430,7 @@ export const mockData: Customer[] = [
     companyName: "농우바이오",
     companySize: "T1",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이지훈",
     renewalDate: "25년 12월",
     contractAmount: 10030000,
@@ -1415,7 +1452,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 재계약 시 프로모션 문의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -1428,7 +1465,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "기능 적용 프로모션 가능여부 안내",
-        date: "2024-11-18",
+        date: "2025-12-14",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 10000000,
@@ -1441,7 +1478,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 진행 상황 확인, 계약 확정",
-        date: "2024-12-06",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 10030000,
@@ -1455,7 +1492,7 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "농업/바이오 산업 HR 동향",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "TOFU",
       },
       { title: "AI 면접가이드 소개", date: "2024-11-20", category: "MOFU" },
@@ -1497,7 +1534,7 @@ export const mockData: Customer[] = [
     companyName: "메리츠캐피탈",
     companySize: "T10",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "이지훈",
     renewalDate: null,
     contractAmount: 10000000,
@@ -1519,7 +1556,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 추후 메일 요청",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 2000000,
@@ -1532,7 +1569,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "관련 자료 메일 발송, 적극 관심 표명",
-        date: "2024-11-12",
+        date: "2025-12-12",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 3000000,
@@ -1545,7 +1582,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "계약 조건 협의, 12월로 연기",
-        date: "2024-12-03",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 3200000,
@@ -1558,7 +1595,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "최종 계약 체결 완료!",
-        date: "2024-12-09",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 3500000,
@@ -1572,12 +1609,12 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "금융권 채용 디지털 전환",
-        date: "2024-11-09",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "MOFU",
       },
       { title: "AI 면접가이드 소개", date: "2024-11-22", category: "MOFU" },
@@ -1585,7 +1622,7 @@ export const mockData: Customer[] = [
       { title: "금융업 AI 채용 사례집", date: "2024-12-05", category: "MOFU" },
       {
         title: "2025 금융 HR 트렌드 전망",
-        date: "2024-12-09",
+        date: "2025-12-17",
         category: "TOFU",
       },
     ],
@@ -1626,7 +1663,7 @@ export const mockData: Customer[] = [
     companyName: "에이플러스에셋어드바이저",
     companySize: "T3",
     category: "채용",
-    productUsage: "역검",
+    productUsage: ["역검"],
     manager: "이정호",
     renewalDate: null,
     contractAmount: 2000000,
@@ -1648,7 +1685,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 역검 FULL버전 관심",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -1661,7 +1698,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "메일 소통, 테스트 수량 지급",
-        date: "2024-11-20",
+        date: "2025-12-14",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 4000000,
@@ -1674,7 +1711,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 검토 진행 상황 확인, 견적/승인 완료",
-        date: "2024-12-05",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5000000,
@@ -1688,13 +1725,13 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "역량검사 SR vs FULL 비교",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       { title: "보험업계 채용 트렌드", date: "2024-11-18", category: "TOFU" },
       {
         title: "역량검사 결과 해석 매뉴얼",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "MOFU",
       },
       { title: "역검 FULL 도입 가이드", date: "2024-12-02", category: "BOFU" },
@@ -1739,7 +1776,7 @@ export const mockData: Customer[] = [
     companyName: "안국건강",
     companySize: "T0",
     category: "채용",
-    productUsage: "역검",
+    productUsage: ["역검"],
     manager: "김택수",
     renewalDate: null,
     contractAmount: 2700000,
@@ -1761,7 +1798,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 역량검사 신뢰도 확인",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -1774,7 +1811,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "비용 관련 추가 협의",
-        date: "2024-11-25",
+        date: "2025-12-15",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 800000,
@@ -1787,7 +1824,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 조건 협의, 테스트 시작",
-        date: "2024-12-06",
+        date: "2025-12-17",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 1000000,
@@ -1800,7 +1837,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "테스트 완료, 견적 요청! 12월 내 계약 목표",
-        date: "2024-12-10",
+        date: "2025-12-18",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 1500000,
@@ -1814,17 +1851,17 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-10-15",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "역량검사 도입 효과 분석",
-        date: "2024-10-22",
+        date: "2025-12-13",
         category: "MOFU",
       },
       {
         title: "AI 채용의 미래: 2025 전망",
-        date: "2024-10-28",
+        date: "2025-12-15",
         category: "TOFU",
       },
       {
@@ -1834,24 +1871,24 @@ export const mockData: Customer[] = [
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "MOFU",
       },
       { title: "AI 면접가이드 소개", date: "2024-11-12", category: "MOFU" },
       {
         title: "역량검사 결과 해석 매뉴얼",
-        date: "2024-11-18",
+        date: "2025-12-14",
         category: "MOFU",
       },
       { title: "채용 솔루션 ROI 분석", date: "2024-11-25", category: "BOFU" },
       {
         title: "중소기업 채용 혁신 사례",
-        date: "2024-12-01",
+        date: "2025-12-16",
         category: "MOFU",
       },
       {
         title: "도입 프로세스 및 일정 안내",
-        date: "2024-12-06",
+        date: "2025-12-17",
         category: "BOFU",
       },
     ],
@@ -1892,7 +1929,7 @@ export const mockData: Customer[] = [
     companyName: "에스테이트",
     companySize: "T0",
     category: "채용",
-    productUsage: "역검",
+    productUsage: ["역검"],
     manager: "윤상준",
     renewalDate: null,
     contractAmount: 2700000,
@@ -1914,7 +1951,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 12월 재계약 관련 논의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 4000000,
@@ -1927,7 +1964,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "프로모션 혜택 적용 안내",
-        date: "2024-11-18",
+        date: "2025-12-14",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 5500000,
@@ -1940,7 +1977,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "신규 모듈 오픈 협의",
-        date: "2024-12-04",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 6000000,
@@ -1954,7 +1991,7 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "부동산 업계 채용 트렌드",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "TOFU",
       },
     ],
@@ -1996,7 +2033,7 @@ export const mockData: Customer[] = [
     companyName: "에이치비테크놀러지",
     companySize: "T3",
     category: "채용",
-    productUsage: "역검",
+    productUsage: ["역검"],
     manager: "이지훈",
     renewalDate: null,
     contractAmount: 1000000,
@@ -2018,7 +2055,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 추가 구매 문의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 500000,
@@ -2031,7 +2068,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "타 영담자 상담 통한 연락 요청 대응",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 900000,
@@ -2044,7 +2081,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "추가 구매 조건 협의",
-        date: "2024-12-02",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 1000000,
@@ -2097,7 +2134,7 @@ export const mockData: Customer[] = [
     companyName: "동오그룹",
     companySize: "T5",
     category: "채용",
-    productUsage: "ATS",
+    productUsage: ["ATS"],
     manager: "김종현",
     renewalDate: "26년 1월",
     contractAmount: 17000000,
@@ -2119,7 +2156,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 영상면접 큐레이터 관심",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 5000000,
@@ -2132,7 +2169,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "재계약 관련 사전 연락",
-        date: "2024-11-20",
+        date: "2025-12-14",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 7000000,
@@ -2145,7 +2182,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "기능 시연 및 조건 협의",
-        date: "2024-12-05",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 8000000,
@@ -2159,38 +2196,38 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "영상면접 도입 기업 사례집",
-        date: "2024-11-12",
+        date: "2025-12-12",
         category: "MOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-18",
+        date: "2025-12-14",
         category: "MOFU",
       },
       {
         title: "AI 면접 평가 기준 설정 가이드",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "MOFU",
       },
       {
         title: "건설/에너지 업계 채용 혁신",
-        date: "2024-12-01",
+        date: "2025-12-16",
         category: "TOFU",
       },
       { title: "공기업 채용 혁신 사례", date: "2024-12-06", category: "MOFU" },
       {
         title: "큐레이터 ROI 분석 리포트",
-        date: "2024-12-09",
+        date: "2025-12-17",
         category: "BOFU",
       },
       {
         title: "영상면접 큐레이터 가격 안내서",
-        date: "2024-12-08",
+        date: "2025-12-17",
         category: "BOFU",
       },
     ],
@@ -2232,7 +2269,7 @@ export const mockData: Customer[] = [
     companyName: "삼우종합건축사사무소",
     companySize: "T5",
     category: "채용",
-    productUsage: "ATS",
+    productUsage: ["ATS"],
     manager: "유재현",
     renewalDate: null,
     contractAmount: 15000000,
@@ -2254,7 +2291,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, AI 신기능 관심 높음",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -2267,7 +2304,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "AI 신기능 관련 미팅 진행",
-        date: "2024-11-20",
+        date: "2025-12-14",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 3000000,
@@ -2280,7 +2317,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 검토 진행 상황 확인",
-        date: "2024-12-03",
+        date: "2025-12-16",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 3750000,
@@ -2294,17 +2331,17 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-10-10",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "건축업계 채용 혁신 사례",
-        date: "2024-10-18",
+        date: "2025-12-12",
         category: "MOFU",
       },
       {
         title: "AI 채용의 미래: 2025 전망",
-        date: "2024-10-25",
+        date: "2025-12-14",
         category: "TOFU",
       },
       {
@@ -2316,12 +2353,12 @@ export const mockData: Customer[] = [
       { title: "AI 면접가이드 소개", date: "2024-11-15", category: "MOFU" },
       {
         title: "AI 면접 평가 정확도 백서",
-        date: "2024-11-22",
+        date: "2025-12-15",
         category: "TOFU",
       },
       {
         title: "설계사무소 HR 디지털 전환",
-        date: "2024-11-28",
+        date: "2025-12-16",
         category: "TOFU",
       },
       { title: "채용 솔루션 ROI 분석", date: "2024-12-05", category: "BOFU" },
@@ -2364,7 +2401,7 @@ export const mockData: Customer[] = [
     companyName: "디비아이엔씨",
     companySize: "T9",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "윤상준",
     renewalDate: null,
     contractAmount: 240000000,
@@ -2386,7 +2423,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 뉴로우 도입 논의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 3000000,
@@ -2399,7 +2436,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "디비그룹 전체 연장계약 제안",
-        date: "2024-11-25",
+        date: "2025-12-15",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 4000000,
@@ -2412,7 +2449,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "계약 조건 협의",
-        date: "2024-12-04",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 4000000,
@@ -2426,27 +2463,27 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "뉴로우 온보딩 솔루션 소개",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       {
         title: "신입사원 온보딩 효과 분석",
-        date: "2024-11-18",
+        date: "2025-12-14",
         category: "MOFU",
       },
       {
         title: "뉴로우 도입 프로세스 가이드",
-        date: "2024-11-28",
+        date: "2025-12-16",
         category: "BOFU",
       },
       {
         title: "대기업 그룹사 HR 통합 사례",
-        date: "2024-12-05",
+        date: "2025-12-17",
         category: "MOFU",
       },
       {
         title: "2025 온보딩 트렌드 전망",
-        date: "2024-12-09",
+        date: "2025-12-17",
         category: "TOFU",
       },
     ],
@@ -2488,7 +2525,7 @@ export const mockData: Customer[] = [
     companyName: "해안종합건축사사무소",
     companySize: "T5",
     category: "채용",
-    productUsage: "ATS/역검",
+    productUsage: ["ATS", "역검"],
     manager: "윤상준",
     renewalDate: null,
     contractAmount: 50000000,
@@ -2510,7 +2547,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 큐레이터 파일럿 테스트 논의",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 8000000,
@@ -2523,7 +2560,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "HR 포지션 파일럿 테스트 진행 안내",
-        date: "2024-11-18",
+        date: "2025-12-14",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 9000000,
@@ -2536,7 +2573,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "파일럿 테스트 결과 논의",
-        date: "2024-12-02",
+        date: "2025-12-16",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 10000000,
@@ -2550,23 +2587,23 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "건축업계 채용 혁신 사례",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "MOFU",
       },
       {
         title: "파일럿 테스트 진행 가이드",
-        date: "2024-11-22",
+        date: "2025-12-15",
         category: "BOFU",
       },
       { title: "AI 면접가이드 소개", date: "2024-12-01", category: "MOFU" },
       {
         title: "건설사 AI 채용 성공 사례",
-        date: "2024-12-07",
+        date: "2025-12-17",
         category: "MOFU",
       },
       { title: "2025 건설업 채용 전망", date: "2024-12-10", category: "TOFU" },
@@ -2608,7 +2645,7 @@ export const mockData: Customer[] = [
     companyName: "엠로",
     companySize: "T3",
     category: "채용",
-    productUsage: "ATS",
+    productUsage: ["ATS"],
     manager: "이지훈",
     renewalDate: null,
     contractAmount: 24000000,
@@ -2630,7 +2667,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 시기 미정 답변",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -2643,7 +2680,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 시기 관련 팔로업",
-        date: "2024-11-22",
+        date: "2025-12-15",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: 20000000,
@@ -2656,7 +2693,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "도입 일정 재확인",
-        date: "2024-12-06",
+        date: "2025-12-17",
         possibility: "90%",
         customerResponse: "상",
         targetRevenue: 24000000,
@@ -2670,17 +2707,17 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 HR 테크 트렌드 리포트",
-        date: "2024-11-09",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "IT 솔루션 기업 채용 사례",
-        date: "2024-11-15",
+        date: "2025-12-13",
         category: "MOFU",
       },
       {
         title: "큐레이터 기능 상세 가이드",
-        date: "2024-11-25",
+        date: "2025-12-15",
         category: "MOFU",
       },
       { title: "AI 면접가이드 소개", date: "2024-12-02", category: "MOFU" },
@@ -2723,7 +2760,7 @@ export const mockData: Customer[] = [
     companyName: "(주)도루코 성과",
     companySize: "T10",
     category: "성과",
-    productUsage: "INHR+통합",
+    productUsage: ["INHR+통합"],
     manager: "김용진",
     renewalDate: null,
     contractAmount: 24800000,
@@ -2745,7 +2782,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 평가시스템 만족도 높음",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: null,
@@ -2758,7 +2795,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "재계약 확정 관련 논의",
-        date: "2024-11-28",
+        date: "2025-12-16",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: null,
@@ -2771,7 +2808,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "추가 기능 요청 대응",
-        date: "2024-12-05",
+        date: "2025-12-17",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: null,
@@ -2785,19 +2822,19 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "2024 성과관리 트렌드 리포트",
-        date: "2024-10-10",
+        date: "2025-12-11",
         category: "TOFU",
       },
       { title: "INHR+ 기능 상세 가이드", date: "2024-10-18", category: "MOFU" },
       {
         title: "제조업 성과관리 혁신 사례",
-        date: "2024-10-25",
+        date: "2025-12-14",
         category: "MOFU",
       },
       { title: "OKR vs KPI 비교 분석", date: "2024-11-02", category: "TOFU" },
       {
         title: "성과평가 시스템 구축 가이드",
-        date: "2024-11-10",
+        date: "2025-12-11",
         category: "MOFU",
       },
       { title: "연봉협상 데이터 활용법", date: "2024-11-18", category: "MOFU" },
@@ -2843,7 +2880,7 @@ export const mockData: Customer[] = [
     companyName: "국가과학기술인력개발원",
     companySize: "T5",
     category: "공공",
-    productUsage: "ATS/역검SR",
+    productUsage: ["ATS", "역검SR"],
     manager: "송병규",
     renewalDate: null,
     contractAmount: 10000000,
@@ -2865,7 +2902,7 @@ export const mockData: Customer[] = [
       {
         type: "meeting",
         content: "MBM 세미나 참석, 역검 풀버전 자료 요청",
-        date: "2024-11-07",
+        date: "2025-12-11",
         possibility: "0%",
         customerResponse: "하",
         targetRevenue: null,
@@ -2878,7 +2915,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "역검 풀버전 자료 전달 완료",
-        date: "2024-11-15",
+        date: "2025-12-13",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: null,
@@ -2891,7 +2928,7 @@ export const mockData: Customer[] = [
       {
         type: "call",
         content: "풀버전 도입 검토 현황 확인",
-        date: "2024-12-03",
+        date: "2025-12-16",
         possibility: "40%",
         customerResponse: "중",
         targetRevenue: null,
@@ -2905,28 +2942,28 @@ export const mockData: Customer[] = [
     contentEngagements: [
       {
         title: "공공기관 채용 혁신 가이드",
-        date: "2024-11-08",
+        date: "2025-12-11",
         category: "TOFU",
       },
       {
         title: "역량검사 SR vs FULL 비교",
-        date: "2024-11-12",
+        date: "2025-12-12",
         category: "MOFU",
       },
       {
         title: "역량검사 결과 해석 매뉴얼",
-        date: "2024-11-20",
+        date: "2025-12-14",
         category: "MOFU",
       },
       { title: "공공기관 ATS 도입 사례", date: "2024-11-28", category: "MOFU" },
       {
         title: "역검 FULL 기능 상세 가이드",
-        date: "2024-12-05",
+        date: "2025-12-17",
         category: "MOFU",
       },
       {
         title: "2025 공공기관 채용 정책 동향",
-        date: "2024-12-08",
+        date: "2025-12-17",
         category: "TOFU",
       },
     ],

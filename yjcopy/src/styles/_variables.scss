@@ -1,0 +1,97 @@
+// Colors - Dark Theme inspired by Vercel/Linear
+$color-bg-primary: #0a0a0b;
+$color-bg-secondary: #111113;
+$color-bg-tertiary: #18181b;
+$color-bg-elevated: #1e1e21;
+$color-bg-hover: #27272a;
+
+$color-border: #27272a;
+$color-border-subtle: #1e1e21;
+$color-border-strong: #3f3f46;
+
+$color-text-primary: #fafafa;
+$color-text-secondary: #a1a1aa;
+$color-text-tertiary: #71717a;
+$color-text-muted: #52525b;
+
+// Accent Colors
+$color-accent-blue: #3b82f6;
+$color-accent-blue-subtle: rgba(59, 130, 246, 0.15);
+$color-accent-green: #22c55e;
+$color-accent-green-subtle: rgba(34, 197, 94, 0.15);
+$color-accent-red: #ef4444;
+$color-accent-red-subtle: rgba(239, 68, 68, 0.15);
+$color-accent-yellow: #eab308;
+$color-accent-yellow-subtle: rgba(234, 179, 8, 0.15);
+$color-accent-purple: #a855f7;
+$color-accent-purple-subtle: rgba(168, 85, 247, 0.15);
+$color-accent-cyan: #06b6d4;
+$color-accent-cyan-subtle: rgba(6, 182, 212, 0.15);
+$color-accent-orange: #f97316;
+$color-accent-orange-subtle: rgba(249, 115, 22, 0.15);
+
+// Gradients
+$gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+$gradient-success: linear-gradient(135deg, #22c55e 0%, #06b6d4 100%);
+$gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+
+// Spacing
+$spacing-xxs: 2px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+$spacing-2xl: 32px;
+$spacing-3xl: 48px;
+
+// Border Radius
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+$shadow-glow: 0 0 20px rgba(59, 130, 246, 0.2);
+
+// Typography
+$font-family-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-family-mono: 'JetBrains Mono', monospace;
+
+$font-size-xs: 11px;
+$font-size-sm: 12px;
+$font-size-base: 14px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 24px;
+$font-size-3xl: 32px;
+$font-size-4xl: 40px;
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-normal: 200ms ease;
+$transition-slow: 300ms ease;
+
+// Z-index
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-modal: 300;
+$z-tooltip: 400;
+
+
+
+
+

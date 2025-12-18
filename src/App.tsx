@@ -1,26 +1,64 @@
-import { useState, useMemo } from "react";
-import {
-  Search,
-  Filter,
-  LayoutGrid,
-  Table as TableIcon,
-  BarChart3,
-  Calendar,
-  Activity,
-} from "lucide-react";
-import { Text, Card } from "@/components/common/atoms";
-import { SummaryCards } from "@/components/dashboard/SummaryCards";
-import { CustomerTable } from "@/components/dashboard/CustomerTable";
-import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { Charts } from "@/components/dashboard/Charts";
-import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
-import { mockData } from "@/data/mockData";
-import { Customer } from "@/types/customer";
+import { CustomerTable } from "@/components/dashboard/CustomerTable";
+import { MBMTimeline } from "@/components/dashboard/MBMTimeline";
+import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
+import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import type {
+  Category,
+  CompanySize,
+  DashboardTableRequest,
+  Possibility,
+  ProgressStage as ProgressStageType,
+} from "@/repository/openapi/model";
+import { ProgressStage } from "@/repository/openapi/model";
+import { useGetDashboardCompanies, useGetFilterOptions } from "@/repository/query/dashboardApiController/queryHook";
+import { TimePeriodType } from "@/types/common";
+import {
+  CategoryType,
+  ChangeDirectionType,
+  CompanySizeType,
+  Customer,
+  PossibilityType,
+  TrustLevelType
+} from "@/types/customer";
+import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  SearchOutlined,
+  TableOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
+import {
+  ConfigProvider,
+  DatePicker,
+  Input,
+  Layout,
+  Select,
+  Space,
+  Spin,
+  Switch,
+  Tabs,
+  theme,
+  Typography
+} from "antd";
+import dayjs, { Dayjs } from "dayjs";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./App.module.scss";
 
+const { RangePicker } = DatePicker;
+
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
-export type TimePeriod = "1w" | "1m" | "6m" | "1y";
+
+const PROGRESS_STAGE_MAP: Record<ProgressStatus, ProgressStageType | null> = {
+  all: null,
+  test: ProgressStage.TEST,
+  quote: ProgressStage.QUOTE,
+  approval: ProgressStage.APPROVAL,
+  contract: ProgressStage.CONTRACT,
+  none: null,
+};
 
 // 진행상태 필터 타입
 type ProgressStatus =
@@ -52,13 +90,6 @@ const DEFAULT_FILTERS: TabFilters = {
   selectedProgress: "all",
 };
 
-const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
-  { value: "1w", label: "최근 1주일" },
-  { value: "1m", label: "최근 1달" },
-  { value: "6m", label: "최근 반기" },
-  { value: "1y", label: "최근 1년" },
-];
-
 const TAB_FILTER_UI: Record<
   ViewMode,
   {
@@ -73,7 +104,7 @@ const TAB_FILTER_UI: Record<
     showSearch: true,
     showManager: true,
     showCompanySize: true,
-    showCategory: true,
+    showCategory: false,
     showProgress: true,
   },
   timeline: {
@@ -106,9 +137,23 @@ const TAB_FILTER_UI: Record<
   },
 };
 
-function App() {
+interface AppContentProps {
+  isDark: boolean;
+  onToggleTheme: (checked: boolean) => void;
+}
+
+function AppContent({ isDark, onToggleTheme }: AppContentProps) {
+  const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("1w");
+  // 기본값: 최근 1주일 (오늘 - 7일 ~ 오늘)
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(7, "day"),
+    dayjs(),
+  ]);
+
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // 탭별 독립적인 필터 상태
   const [tabFilters, setTabFilters] = useState<TabFilterState>({
@@ -128,325 +173,463 @@ function App() {
       ...prev,
       [viewMode]: { ...prev[viewMode], [key]: value },
     }));
+    setCurrentPage(1); // 필터 변경 시 첫 페이지로
   };
 
-  // 고유 담당자 목록
+  // dateRange 변경 시에도 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dateRange]);
+
+  // dateRange에서 일수를 계산하여 가장 가까운 TimePeriodType으로 변환
+  const timePeriod: TimePeriodType = useMemo(() => {
+    const days = dateRange[1].diff(dateRange[0], "day");
+    if (days <= 7) return "1w";
+    if (days <= 30) return "1m";
+    if (days <= 180) return "6m";
+    return "1y";
+  }, [dateRange]);
+
+  // API 요청 바디 생성
+  const requestBody: DashboardTableRequest = useMemo(() => {
+    const filters: DashboardTableRequest["filters"] = {};
+
+    if (currentFilters.selectedManager !== "all") {
+      filters.managers = [currentFilters.selectedManager];
+    }
+    if (currentFilters.selectedCategory !== "all") {
+      filters.categories = [currentFilters.selectedCategory as Category];
+    }
+    if (currentFilters.selectedCompanySize !== "all") {
+      filters.companySizes = [currentFilters.selectedCompanySize as CompanySize];
+    }
+    if (currentFilters.selectedPossibility !== "all") {
+      filters.possibilities = [currentFilters.selectedPossibility as Possibility];
+    }
+    const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
+    if (stage) {
+      filters.stages = [stage];
+    }
+
+    return {
+      dateRange: {
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD'),
+      },
+      search:
+        currentFilters.searchQuery.trim().length > 0
+          ? { companyName: currentFilters.searchQuery.trim() }
+          : undefined,
+      filters: Object.keys(filters).length ? filters : undefined,
+      pagination: { page: currentPage, pageSize },
+    };
+  }, [currentFilters, dateRange, currentPage, pageSize]);
+
+  // React Query로 API 호출 (약간의 지연으로 MSW 준비 대기)
+  const [mswReady, setMswReady] = useState(false);
+
+  useEffect(() => {
+    // MSW가 준비될 시간을 주기 위한 짧은 지연
+    const timer = setTimeout(() => {
+      console.log('[App] Enabling React Query...');
+      setMswReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 필터 옵션 조회
+  const { data: filterOptions } = useGetFilterOptions({
+    enabled: mswReady,
+  });
+
+  // 테이블 데이터 조회
+  const { data: apiData, isLoading } = useGetDashboardCompanies(requestBody, {
+    staleTime: 60 * 1000,
+    enabled: mswReady, // MSW 준비 후에만 쿼리 실행
+  });
+
+  // DashboardTableRow를 Customer로 변환
+  const tableRows = useMemo(() => {
+    if (!apiData?.data?.rows) return [];
+
+    return apiData.data.rows.map((row) => {
+      const current = row.current;
+      const previous = row.previous;
+
+      // 신뢰지수 변화 계산
+      const currentTrust = current.trustIndex ?? 0;
+      const previousTrust = previous.trustIndex ?? 0;
+      const changeAmount = currentTrust - previousTrust;
+      const changeDirection: ChangeDirectionType =
+        changeAmount > 0 ? 'up' : changeAmount < 0 ? 'down' : 'none';
+
+      // 신뢰 레벨 계산 (P1: 80+, P2: 60-79, P3: 0-59)
+      const getTrustLevel = (trust: number): TrustLevelType => {
+        if (trust >= 80) return 'P1';
+        if (trust >= 60) return 'P2';
+        return 'P3';
+      };
+
+      // Category 매핑
+      const mapCategory = (cat: string | null | undefined): CategoryType => {
+        if (cat === 'recruit') return '채용';
+        if (cat === 'public') return '공공';
+        if (cat === 'performance') return '성과';
+        return '채용'; // 기본값
+      };
+
+      return {
+        no: row.companyId,
+        companyName: row.companyName,
+        companySize: row.companySize as CompanySizeType,
+        category: mapCategory(row.category),
+        productUsage: row.productUsage || [],
+        manager: row.manager ?? '',
+        renewalDate: null,
+        contractAmount: row.contractAmount ?? null,
+        hDot: false,
+        trustLevel: getTrustLevel(currentTrust),
+        trustIndex: currentTrust,
+        changeAmount,
+        changeDirection,
+        rank: null,
+        trustHistory: undefined,
+        salesActions: [],
+        contentEngagements: [],
+        attendance: {},
+        trustFormation: {
+          customerResponse: '중',
+          detail: '',
+          targetDate: null,
+          targetRevenueMin: null,
+          targetRevenueMax: null,
+          interestFunction: null,
+        },
+        valueRecognition: {
+          customerResponse: '중',
+          possibility: current.possibility as PossibilityType ?? '0%',
+          targetRevenue: current.targetRevenue,
+          targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
+          test: current.test ?? false,
+          quote: current.quote ?? false,
+          approval: current.approval ?? false,
+          contract: current.contract ?? false,
+          simulation: null,
+        },
+        adoptionDecision: {
+          customerResponse: '중',
+          possibility: current.possibility as PossibilityType ?? '0%',
+          targetRevenue: current.targetRevenue,
+          targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
+          test: current.test ?? false,
+          quote: current.quote ?? false,
+          approval: current.approval ?? false,
+          contract: current.contract ?? false,
+          simulation: null,
+        },
+        _periodData: {
+          pastTrustIndex: previousTrust,
+          pastPossibility: previous.possibility as PossibilityType ?? '0%',
+          pastCustomerResponse: '중',
+          pastTargetRevenue: previous.targetRevenue,
+          pastTargetDate: previous.targetMonth ? `2024-${String(previous.targetMonth).padStart(2, '0')}-01` : null,
+          pastTest: previous.test ?? false,
+          pastQuote: previous.quote ?? false,
+          pastApproval: previous.approval ?? false,
+          pastContract: previous.contract ?? false,
+          pastExpectedRevenue: previous.targetRevenue ?? 0,
+          currentExpectedRevenue: current.targetRevenue ?? 0,
+          possibilityChange: 'none',
+          responseChange: 'none',
+        },
+      } as Customer;
+    });
+  }, [apiData?.data?.rows]);
+
+  // 필터 옵션들 (API에서 가져옴)
   const managers = useMemo(
-    () => [...new Set(mockData.map((c) => c.manager))].sort(),
-    []
+    () => filterOptions?.data?.managers ?? [],
+    [filterOptions]
   );
 
   const categories = useMemo(
-    () => [...new Set(mockData.map((c) => c.category))].sort(),
-    []
+    () => filterOptions?.data?.categories ?? [],
+    [filterOptions]
   );
 
   const companySizes = useMemo(
-    () => [...new Set(mockData.map((c) => c.companySize || "미정"))].sort(),
-    []
+    () => filterOptions?.data?.companySizes ?? [],
+    [filterOptions]
   );
 
-  // 필터링된 데이터 (현재 탭의 필터 사용)
+  // 진행상태 "없음" 필터는 프론트에서 추가 처리
   const filteredData = useMemo(() => {
-    const {
-      searchQuery,
-      selectedManager,
-      selectedCategory,
-      selectedCompanySize,
-      selectedPossibility,
-      selectedProgress,
-    } = currentFilters;
-
-    return mockData.filter((customer: Customer) => {
-      // 검색어 필터
-      if (
-        searchQuery &&
-        !customer.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      // 담당자 필터
-      if (selectedManager !== "all" && customer.manager !== selectedManager) {
-        return false;
-      }
-      // 카테고리 필터
-      if (
-        selectedCategory !== "all" &&
-        customer.category !== selectedCategory
-      ) {
-        return false;
-      }
-      // 기업 규모 필터
-      if (
-        selectedCompanySize !== "all" &&
-        (customer.companySize || "미정") !== selectedCompanySize
-      ) {
-        return false;
-      }
-      // 가능성 필터
-      if (
-        selectedPossibility !== "all" &&
-        customer.adoptionDecision.possibility !== selectedPossibility
-      ) {
-        return false;
-      }
-      // 진행상태 필터
-      if (selectedProgress !== "all") {
+    if (currentFilters.selectedProgress === "none") {
+      return tableRows.filter((customer: Customer) => {
         const ad = customer.adoptionDecision;
-        if (selectedProgress === "none") {
-          // 아무 진행 상태도 없는 경우
-          if (ad.test || ad.quote || ad.approval || ad.contract) {
-            return false;
-          }
-        } else if (selectedProgress === "contract") {
-          if (!ad.contract) return false;
-        } else if (selectedProgress === "approval") {
-          if (!ad.approval || ad.contract) return false;
-        } else if (selectedProgress === "quote") {
-          if (!ad.quote || ad.approval) return false;
-        } else if (selectedProgress === "test") {
-          if (!ad.test || ad.quote) return false;
-        }
-      }
-      return true;
-    });
-  }, [currentFilters]);
+        return !(ad.test || ad.quote || ad.approval || ad.contract);
+      });
+    }
+    return tableRows;
+  }, [tableRows, currentFilters.selectedProgress]);
 
   const filterControls = (
-    <>
+    <Space wrap size="middle" className={styles.filterInline}>
       {TAB_FILTER_UI[viewMode].showSearch && (
-        <div className={styles.searchBox}>
-          <Search size={18} className={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="기업명 검색..."
-            value={currentFilters.searchQuery}
-            onChange={(e) => updateCurrentFilter("searchQuery", e.target.value)}
-            className={styles.searchInput}
-          />
-        </div>
+        <Input
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="기업명 검색..."
+          value={currentFilters.searchQuery}
+          onChange={(e) => updateCurrentFilter("searchQuery", e.target.value)}
+          style={{ width: 260 }}
+        />
       )}
 
-      {(TAB_FILTER_UI[viewMode].showManager ||
-        TAB_FILTER_UI[viewMode].showCompanySize ||
-        TAB_FILTER_UI[viewMode].showCategory ||
-        TAB_FILTER_UI[viewMode].showProgress) && (
-        <div className={styles.filterGroup}>
-          {viewMode !== "timeline" && <Filter size={16} />}
-
-          {TAB_FILTER_UI[viewMode].showManager && (
-            <select
-              value={currentFilters.selectedManager}
-              onChange={(e) =>
-                updateCurrentFilter("selectedManager", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 담당자</option>
-              {managers.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showCompanySize && (
-            <select
-              value={currentFilters.selectedCompanySize}
-              onChange={(e) =>
-                updateCurrentFilter("selectedCompanySize", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 기업 규모</option>
-              {companySizes.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showCategory && (
-            <select
-              value={currentFilters.selectedCategory}
-              onChange={(e) =>
-                updateCurrentFilter("selectedCategory", e.target.value)
-              }
-              className={styles.select}
-            >
-              <option value="all">조직 구분</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {TAB_FILTER_UI[viewMode].showProgress && (
-            <select
-              value={currentFilters.selectedProgress}
-              onChange={(e) =>
-                updateCurrentFilter(
-                  "selectedProgress",
-                  e.target.value as ProgressStatus
-                )
-              }
-              className={styles.select}
-            >
-              <option value="all">전체 진행상태</option>
-              <option value="contract">계약 완료</option>
-              <option value="approval">승인 단계</option>
-              <option value="quote">견적 단계</option>
-              <option value="test">테스트 단계</option>
-              <option value="none">미진행</option>
-            </select>
-          )}
-        </div>
+      {TAB_FILTER_UI[viewMode].showManager && (
+        <Select
+          value={currentFilters.selectedManager}
+          onChange={(val) => updateCurrentFilter("selectedManager", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 담당자" },
+            ...managers.map((m: string) => ({ value: m, label: m })),
+          ]}
+        />
       )}
-    </>
+
+      {TAB_FILTER_UI[viewMode].showCompanySize && (
+        <Select
+          value={currentFilters.selectedCompanySize}
+          onChange={(val) => updateCurrentFilter("selectedCompanySize", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 기업 규모" },
+            ...companySizes.map((size: CompanySize) => ({ value: size, label: size })),
+          ]}
+        />
+      )}
+
+      {TAB_FILTER_UI[viewMode].showCategory && (
+        <Select
+          value={currentFilters.selectedCategory}
+          onChange={(val) => updateCurrentFilter("selectedCategory", val)}
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "조직 구분" },
+            ...categories.map((c: Category) => ({ value: c, label: c })),
+          ]}
+        />
+      )}
+
+      {TAB_FILTER_UI[viewMode].showProgress && (
+        <Select
+          value={currentFilters.selectedProgress}
+          onChange={(val) =>
+            updateCurrentFilter("selectedProgress", val as ProgressStatus)
+          }
+          style={{ minWidth: 160 }}
+          options={[
+            { value: "all", label: "전체 진행상태" },
+            { value: "contract", label: "계약 완료" },
+            { value: "approval", label: "승인 단계" },
+            { value: "quote", label: "견적 단계" },
+            { value: "test", label: "테스트 단계" },
+            { value: "none", label: "미진행" },
+          ]}
+        />
+      )}
+    </Space>
   );
 
+  const tabItems = [
+    {
+      key: "table",
+      label: (
+        <Space size={6}>
+          <TableOutlined />
+          전체 현황
+        </Space>
+      ),
+    },
+    {
+      key: "timeline",
+      label: (
+        <Space size={6}>
+          <CalendarOutlined />
+          타임라인
+        </Space>
+      ),
+    },
+    {
+      key: "activity",
+      label: (
+        <Space size={6}>
+          <ThunderboltOutlined />
+          고객 활동 분석
+        </Space>
+      ),
+    },
+    {
+      key: "pipeline",
+      label: (
+        <Space size={6}>
+          <AppstoreOutlined />딜
+        </Space>
+      ),
+    },
+    {
+      key: "chart",
+      label: (
+        <Space size={6}>
+          <BarChartOutlined />
+          차트
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className={styles.app}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
+    <Layout
+      className={styles.app}
+      data-theme={isDark ? "dark" : "light"}
+      style={{
+        background: token.colorBgLayout,
+        color: token.colorText,
+      }}
+    >
+      <Layout.Header
+        className={styles.header}
+        style={{
+          background: token.colorBgElevated,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        <Space align="center" size="large">
           <div className={styles.logo}>
             <div className={styles.logoIcon}>
-              <BarChart3 size={24} />
+              <BarChartOutlined />
             </div>
-            <Text variant="h4">Bgent</Text>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              Bgent
+            </Typography.Title>
           </div>
+        </Space>
+        <Space align="center" size="middle">
+          <Space align="center" size={6}>
+            <Typography.Text type="secondary">Light</Typography.Text>
+            <Switch checked={isDark} onChange={onToggleTheme} size="small" />
+            <Typography.Text type="secondary">Dark</Typography.Text>
+          </Space>
+        </Space>
+      </Layout.Header>
+
+      <Layout.Content
+        className={styles.main}
+        style={{ background: token.colorBgLayout }}
+      >
+        <div className={styles.viewToggleSection}>
+          <Tabs
+            activeKey={viewMode}
+            onChange={(key) => setViewMode(key as ViewMode)}
+            items={tabItems}
+            size="large"
+          />
         </div>
-        <div className={styles.headerRight}>
-          <Text variant="body-sm" color="tertiary">
-            마지막 업데이트: 2025.12.09
-          </Text>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className={styles.main}>
-        {/* 기간 필터 + View Toggle */}
-        <section className={styles.viewToggleSection}>
-          <div className={styles.periodFilter}>
-            <Calendar size={16} />
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-              className={styles.periodSelect}
-            >
-              {TIME_PERIOD_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.viewToggle}>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "table" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("table")}
-            >
-              <TableIcon size={18} />
-              <span>전체 현황</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "timeline" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("timeline")}
-            >
-              <Calendar size={18} />
-              <span>타임라인</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "activity" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("activity")}
-            >
-              <Activity size={18} />
-              <span>고객 활동 분석</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "pipeline" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("pipeline")}
-            >
-              <LayoutGrid size={18} />
-              <span>딜</span>
-            </button>
-            <button
-              className={`${styles.viewBtn} ${
-                viewMode === "chart" ? styles.active : ""
-              }`}
-              onClick={() => setViewMode("chart")}
-            >
-              <BarChart3 size={18} />
-              <span>차트</span>
-            </button>
-          </div>
-        </section>
-
-        {/* Summary Cards - only on table tab */}
-        {viewMode === "table" && (
-          <section className={styles.section}>
-            <SummaryCards data={filteredData} timePeriod={timePeriod} />
-          </section>
-        )}
-
-        {/* Content Area */}
-        <section className={styles.contentSection}>
+        <Spin spinning={isLoading}>
           {viewMode === "table" && (
-            <CustomerTable data={filteredData} timePeriod={timePeriod} />
+            <section className={styles.section}>
+              <SummaryCards />
+            </section>
           )}
-          {viewMode === "pipeline" && (
-            <PipelineBoard data={filteredData} timePeriod={timePeriod} />
-          )}
-          {viewMode === "chart" && (
-            <Charts data={filteredData} timePeriod={timePeriod} />
-          )}
-          {viewMode === "timeline" && (
-            <MBMTimeline
-              data={filteredData}
-              timePeriod={timePeriod}
-              filters={filterControls}
-            />
-          )}
-          {viewMode === "activity" && (
-            <CustomerActivityAnalysis
-              data={filteredData}
-              timePeriod={timePeriod}
-              filters={filterControls}
-            />
-          )}
-        </section>
 
-        {/* Footer Stats */}
-        <Card className={styles.footer} padding="sm">
-          <Text variant="body-sm" color="secondary">
-            총{" "}
-            <Text as="span" weight="semibold" color="primary">
-              {filteredData.length}
-            </Text>
-            개 고객 표시 중
-            {currentFilters.selectedManager !== "all" &&
-              ` · 담당자: ${currentFilters.selectedManager}`}
-            {currentFilters.selectedCategory !== "all" &&
-              ` · ${currentFilters.selectedCategory}`}
-            {currentFilters.selectedPossibility !== "all" &&
-              ` · ${currentFilters.selectedPossibility} 가능성`}
-          </Text>
-        </Card>
-      </main>
-    </div>
+          <section className={styles.contentSection}>
+            {viewMode === "table" && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Space size="middle" align="center">
+                    <Typography.Text strong>조회 기간</Typography.Text>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={(dates) => {
+                        if (dates && dates[0] && dates[1]) {
+                          setDateRange([dates[0], dates[1]]);
+                        }
+                      }}
+                      format="YYYY-MM-DD"
+                      style={{ width: 280 }}
+                    />
+                  </Space>
+                </div>
+                <CustomerTable
+                  data={filteredData}
+                  timePeriod={timePeriod}
+                  loading={isLoading}
+                  dateRange={{
+                    startDate: dateRange[0].format('YYYY-MM-DD'),
+                    endDate: dateRange[1].format('YYYY-MM-DD'),
+                  }}
+                  pagination={{
+                    current: currentPage,
+                    pageSize,
+                    total: apiData?.data?.total ?? 0,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} / 전체 ${total}건`,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    onChange: (page, newPageSize) => {
+                      setCurrentPage(page);
+                      if (newPageSize !== pageSize) {
+                        setPageSize(newPageSize);
+                        setCurrentPage(1); // 페이지 크기 변경 시 첫 페이지로
+                      }
+                    },
+                  }}
+                />
+              </>
+            )}
+            {viewMode === "pipeline" && (
+              <PipelineBoard data={filteredData} timePeriod={timePeriod} />
+            )}
+            {viewMode === "chart" && (
+              <Charts data={filteredData} timePeriod={timePeriod} />
+            )}
+            {viewMode === "timeline" && (
+              <MBMTimeline
+                data={filteredData}
+                timePeriod={timePeriod}
+                filters={filterControls}
+              />
+            )}
+            {viewMode === "activity" && (
+              <CustomerActivityAnalysis
+                data={filteredData}
+                timePeriod={timePeriod}
+                filters={filterControls}
+              />
+            )}
+          </section>
+        </Spin>
+      </Layout.Content>
+    </Layout>
+  );
+}
+
+function App() {
+  const [isDark, setIsDark] = useState(true);
+
+  const handleToggleTheme = (checked: boolean) => {
+    setIsDark(checked);
+  };
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
+      <AppContent isDark={isDark} onToggleTheme={handleToggleTheme} />
+    </ConfigProvider>
   );
 }
 

@@ -1,0 +1,73 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.companyCard {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  width: 100%;
+  padding: $spacing-md;
+  border: none;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  text-align: left;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.cardHeader {
+  @include Flex(row, space-between, center);
+}
+
+.companyName {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.cardHeaderRight {
+  @include Flex(row, flex-end, center, $spacing-md);
+}
+
+.trustChange {
+  @include Flex(row, flex-end, center, $spacing-sm);
+}
+
+.arrowIcon {
+  color: $color-text-muted;
+}
+
+.cardDetails {
+  @include Flex(row, space-between, center);
+}
+
+.cardMeta {
+  @include Flex(row, flex-start, center, $spacing-md);
+}
+
+.cardProgress {
+  @include Flex(row, flex-end, center, $spacing-sm);
+}
+
+.progressDots {
+  @include Flex(row, flex-start, center, 4px);
+}
+
+.dot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: $radius-full;
+  background: $color-bg-secondary;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+
+  &.dotActive {
+    background: $color-accent-blue;
+    color: $color-text-primary;
+  }
+}
+

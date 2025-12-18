@@ -1,0 +1,128 @@
+@use "@/styles/variables" as *;
+
+.drawerHeader {
+  padding: 24px;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: $color-bg-elevated;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $color-text-tertiary;
+  padding: 4px;
+  
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.drawerBody {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  background-color: $color-bg-primary;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  margin-bottom: 16px;
+}
+
+.funnelContainer {
+  display: flex;
+  justify-content: space-between;
+  background-color: $color-bg-secondary;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.funnelStep {
+  text-align: center;
+  flex: 1;
+  
+  &:not(:last-child) {
+    border-right: 1px solid $color-border;
+  }
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.statusItem {
+  background-color: $color-bg-secondary;
+  border: 1px solid $color-border;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.vocList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.vocItem {
+  padding: 12px;
+  border-bottom: 1px solid $color-border;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:before {
+    content: "•";
+    color: $color-accent-blue;
+    margin-right: 8px;
+  }
+}
+
+.drawerFooter {
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background-color: $color-bg-elevated;
+}
+
+.aiButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background-color: $color-accent-blue-subtle;
+  border: 1px solid $color-accent-blue;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(59, 130, 246, 0.25);
+  }
+  
+  svg {
+    color: $color-accent-blue;
+  }
+}
+
+.aiText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

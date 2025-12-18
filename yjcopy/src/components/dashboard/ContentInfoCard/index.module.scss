@@ -1,0 +1,65 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.contentCard {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  width: 100%;
+  padding: $spacing-md;
+  border: none;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  text-align: left;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.cardHeader {
+  @include Flex(row, space-between, center);
+}
+
+.cardTitle {
+  @include Flex(row, flex-start, center, $spacing-sm);
+}
+
+.cardViews {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.viewsIcon {
+  color: $color-text-tertiary;
+}
+
+.arrowIcon {
+  color: $color-text-muted;
+}
+
+.cardMeta {
+  @include Flex(row, space-between, center);
+}
+
+.progressDots {
+  @include Flex(row, flex-end, center, $spacing-xs);
+}
+
+.dot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: $radius-sm;
+  background: $color-bg-secondary;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  color: $color-text-tertiary;
+
+  &.dotActive {
+    background: $color-accent-blue-subtle;
+    color: $color-accent-blue;
+  }
+}
+

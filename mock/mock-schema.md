@@ -16,10 +16,17 @@
 | `companyName`    | string         | 기업명                  | `"비전바이오켐"`, `"도쿄일렉트론코리아"`       |
 | `companySize`    | string \| null | 기업 규모 등급 (T0~T10) | `"T0"`, `"T5"`, `"T9"`                         |
 | `category`       | string         | 사업 구분               | `"채용"`, `"공공"`, `"병원"`, `"성과"`         |
-| `productUsage`   | string         | 현재 사용 중인 제품     | `"ATS/역검"`, `"ATS"`, `"역검"`, `"INHR+통합"` |
+| `productUsage`   | ProductType[]  | 현재 사용 중인 제품 배열 | `["ATS"]`, `["역검"]`, `["ATS", "역검SR"]`, `["INHR+통합"]` |
 | `manager`        | string         | 담당 영업사원           | `"이정호"`, `"김택수"`, `"윤상준"`             |
 | `renewalDate`    | string \| null | 재계약 예정일           | `"25.10.18"`, `"26.03.31"`, `"25년 12월"`      |
 | `contractAmount` | number \| null | 현재 계약 금액 (원)     | `11000000`, `50000000`                         |
+
+#### ProductType 정의
+`type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이탈사"`
+
+**사용 예시:**
+- 단일 제품: `["ATS"]`, `["역검"]`
+- 복수 제품: `["ATS", "역검"]`, `["ATS", "역검SR"]`
 
 ---
 

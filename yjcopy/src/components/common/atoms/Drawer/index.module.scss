@@ -1,0 +1,85 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0);
+  visibility: hidden;
+  transition: background $transition-normal, visibility $transition-normal;
+  z-index: $z-modal;
+
+  &.open {
+    background: rgba(0, 0, 0, 0.5);
+    visibility: visible;
+  }
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  @include Flex(column, flex-start, stretch);
+  background: $color-bg-secondary;
+  border-left: 1px solid $color-border;
+  box-shadow: $shadow-lg;
+  transform: translateX(100%);
+  transition: transform $transition-normal;
+  z-index: $z-modal + 1;
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  &.width_sm {
+    width: 360px;
+  }
+
+  &.width_md {
+    width: 480px;
+  }
+
+  &.width_lg {
+    width: 600px;
+  }
+}
+
+.header {
+  @include Flex(row, space-between, center);
+  flex-shrink: 0;
+  padding: $spacing-lg $spacing-xl;
+  background: $color-bg-tertiary;
+  border-bottom: 1px solid $color-border;
+}
+
+.closeButton {
+  @include FlexCenter;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+}
+
+.content {
+  overflow-y: auto;
+  flex: 1;
+  padding: $spacing-xl;
+}
+
+
+
+
+

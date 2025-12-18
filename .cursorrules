@@ -3,142 +3,21 @@
 ## 프로젝트 개요
 영업 BI 대시보드로, 고객 신뢰도 관리, 영업 파이프라인, MBM 타임라인을 시각화합니다.
 
----
 
-## 🚨 필수 규칙: 데이터 변경 시 동기화
+## 📦 코드 구조 규칙
 
-### ⚠️ 매우 중요: 데이터 관련 변경 요청 시 반드시 아래 4곳을 함께 업데이트
-
-| 순서 | 파일 경로 | 설명 | 필수 여부 |
-|------|-----------|------|-----------|
-| 1 | `src/types/customer.ts` | TypeScript 타입/인터페이스 | ✅ 필수 |
-| 2 | `src/data/mockData.ts` | 실제 앱에서 사용하는 데이터 | ✅ 필수 |
-| 3 | `mock/mock-schema.md` | 스키마 문서 (필드 설명) | ✅ 필수 |
-| 4 | `mock/mock.md` | 예시 데이터 문서 | 선택적 |
-
-### 데이터 변경 체크리스트
-
-**필드 추가 시:**
-- [ ] `customer.ts`에 타입 추가
-- [ ] `mockData.ts`에 데이터 추가
-- [ ] `mock-schema.md`에 필드 설명 추가
-- [ ] 관련 컴포넌트에서 새 필드 사용
-
-**필드 삭제 시:**
-- [ ] `customer.ts`에서 타입 제거
-- [ ] `mockData.ts`에서 데이터 제거
-- [ ] `mock-schema.md`에서 필드 설명 제거
-- [ ] 관련 컴포넌트에서 해당 필드 사용 코드 제거
-
-**필드 수정 시:**
-- [ ] 모든 파일에서 일관성 있게 수정
-- [ ] 타입과 실제 데이터 일치 확인
-
----
-
-## 📁 핵심 파일 경로
-
-### 데이터 관련
-- **스키마 정의**: `mock/mock-schema.md` - 모든 데이터 구조와 필드 설명
-- **Mock 데이터 예시**: `mock/mock.md` - JSON 형태의 예시 데이터
-- **실제 Mock 데이터**: `src/data/mockData.ts` - 앱에서 사용하는 실제 데이터
-
-### 타입 정의
-- **Customer 타입**: `src/types/customer.ts` - TypeScript 인터페이스
-
----
-
-## 📊 핵심 데이터 관계도
-
-```
-Customer (고객)
-├── 기본정보: companyName, category, manager, contractAmount
-├── 신뢰지표: trustIndex, trustLevel, changeAmount, changeDirection
-│   └── trustHistory (주간별 신뢰지수 히스토리)
-│       └── 신뢰지수 변화 원인:
-│           ├── contentEngagements (TOFU/MOFU/BOFU 콘텐츠 조회)
-│           └── attendance (MBM 이벤트 참석 여부)
-│
-├── 영업활동: salesActions[]
-│   ├── type: "call" | "meeting"
-│   ├── possibility: "90%" | "40%" | "0%"
-│   ├── customerResponse: "상" | "중" | "하"
-│   ├── targetRevenue: number
-│   ├── targetDate: string | null (목표 일자)
-│   └── 진행상태: test, quote, approval, contract (boolean)
-│
-├── 고객활동:
-│   ├── contentEngagements[] (콘텐츠 조회 → 신뢰지수 영향)
-│   │   └── category: "TOFU"(+1) | "MOFU"(+2) | "BOFU"(+3)
-│   └── attendance (MBM 참석 여부 → 신뢰지수 영향)
-│       └── { "1107": true, "1218": false } (날짜키: 참석여부)
-│       └── MBM_EVENTS: { key: { date, label, topic, description } }
-│
-└── 파이프라인 단계:
-    ├── trustFormation (신뢰형성)
-    ├── valueRecognition (가치인식)
-    └── adoptionDecision (도입결정)
-        └── expectedRevenue = targetRevenue × possibility
-```
-
----
-
-## 📈 신뢰지수 vs 가능성 - 핵심 구분
-
-| 지표 | 영향을 주는 활동 | 설명 |
-|------|-----------------|------|
-| **신뢰지수 (trustIndex)** | 콘텐츠 조회, MBM 참석 | 고객의 브랜드 신뢰도 |
-| **가능성 (possibility)** | 영업 액션 (call, meeting) | 계약 체결 가능성 |
-| **고객반응 (customerResponse)** | 영업 액션 | 고객의 반응 수준 |
-
----
-
-## 🗓️ MBM 이벤트 데이터
-
-MBM 참석 여부는 `attendance` 필드로 관리됩니다.
-
-```typescript
-// MBM 이벤트 정의 (컴포넌트 내 상수)
-type MBMEvent = { date: string; label: string; topic: string; description: string };
-const MBM_EVENTS: Record<string, MBMEvent> = {
-  "1107": {
-    date: "2024-11-07",
-    label: "11/7 MBM",
-    topic: "HR Tech 트렌드와 채용 자동화",
-    description: "최신 HR Tech 동향과 영상면접 큐레이터/역검 활용 사례",
-  },
-  "1218": {
-    date: "2024-12-18",
-    label: "12/18 MBM",
-    topic: "영상면접 고도화 & 리텐션 전략",
-    description: "영상면접 큐레이터 고도화 기능 소개 및 리텐션/재계약 사례",
-  },
-};
-
-// 고객별 참석 여부 (mockData)
-attendance: { "1107": true, "1218": false }
-```
-
----
-
-## 🕐 기간 필터 로직
-
-```typescript
-type TimePeriod = '1w' | '1m' | '6m' | '1y';
-
-// 현재 날짜 기준: 2024-12-10
-const PERIOD_DAYS = {
-  '1w': 7,   // 12/03 ~ 12/10
-  '1m': 30,  // 11/10 ~ 12/10
-  '6m': 180, // 06/13 ~ 12/10
-  '1y': 365  // 2023/12/11 ~ 12/10
-};
-```
-
-기간 필터 적용 시:
-- trustHistory에서 해당 기간의 시작점과 현재를 비교하여 changeAmount 계산
-- salesActions에서 해당 기간 내 액션들만 표시
-- 과거값 → 현재값 형태로 UI 표시
+### 파일 구조
+- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`만 하는 `index.ts` 파일을 만들지 마세요
+  - ❌ 나쁜 예:
+    ```typescript
+    // index.ts
+    export * from './queryHook';
+    export * from './queryKey';
+    ```
+  - ✅ 좋은 예: 직접 import 사용
+    ```typescript
+    import { useGetCustomerSummary } from '@/repository/query/customerDetailApiController/queryHook';
+    ```
 
 ---
 

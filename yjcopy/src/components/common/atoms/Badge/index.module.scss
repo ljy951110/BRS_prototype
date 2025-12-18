@@ -1,0 +1,69 @@
+@use '@/styles/variables' as *;
+@use '@/styles/common' as *;
+
+.badge {
+  @include Flex(row, center, center, $spacing-xs);
+  display: inline-flex;
+  border-radius: $radius-full;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  &.sm {
+    padding: 2px $spacing-sm;
+    font-size: $font-size-xs;
+  }
+
+  &.md {
+    padding: $spacing-xs $spacing-md;
+    font-size: $font-size-sm;
+  }
+
+  // Variants
+  &.default {
+    background: $color-bg-hover;
+    color: $color-text-secondary;
+  }
+
+  &.success {
+    background: $color-accent-green-subtle;
+    color: $color-accent-green;
+  }
+
+  &.warning {
+    background: $color-accent-yellow-subtle;
+    color: $color-accent-yellow;
+  }
+
+  &.error {
+    background: $color-accent-red-subtle;
+    color: $color-accent-red;
+  }
+
+  &.info {
+    background: $color-accent-blue-subtle;
+    color: $color-accent-blue;
+  }
+
+  &.purple {
+    background: $color-accent-purple-subtle;
+    color: $color-accent-purple;
+  }
+
+  &.cyan {
+    background: $color-accent-cyan-subtle;
+    color: $color-accent-cyan;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: $radius-full;
+    background: currentColor;
+  }
+}
+
+
+
+
+
+
