@@ -1,21 +1,43 @@
-/**
- * 공통 타입 정의
- * 여러 컴포넌트에서 공통으로 사용되는 타입들
- */
+// openapi로 가져올때 에러나는 타입들 (ex: 다 한글일 경우)
+
 
 /**
- * 시간 기간 타입
- * UI에서 사용하는 기간 필터링용
+ * 제품 타입
+ * @export
+ * @enum {string}
  */
-export type TimePeriodType = "1w" | "1m" | "6m" | "1y";
+
+export const ProductType = {
+  ATS: 'ATS',
+  SR: '역검SR',
+  INHR: 'INHR+통합',
+  ACC: '역검',
+  OUTSOURCING: '이탈사'
+} as const;
+
+export type ProductType = typeof ProductType[keyof typeof ProductType];
+
+
+
 
 /**
- * 기간별 일수 매핑
+ * 기업 규모 (BigQuery companies.company_size 값과 일치)
+ * @export
+ * @enum {string}
  */
-export const PERIOD_DAYS: Record<TimePeriodType, number> = {
-  "1w": 7,
-  "1m": 30,
-  "6m": 180,
-  "1y": 365,
-};
+
+export const CompanySize = {
+  T0: 'T0',
+  T1: 'T1',
+  T2: 'T2',
+  T3: 'T3',
+  T4: 'T4',
+  T5: 'T5',
+  T10: 'T10',
+  UNKOWN: '미확인'
+} as const;
+
+export type CompanySize = typeof CompanySize[keyof typeof CompanySize];
+
+
 
