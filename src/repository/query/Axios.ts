@@ -51,7 +51,7 @@ export const getBaseUrl = (): string => {
 
   // 기본: 실제 API 서버 URL
   console.log('[Axios] Using default API URL');
-  return 'http://10.11.30.192:8001';
+  return 'https://dashboardapi-mu.vercel.app';
 };
 
 const baseURL = getBaseUrl();
