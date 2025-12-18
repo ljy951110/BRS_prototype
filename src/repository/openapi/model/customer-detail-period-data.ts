@@ -46,6 +46,12 @@ export interface CustomerDetailPeriodData {
     'expectedRevenue'?: number | null;
     /**
      * 
+     * @type {number}
+     * @memberof CustomerDetailPeriodData
+     */
+    'currentQuarterRevenue'?: number | null;
+    /**
+     * 
      * @type {string}
      * @memberof CustomerDetailPeriodData
      */

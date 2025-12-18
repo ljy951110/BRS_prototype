@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **possibility** | **number** |  | [optional] [default to undefined]
 **targetRevenue** | **number** |  | [optional] [default to undefined]
 **expectedRevenue** | **number** |  | [optional] [default to undefined]
+**currentQuarterRevenue** | **number** |  | [optional] [default to undefined]
 **targetDate** | **string** |  | [optional] [default to undefined]
 **test** | **boolean** |  | [optional] [default to false]
 **quote** | **boolean** |  | [optional] [default to false]
@@ -26,6 +27,7 @@ const instance: CustomerDetailPeriodData = {
     possibility,
     targetRevenue,
     expectedRevenue,
+    currentQuarterRevenue,
     targetDate,
     test,
     quote,

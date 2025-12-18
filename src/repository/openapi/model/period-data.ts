@@ -49,6 +49,12 @@ export interface PeriodData {
      * @type {number}
      * @memberof PeriodData
      */
+    'currentQuarterRevenue'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof PeriodData
+     */
     'targetMonth'?: number | null;
     /**
      * 

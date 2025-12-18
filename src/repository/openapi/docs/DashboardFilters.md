@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **managers** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **categories** | [**Array&lt;Category&gt;**](Category.md) |  | [optional] [default to undefined]
 **productUsages** | [**Array&lt;ProductType&gt;**](ProductType.md) |  | [optional] [default to undefined]
-**possibilities** | [**Array&lt;Possibility&gt;**](Possibility.md) |  | [optional] [default to undefined]
+**possibilityRange** | [**PossibilityRange**](PossibilityRange.md) |  | [optional] [default to undefined]
 **stages** | [**Array&lt;ProgressStage&gt;**](ProgressStage.md) |  | [optional] [default to undefined]
 **contractAmountRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
 **targetRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
@@ -28,7 +28,7 @@ const instance: DashboardFilters = {
     managers,
     categories,
     productUsages,
-    possibilities,
+    possibilityRange,
     stages,
     contractAmountRange,
     targetRevenueRange,

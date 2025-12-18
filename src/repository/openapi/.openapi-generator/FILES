@@ -38,7 +38,7 @@ docs/ModelsHeatmapMarketingEvent.md
 docs/ModelsTrustChangeDetailMarketingEvent.md
 docs/PaginationConfig.md
 docs/PeriodData.md
-docs/Possibility.md
+docs/PossibilityRange.md
 docs/PossibilityType.md
 docs/ProductType.md
 docs/ProgressStage.md
@@ -86,8 +86,8 @@ model/models-heatmap-marketing-event.ts
 model/models-trust-change-detail-marketing-event.ts
 model/pagination-config.ts
 model/period-data.ts
+model/possibility-range.ts
 model/possibility-type.ts
-model/possibility.ts
 model/product-type.ts
 model/progress-stage.ts
 model/sales-action-type.ts

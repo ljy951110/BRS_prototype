@@ -73,7 +73,7 @@ interface TabFilters {
   selectedManager: string;
   selectedCategory: string;
   selectedCompanySize: string;
-  selectedPossibility: string;
+  possibilityRange?: { min?: number; max?: number };
   selectedProgress: ProgressStatus;
 }
 
@@ -84,7 +84,7 @@ const DEFAULT_FILTERS: TabFilters = {
   selectedManager: "all",
   selectedCategory: "all",
   selectedCompanySize: "all",
-  selectedPossibility: "all",
+  possibilityRange: undefined,
   selectedProgress: "all",
 };
 
@@ -168,7 +168,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     categories?: string[];
     productUsages?: string[];
     managers?: string[];
-    possibilities?: string[];
+    possibilityRange?: { min?: number; max?: number };
     progressStages?: string[];
     contractAmountRange?: { minMan?: number; maxMan?: number };
     expectedRevenueRange?: { minMan?: number; maxMan?: number };
@@ -216,11 +216,8 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       if (tableFilters.managers && tableFilters.managers.length > 0) {
         filters.managers = tableFilters.managers;
       }
-      if (tableFilters.possibilities && tableFilters.possibilities.length > 0) {
-        // "0%", "40%" 형식을 0, 40 integer로 변환 (any로 타입 우회)
-        filters.possibilities = tableFilters.possibilities
-          .map(p => parseInt(p.replace('%', '')))
-          .filter(p => !isNaN(p)) as any;
+      if (tableFilters.possibilityRange && (tableFilters.possibilityRange.min !== undefined || tableFilters.possibilityRange.max !== undefined)) {
+        filters.possibilityRange = tableFilters.possibilityRange;
       }
       if (tableFilters.progressStages && tableFilters.progressStages.length > 0) {
         // progressStages를 stages로 변환
@@ -252,12 +249,8 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       if (currentFilters.selectedCompanySize !== "all" && currentFilters.selectedCompanySize !== null) {
         filters.companySizes = [currentFilters.selectedCompanySize as CompanySize];
       }
-      if (currentFilters.selectedPossibility !== "all") {
-        // "0%", "40%" 형식을 integer로 변환
-        const possibilityInt = parseInt(currentFilters.selectedPossibility.replace('%', ''));
-        if (!isNaN(possibilityInt)) {
-          filters.possibilities = [possibilityInt] as any;
-        }
+      if (currentFilters.possibilityRange && (currentFilters.possibilityRange.min !== undefined || currentFilters.possibilityRange.max !== undefined)) {
+        filters.possibilityRange = currentFilters.possibilityRange;
       }
       const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
       if (stage) {

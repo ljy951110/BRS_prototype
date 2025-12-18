@@ -8,7 +8,6 @@ import type {
   Category,
   DashboardTableRequest,
   DashboardTableResponse,
-  Possibility,
   ProgressStage,
 } from '@/repository/openapi/model';
 import { axios } from '@/repository/query/Axios';
@@ -38,7 +37,6 @@ export interface DashboardFilterOptionsResponse {
   managers: Manager[];
   categories: Category[];
   companySizes: CompanySizeType[];
-  possibilities: Possibility[];
   mbmPipelineStatuses: ProgressStage[];
 }
 
@@ -67,7 +65,7 @@ export const useGetDashboardCompanies = (
 /**
  * 대시보드 필터 옵션 조회
  * @param options - React Query 옵션
- * @returns 필터 옵션 응답 (managers, categories, companySizes, possibilities, mbmPipelineStatuses)
+ * @returns 필터 옵션 응답 (managers, categories, companySizes, mbmPipelineStatuses)
  */
 export const useGetFilterOptions = (
   options?: CUSTOM_QUERY_OPTIONS<DashboardFilterOptionsResponse>

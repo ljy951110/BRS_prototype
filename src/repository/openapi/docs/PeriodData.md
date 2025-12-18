@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **possibility** | **number** |  | [optional] [default to undefined]
 **targetRevenue** | **number** |  | [optional] [default to undefined]
 **expectedRevenue** | **number** |  | [optional] [default to undefined]
+**currentQuarterRevenue** | **number** |  | [optional] [default to undefined]
 **targetMonth** | **number** |  | [optional] [default to undefined]
 **test** | **boolean** |  | [optional] [default to false]
 **quote** | **boolean** |  | [optional] [default to false]
@@ -26,6 +27,7 @@ const instance: PeriodData = {
     possibility,
     targetRevenue,
     expectedRevenue,
+    currentQuarterRevenue,
     targetMonth,
     test,
     quote,

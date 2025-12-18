@@ -20,7 +20,7 @@ export * from './models-heatmap-marketing-event';
 export * from './models-trust-change-detail-marketing-event';
 export * from './pagination-config';
 export * from './period-data';
-export * from './possibility';
+export * from './possibility-range';
 export * from './possibility-type';
 export * from './product-type';
 export * from './progress-stage';

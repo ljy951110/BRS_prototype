@@ -27,7 +27,7 @@ import type { CompanySize } from './company-size';
 import type { DateRangeFilter } from './date-range-filter';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { Possibility } from './possibility';
+import type { PossibilityRange } from './possibility-range';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { ProductType } from './product-type';
@@ -67,10 +67,10 @@ export interface DashboardFilters {
     'productUsages'?: Array<ProductType> | null;
     /**
      * 
-     * @type {Array<Possibility>}
+     * @type {PossibilityRange}
      * @memberof DashboardFilters
      */
-    'possibilities'?: Array<Possibility> | null;
+    'possibilityRange'?: PossibilityRange | null;
     /**
      * 
      * @type {Array<ProgressStage>}

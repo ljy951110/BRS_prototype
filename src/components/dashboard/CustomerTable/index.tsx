@@ -69,7 +69,7 @@ interface TableFilters {
   categories?: string[];
   productUsages?: string[];
   managers?: string[];
-  possibilities?: string[];
+  possibilityRange?: { min?: number; max?: number };
   progressStages?: string[];
   contractAmountRange?: { minMan?: number; maxMan?: number };
   expectedRevenueRange?: { minMan?: number; maxMan?: number };
@@ -343,7 +343,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedProductUsages, setSelectedProductUsages] = useState<string[]>([]);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
-  const [selectedPossibilities, setSelectedPossibilities] = useState<string[]>([]);
+  const [possibilityMin, setPossibilityMin] = useState<number | null>(null);
+  const [possibilityMax, setPossibilityMax] = useState<number | null>(null);
+  const [possibilityMinDraft, setPossibilityMinDraft] = useState<number | null>(null);
+  const [possibilityMaxDraft, setPossibilityMaxDraft] = useState<number | null>(null);
   const [selectedProgressStages, _setSelectedProgressStages] = useState<string[]>([]);
 
   // 정렬 state
@@ -363,7 +366,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     categories?: string[];
     productUsages?: string[];
     managers?: string[];
-    possibilities?: string[];
+    possibilityMin?: number | null;
+    possibilityMax?: number | null;
     progressStages?: string[];
     targetMonths?: number[];
     contractAmountMin?: number | null;
@@ -403,9 +407,16 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       currentFilters.managers = finalManagers;
     }
 
-    const finalPossibilities = overrides?.possibilities !== undefined ? overrides.possibilities : selectedPossibilities;
-    if (finalPossibilities.length > 0) {
-      currentFilters.possibilities = finalPossibilities;
+    const finalPossibilityMin = overrides?.possibilityMin !== undefined ? overrides.possibilityMin : possibilityMin;
+    const finalPossibilityMax = overrides?.possibilityMax !== undefined ? overrides.possibilityMax : possibilityMax;
+    if (finalPossibilityMin !== null || finalPossibilityMax !== null) {
+      currentFilters.possibilityRange = {};
+      if (finalPossibilityMin !== null) {
+        currentFilters.possibilityRange.min = finalPossibilityMin;
+      }
+      if (finalPossibilityMax !== null) {
+        currentFilters.possibilityRange.max = finalPossibilityMax;
+      }
     }
 
     const finalProgressStages = overrides?.progressStages !== undefined ? overrides.progressStages : selectedProgressStages;
@@ -633,18 +644,6 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         }
       });
   }, [data, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch, lastContactStart, lastContactEnd, sortField, sortOrder]);
-
-  const possibilityOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          tableData
-            .map((row) => row.adoptionDecision?.possibility)
-            .filter((p): p is PossibilityType => !!p)
-        )
-      ).map((value) => ({ label: value, value })),
-    [tableData]
-  );
 
   const monthOptions = useMemo(
     () =>
@@ -2004,6 +2003,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             return;
           }
 
+          setPossibilityMin(possibilityMinDraft);
+          setPossibilityMax(possibilityMaxDraft);
           let finalSortField = sortField;
           let finalSortOrder = sortOrder;
           if (sortFieldDraft["possibility"] !== undefined) {
@@ -2013,6 +2014,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             setSortOrder(finalSortOrder);
           }
           applyFilters({
+            possibilityMin: possibilityMinDraft,
+            possibilityMax: possibilityMaxDraft,
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
@@ -2023,19 +2026,26 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         const currentSortOrder = sortOrderDraft["possibility"] ?? (sortField === "possibility" ? sortOrder : "asc");
 
         return (
-          <div style={{ padding: 8, minWidth: 200 }}>
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch
-              placeholder="가능성 선택"
-              style={{ width: "100%" }}
-              options={possibilityOptions}
-              value={selectedPossibilities}
-              onChange={(values) => {
-                setSelectedPossibilities(values);
+          <Space direction="vertical" style={{ padding: 8 }}>
+            <InputNumber
+              style={{ width: 180 }}
+              placeholder="최소 (0-100)"
+              value={possibilityMinDraft ?? undefined}
+              onChange={(value) => {
+                setPossibilityMinDraft(value === null ? null : Number(value));
               }}
-              optionFilterProp="label"
+              min={0}
+              max={100}
+            />
+            <InputNumber
+              style={{ width: 180 }}
+              placeholder="최대 (0-100)"
+              value={possibilityMaxDraft ?? undefined}
+              onChange={(value) => {
+                setPossibilityMaxDraft(value === null ? null : Number(value));
+              }}
+              min={0}
+              max={100}
             />
             <Divider style={{ margin: "8px 0" }} />
             <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
@@ -2062,12 +2072,14 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
               </Button>
             </Space>
             <Divider style={{ margin: "8px 0" }} />
-            <Space style={{ marginTop: 8 }}>
+            <Space>
               <Button
                 type="primary"
                 size="small"
                 onClick={() => {
                   skipAutoApplyRef.current = true;
+                  setPossibilityMin(possibilityMinDraft);
+                  setPossibilityMax(possibilityMaxDraft);
                   let finalSortField = sortField;
                   let finalSortOrder = sortOrder;
                   if (sortFieldDraft["possibility"] !== undefined) {
@@ -2077,6 +2089,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     setSortOrder(finalSortOrder);
                   }
                   applyFilters({
+                    possibilityMin: possibilityMinDraft,
+                    possibilityMax: possibilityMaxDraft,
                     sortField: finalSortField,
                     sortOrder: finalSortOrder,
                   });
@@ -2090,7 +2104,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                 onClick={() => {
                   skipAutoApplyRef.current = true;
                   clearFilters?.();
-                  setSelectedPossibilities([]);
+                  setPossibilityMinDraft(null);
+                  setPossibilityMaxDraft(null);
+                  setPossibilityMin(null);
+                  setPossibilityMax(null);
                   const newFieldDraft = { ...sortFieldDraft };
                   const newOrderDraft = { ...sortOrderDraft };
                   delete newFieldDraft.possibility;
@@ -2103,7 +2120,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     setSortField(null);
                   }
                   applyFilters({
-                    possibilities: [], // 빈 배열로 즉시 초기화
+                    possibilityMin: null,
+                    possibilityMax: null,
                     sortField: finalSortField,
                     sortOrder: sortOrder,
                   });
@@ -2113,11 +2131,11 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                 초기화
               </Button>
             </Space>
-          </div>
+          </Space>
         );
       },
       filterIcon: () => (
-        <FilterFilled style={{ color: selectedPossibilities.length > 0 || sortField === "possibility" ? token.colorPrimary : undefined }} />
+        <FilterFilled style={{ color: possibilityMin !== null || possibilityMax !== null || sortField === "possibility" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.adoptionDecision?.possibility === value,
       render: (_, record) => {

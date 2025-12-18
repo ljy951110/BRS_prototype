@@ -15,20 +15,22 @@
 
 
 /**
- * 계약 가능성 (confirmation_of_sales_secured 매핑)
+ * 가능성 범위 (0-100 정수)
  * @export
- * @enum {string}
+ * @interface PossibilityRange
  */
-
-export const Possibility = {
-    _100: '100%',
-    _90: '90%',
-    _40: '40%',
-    _10: '10%',
-    _0: '0%'
-} as const;
-
-export type Possibility = typeof Possibility[keyof typeof Possibility];
-
-
+export interface PossibilityRange {
+    /**
+     * 
+     * @type {number}
+     * @memberof PossibilityRange
+     */
+    'min'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof PossibilityRange
+     */
+    'max'?: number | null;
+}
 

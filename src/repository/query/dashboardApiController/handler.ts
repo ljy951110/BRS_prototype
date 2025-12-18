@@ -793,13 +793,11 @@ export const getFilterOptionsHandler = http.get(
       }));
     const uniqueCategories = Array.from(new Set(enrichedData.map(d => d.category).filter(Boolean)));
     const uniqueCompanySizes = Array.from(new Set(enrichedData.map(d => d.companySize).filter(Boolean)));
-    const uniquePossibilities = Array.from(new Set(enrichedData.map(d => d.current.possibility).filter(Boolean)));
 
     const response = {
       managers: uniqueManagers,
       categories: uniqueCategories,
       companySizes: uniqueCompanySizes,
-      possibilities: uniquePossibilities,
       mbmPipelineStatuses: ['test', 'quote', 'approval', 'contract'],
     };
 
@@ -876,10 +874,16 @@ export const getDashboardCompaniesHandler = http.post(
       );
     }
 
-    // 가능성 필터
-    if (filters?.possibilities?.length) {
-      const possibilities = new Set(filters.possibilities as any);
-      rows = rows.filter((row) => row.current.possibility !== null && row.current.possibility !== undefined && possibilities.has(row.current.possibility as any));
+    // 가능성 범위 필터
+    if (filters?.possibilityRange) {
+      const { min, max } = filters.possibilityRange;
+      rows = rows.filter((row) => {
+        const possibility = row.current.possibility;
+        if (possibility === null || possibility === undefined) return false;
+        if (min !== null && min !== undefined && possibility < min) return false;
+        if (max !== null && max !== undefined && possibility > max) return false;
+        return true;
+      });
     }
 
     // 진행 단계 필터
