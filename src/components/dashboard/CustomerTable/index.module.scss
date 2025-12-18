@@ -486,6 +486,451 @@
   @include Flex(column, flex-start, flex-start, $spacing-xs);
 }
 
+.infoTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th, td {
+    padding: $spacing-sm $spacing-md;
+    text-align: left;
+    border: 1px solid $color-border;
+  }
+
+  th {
+    background-color: $color-bg-secondary;
+    color: $color-text-tertiary;
+    font-weight: $font-weight-medium;
+    font-size: 12px;
+    width: 120px;
+    white-space: nowrap;
+  }
+
+  td {
+    background-color: $color-bg-primary;
+    color: $color-text-primary;
+
+    &.mono {
+      font-family: 'Roboto Mono', monospace;
+    }
+  }
+
+  tr:hover {
+    td {
+      background-color: $color-bg-tertiary;
+    }
+  }
+}
+
+.funnelTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead {
+    th {
+      padding: $spacing-sm $spacing-md;
+      text-align: left;
+      border: 1px solid $color-border;
+      background-color: $color-bg-secondary;
+      color: $color-text-tertiary;
+      font-weight: $font-weight-semibold;
+      font-size: 13px;
+    }
+  }
+
+  tbody {
+    td {
+      padding: $spacing-sm $spacing-md;
+      text-align: left;
+      border: 1px solid $color-border;
+      background-color: $color-bg-primary;
+      color: $color-text-primary;
+      font-size: 14px;
+    }
+
+    tr:hover {
+      td {
+        background-color: $color-bg-tertiary;
+      }
+    }
+
+    tr.totalRow {
+      td {
+        background-color: $color-bg-secondary;
+        font-weight: $font-weight-semibold;
+        border-top: 2px solid $color-border;
+      }
+
+      &:hover td {
+        background-color: $color-bg-secondary;
+      }
+    }
+  }
+}
+
+.salesTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.marketingTab {
+  @include Flex(column, flex-start, stretch, $spacing-lg);
+}
+
+.chartPlaceholder {
+  padding: $spacing-xl;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  text-align: center;
+  border: 1px dashed $color-border;
+}
+
+.weeklyChart {
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+}
+
+.actionTimeline {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+}
+
+.actionCard {
+  @include Flex(column, flex-start, stretch, $spacing-sm);
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  transition: all $transition-fast;
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+  }
+}
+
+.actionHeader {
+  @include Flex(row, space-between, center, $spacing-sm);
+}
+
+.actionTags {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  margin-top: $spacing-xs;
+}
+
+.actionDescription {
+  margin-top: $spacing-xs;
+}
+
+.contentList {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: $spacing-xs;
+  
+  // 스크롤바 스타일
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: $radius-full;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color-border;
+    border-radius: $radius-full;
+    
+    &:hover {
+      background: $color-text-tertiary;
+    }
+  }
+}
+
+.contentItem {
+  display: grid !important;
+  grid-template-columns: 40px 1fr 40px !important;
+  grid-template-rows: auto !important;
+  gap: $spacing-md;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  transition: all $transition-fast;
+  min-height: 80px;
+  width: 100%;
+  
+  > * {
+    grid-row: 1;
+  }
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    .contentLink {
+      background: $color-accent-blue;
+      color: white;
+    }
+  }
+}
+
+.contentIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-blue, 0.15);
+  color: $color-accent-blue;
+}
+
+.contentInfo {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+  gap: $spacing-xs;
+}
+
+.contentTitle {
+  font-size: 15px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.4;
+}
+
+.contentMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.metaItem {
+  @include Flex(row, flex-start, center, 4px);
+  
+  svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: $color-text-tertiary;
+  }
+  
+  span {
+    white-space: nowrap;
+    font-size: 12px;
+    color: $color-text-secondary;
+  }
+}
+
+.contentDate {
+  font-size: 12px;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.contentLink {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+  text-decoration: none;
+  transition: all $transition-fast;
+  cursor: pointer;
+  
+  &:hover {
+    background: $color-accent-blue;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  
+  svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.mbmList {
+  @include Flex(column, flex-start, stretch, $spacing-md);
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: $spacing-xs;
+  
+  // 스크롤바 스타일
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: $radius-full;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color-border;
+    border-radius: $radius-full;
+    
+    &:hover {
+      background: $color-text-tertiary;
+    }
+  }
+}
+
+.mbmItem {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  gap: $spacing-md;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  transition: all $transition-fast;
+  min-height: 80px;
+  
+  &:hover {
+    border-color: $color-accent-blue;
+    background: $color-bg-hover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    .mbmLink {
+      background: $color-accent-blue;
+      color: white;
+    }
+  }
+}
+
+.mbmIcon {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-yellow, 0.15);
+  color: $color-accent-yellow;
+}
+
+.mbmContent {
+  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  flex: 1;
+  min-width: 0;
+  gap: $spacing-xs;
+}
+
+.mbmTitle {
+  font-size: 15px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.4;
+}
+
+.mbmMeta {
+  @include Flex(row, flex-start, center, $spacing-xs);
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.mbmDate {
+  font-size: 12px;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.mbmLink {
+  @include FlexCenter;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-sm;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+  text-decoration: none;
+  transition: all $transition-fast;
+  cursor: pointer;
+  
+  &:hover {
+    background: $color-accent-blue;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  
+  svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.changeTag {
+  @include Flex(row, center, center, 4px);
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  
+  svg {
+    flex-shrink: 0;
+  }
+  
+  &.neutral {
+    background-color: $color-bg-tertiary;
+    color: $color-text-secondary;
+    border: 1px solid $color-border;
+  }
+  
+  &.positive {
+    background-color: rgba($color-accent-green, 0.15);
+    color: $color-accent-green;
+    border: 1px solid rgba($color-accent-green, 0.3);
+  }
+  
+  &.negative {
+    background-color: rgba($color-accent-red, 0.15);
+    color: $color-accent-red;
+    border: 1px solid rgba($color-accent-red, 0.3);
+  }
+}
+
+.hubspotButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  background: $color-accent-blue;
+  color: white;
+  border-radius: $radius-md;
+  text-decoration: none;
+  transition: all $transition-fast;
+  
+  &:hover {
+    background: darken($color-accent-blue, 10%);
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
 // Trust Info
 .trustInfo {
   @include Flex(column, flex-start, stretch, $spacing-md);
@@ -951,7 +1396,7 @@
 }
 
 .metaItem {
-  @include Flex(column, flex-start, flex-start, $spacing-xs);
+  @include Flex(row, flex-start, flex-start, $spacing-xs);
 }
 
 .possibilityChange {
@@ -1253,168 +1698,4 @@
 
 .changeIndicator {
   @include Flex(row, flex-start, center, $spacing-xs);
-}
-
-.hubspotButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  background: $color-accent-blue;
-  color: white;
-  border-radius: $radius-md;
-  text-decoration: none;
-  transition: all $transition-fast;
-  
-  &:hover {
-    background: darken($color-accent-blue, 10%);
-    transform: translateY(-2px);
-    box-shadow: $shadow-md;
-  }
-}
-
-.salesTab {
-  @include Flex(column, flex-start, stretch, $spacing-lg);
-}
-
-.marketingTab {
-  @include Flex(column, flex-start, stretch, $spacing-lg);
-}
-
-.chartPlaceholder {
-  padding: $spacing-xl;
-  background: $color-bg-tertiary;
-  border-radius: $radius-md;
-  text-align: center;
-  border: 1px dashed $color-border;
-}
-
-.weeklyChart {
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $radius-md;
-  border: 1px solid $color-border;
-}
-
-.actionTimeline {
-  @include Flex(column, flex-start, stretch, $spacing-md);
-}
-
-.actionCard {
-  @include Flex(column, flex-start, stretch, $spacing-sm);
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $radius-md;
-  border: 1px solid $color-border;
-  transition: all $transition-fast;
-  
-  &:hover {
-    border-color: $color-accent-blue;
-    background: $color-bg-hover;
-  }
-}
-
-.actionHeader {
-  @include Flex(row, space-between, center, $spacing-sm);
-}
-
-.actionTags {
-  @include Flex(row, flex-start, center, $spacing-xs);
-  flex-wrap: wrap;
-  margin-top: $spacing-xs;
-}
-
-.actionDescription {
-  margin-top: $spacing-xs;
-}
-
-.contentList {
-  @include Flex(column, flex-start, stretch, $spacing-sm);
-}
-
-.contentItem {
-  @include Flex(column, flex-start, stretch, $spacing-xs);
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $radius-md;
-  border: 1px solid $color-border;
-  text-decoration: none;
-  transition: all $transition-fast;
-  
-  &:hover {
-    border-color: $color-accent-blue;
-    background: $color-bg-hover;
-  }
-}
-
-.contentHeader {
-  @include Flex(row, space-between, center, $spacing-sm);
-}
-
-.mbmList {
-  @include Flex(column, flex-start, stretch, $spacing-sm);
-}
-
-.mbmItem {
-  @include Flex(row, flex-start, center, $spacing-md);
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $radius-md;
-  border: 1px solid $color-border;
-  text-decoration: none;
-  transition: all $transition-fast;
-  
-  &:hover {
-    border-color: $color-accent-blue;
-    background: $color-bg-hover;
-  }
-}
-
-.mbmIcon {
-  @include FlexCenter;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: $radius-full;
-  background: rgba($color-accent-yellow, 0.15);
-  color: $color-accent-yellow;
-}
-
-.mbmContent {
-  @include Flex(column, flex-start, flex-start, $spacing-xs);
-}
-
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-md;
-}
-
-.summaryItem {
-  @include Flex(column, flex-start, flex-start, $spacing-xs);
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $radius-md;
-  border: 1px solid $color-border;
-}
-
-.changeTag {
-  @include Flex(row, flex-start, center, $spacing-xs);
-  
-  span {
-    font-size: 14px;
-  }
-  
-  &.positive {
-    color: $color-accent-green;
-  }
-  
-  &.negative {
-    color: $color-accent-red;
-  }
-  
-  &.neutral {
-    color: $color-text-secondary;
-  }
 }

@@ -10,6 +10,7 @@ import {
   Star,
   BookOpen,
   ArrowRight,
+  ArrowUpRight,
   CheckCircle2,
   XCircle,
   Eye,
@@ -57,7 +58,7 @@ interface CustomerTableProps {
   timePeriod: TimePeriod;
 }
 
-type ModalTab = "summary" | "sales" | "marketing";
+type ModalTab = "info" | "timeline" | "sales" | "marketing";
 
 type ColumnFilters = {
   company: string;
@@ -289,8 +290,8 @@ const formatDateShort = (dateStr: string | null): string => {
 // 도입결정 단계 계산
 const getAdoptionStage = (adoption: Customer["adoptionDecision"]): string => {
   if (adoption.contract) return "계약";
-  if (adoption.approval) return "품의";
-  if (adoption.quote) return "견적서";
+  if (adoption.approval) return "승인";
+  if (adoption.quote) return "견적";
   if (adoption.test) return "테스트";
   return "-";
 };
@@ -299,8 +300,8 @@ const getAdoptionStage = (adoption: Customer["adoptionDecision"]): string => {
 const getAdoptionStageVariant = (stage: string): "default" | "info" | "warning" | "success" | "purple" => {
   switch (stage) {
     case "계약": return "success";
-    case "품의": return "purple";
-    case "견적서": return "info";
+    case "승인": return "purple";
+    case "견적": return "info";
     case "테스트": return "warning";
     default: return "default";
   }
@@ -310,8 +311,8 @@ const getAdoptionStageVariant = (stage: string): "default" | "info" | "warning" 
 const getAdoptionStageLevel = (stage: string): number => {
   switch (stage) {
     case "계약": return 4;
-    case "품의": return 3;
-    case "견적서": return 2;
+    case "승인": return 3;
+    case "견적": return 2;
     case "테스트": return 1;
     default: return 0;
   }
@@ -365,9 +366,30 @@ const WEEKS = [
 ] as const;
 
 // MBM 이벤트 목록
-const MBM_EVENTS: Record<string, { date: string; label: string }> = {
-  "1107": { date: "2024-11-07", label: "11/7 MBM" },
-  "1218": { date: "2024-12-18", label: "12/18 MBM" },
+const MBM_EVENTS: Record<string, { 
+  date: string; 
+  label: string;
+  product?: string;
+  landingUrl?: string;
+  target?: string;
+  type?: string;
+}> = {
+  "1107": { 
+    date: "2024-11-07", 
+    label: "11/7 MBM",
+    product: "H.채용",
+    landingUrl: "https://hrflow.net/mbm/1107",
+    target: "신규",
+    type: "H.Insight Day"
+  },
+  "1218": { 
+    date: "2024-12-18", 
+    label: "12/18 MBM",
+    product: "H.성과",
+    landingUrl: "https://hrflow.net/mbm/1218",
+    target: "고가",
+    type: "H.Solution Day"
+  },
 };
 
 // 특정 주에 MBM 이벤트가 있는지 확인
@@ -434,7 +456,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     null
   );
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<ModalTab>("summary");
+  const [activeTab, setActiveTab] = useState<ModalTab>("info");
   const [actionModalData, setActionModalData] =
     useState<ActionModalData | null>(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -731,7 +753,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
   const openCustomerDetail = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setActiveTab("summary");
+    setActiveTab("info");
     setModalOpen(true);
   };
 
@@ -1692,9 +1714,9 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
             <div className={styles.tabNav}>
               <button
                 className={`${styles.tabButton} ${
-                  activeTab === "summary" ? styles.active : ""
+                  activeTab === "info" ? styles.active : ""
                 }`}
-                onClick={() => setActiveTab("summary")}
+                onClick={() => setActiveTab("info")}
               >
                 <Building2 size={16} />
                 <span>요약</span>
@@ -1721,55 +1743,33 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
             {/* Tab Content */}
             <div className={styles.tabContent}>
-              {activeTab === "summary" && (
+              {activeTab === "info" && (
                 <div className={styles.infoTab}>
                   {/* Basic Info */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
                       기본 정보
                     </Text>
-                    <div className={styles.infoGrid}>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          담당자
-                        </Text>
-                        <Text variant="body-sm">
-                          {selectedCustomer.manager}
-                        </Text>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          카테고리
-                        </Text>
-                        <Text variant="body-sm">
-                          {selectedCustomer.category}
-                        </Text>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          기업 규모
-                        </Text>
-                        <Text variant="body-sm">
-                          {selectedCustomer.companySize || "-"}
-                        </Text>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          계약 금액
-                        </Text>
-                        <Text variant="body-sm" mono>
-                          {formatCurrency(selectedCustomer.contractAmount)}
-                        </Text>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          제품 사용
-                        </Text>
-                        <Text variant="body-sm">
-                          {selectedCustomer.productUsage}
-                        </Text>
-                      </div>
-                    </div>
+                    <table className={styles.infoTable}>
+                      <tbody>
+                        <tr>
+                          <th>담당자</th>
+                          <td>{selectedCustomer.manager}</td>
+                          <th>카테고리</th>
+                          <td>{selectedCustomer.category}</td>
+                        </tr>
+                        <tr>
+                          <th>기업 규모</th>
+                          <td>{selectedCustomer.companySize || "-"}</td>
+                          <th>계약 금액</th>
+                          <td className={styles.mono}>{formatCurrency(selectedCustomer.contractAmount)}</td>
+                        </tr>
+                        <tr>
+                          <th>제품 사용</th>
+                          <td colSpan={3}>{selectedCustomer.productUsage}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </section>
 
                   {/* Status Changes */}
@@ -1777,96 +1777,378 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     <Text variant="body-md" weight="semibold">
                       상태 변화
                     </Text>
-                    <div className={styles.infoGrid}>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          신뢰 점수
-                        </Text>
-                        <div className={`${styles.changeTag} ${styles[
-                          selectedCustomer.changeDirection === "up" ? "positive" :
-                          selectedCustomer.changeDirection === "down" ? "negative" : "neutral"
-                        ]}`}>
-                          <span>{(selectedCustomer.trustIndex ?? 0) - (selectedCustomer.changeAmount ?? 0)}</span>
-                          <ArrowRight size={10} />
-                          <span>{selectedCustomer.trustIndex}</span>
-                        </div>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          목표 매출
-                        </Text>
-                        <div className={styles.changeTag}>
-                          <span>{formatCompactCurrency(selectedCustomer._periodData?.pastTargetRevenue ?? 0)}</span>
-                          <ArrowRight size={10} />
-                          <span>{formatCompactCurrency(selectedCustomer.adoptionDecision?.targetRevenue ?? 0)}</span>
-                        </div>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          가능성
-                        </Text>
-                        <div className={styles.changeTag}>
-                          <span>{selectedCustomer._periodData?.pastPossibility}</span>
-                          <ArrowRight size={10} />
-                          <span>{selectedCustomer.adoptionDecision.possibility}</span>
-                        </div>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          예상 매출
-                        </Text>
-                        <div className={styles.changeTag}>
-                          <span>{formatCompactCurrency(selectedCustomer._periodData?.pastExpectedRevenue ?? 0)}</span>
-                          <ArrowRight size={10} />
-                          <span>{formatCompactCurrency(selectedCustomer._periodData?.currentExpectedRevenue ?? 0)}</span>
-                        </div>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          도입결정 단계
-                        </Text>
-                        <div className={styles.changeTag}>
-                          <span>{selectedCustomer._periodData?.pastAdoptionStage || "-"}</span>
-                          <ArrowRight size={10} />
-                          <span>{getAdoptionStage(selectedCustomer.adoptionDecision) || "-"}</span>
-                        </div>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <Text variant="caption" color="tertiary">
-                          목표 일자
-                        </Text>
-                        <div className={styles.changeTag}>
-                          <span>{selectedCustomer._periodData?.pastTargetDate || "-"}</span>
-                          <ArrowRight size={10} />
-                          <span>{selectedCustomer.adoptionDecision.targetDate || "-"}</span>
-                        </div>
-                      </div>
-                    </div>
+                    <table className={styles.infoTable}>
+                      <tbody>
+                        <tr>
+                          <th>신뢰 점수</th>
+                          <td>
+                            <div className={`${styles.changeTag} ${styles[
+                              selectedCustomer.changeDirection === "up" ? "positive" :
+                              selectedCustomer.changeDirection === "down" ? "negative" : "neutral"
+                            ]}`}>
+                              <span>{(selectedCustomer.trustIndex ?? 0) - (selectedCustomer.changeAmount ?? 0)}</span>
+                              <ArrowRight size={10} />
+                              <span>{selectedCustomer.trustIndex}</span>
+                            </div>
+                          </td>
+                          <th>목표 매출</th>
+                          <td>
+                            <div className={styles.changeTag}>
+                              <span>{formatCompactCurrency(selectedCustomer._periodData?.pastTargetRevenue ?? 0)}</span>
+                              <ArrowRight size={10} />
+                              <span>{formatCompactCurrency(selectedCustomer.adoptionDecision?.targetRevenue ?? 0)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>가능성</th>
+                          <td>
+                            <div className={styles.changeTag}>
+                              <span>{selectedCustomer._periodData?.pastPossibility}</span>
+                              <ArrowRight size={10} />
+                              <span>{selectedCustomer.adoptionDecision.possibility}</span>
+                            </div>
+                          </td>
+                          <th>예상 매출</th>
+                          <td>
+                            <div className={styles.changeTag}>
+                              <span>{formatCompactCurrency(selectedCustomer._periodData?.pastExpectedRevenue ?? 0)}</span>
+                              <ArrowRight size={10} />
+                              <span>{formatCompactCurrency(selectedCustomer._periodData?.currentExpectedRevenue ?? 0)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>도입결정 단계</th>
+                          <td>
+                            <div className={styles.changeTag}>
+                              <span>{selectedCustomer._periodData?.pastAdoptionStage || "-"}</span>
+                              <ArrowRight size={10} />
+                              <span>{getAdoptionStage(selectedCustomer.adoptionDecision) || "-"}</span>
+                            </div>
+                          </td>
+                          <th>목표 일자</th>
+                          <td>
+                            <div className={styles.changeTag}>
+                              <span>{selectedCustomer._periodData?.pastTargetDate || "-"}</span>
+                              <ArrowRight size={10} />
+                              <span>{selectedCustomer.adoptionDecision.targetDate || "-"}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </section>
 
                   {/* HubSpot Link */}
                   <section className={styles.modalSection}>
                     <a 
-                      href={`https://app.hubspot.com/contacts/${selectedCustomer.no}`}
+                      href={`https://app.hubspot.com/contacts/company/${selectedCustomer.companyName}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={styles.hubspotButton}
                     >
-                      <Text variant="body-sm" weight="medium">
-                        HubSpot Company 보기
-                      </Text>
-                      <ArrowRight size={16} />
+                      <Building2 size={16} />
+                      <Text variant="body-sm" weight="medium">HubSpot Company 보기</Text>
                     </a>
                   </section>
                 </div>
               )}
 
+              {activeTab === "timeline" && (
+                <div className={styles.timelineTab}>
+                  {/* 기간 필터 표시 */}
+                  <div className={styles.periodBadge}>
+                    <Text variant="caption" color="tertiary">
+                      최근 {TIME_PERIOD_LABELS[timePeriod]} 타임라인
+                    </Text>
+                  </div>
+                  {/* Timeline Header */}
+                  <div className={styles.timelineHeader}>
+                    {filteredWeeks.map((week) => {
+                      const mbmEvent = getMBMForWeek(
+                        week.startDate,
+                        week.endDate
+                      );
+                      const hasMBM = !!mbmEvent;
+                      return (
+                        <div
+                          key={week.key}
+                          className={`${styles.weekHeader} ${
+                            hasMBM ? styles.mbmWeek : ""
+                          } ${
+                            "isCurrent" in week && week.isCurrent
+                              ? styles.currentWeek
+                              : ""
+                          }`}
+                        >
+                          <Text
+                            variant="caption"
+                            weight="semibold"
+                            color={hasMBM ? "accent" : "secondary"}
+                          >
+                            {week.label}
+                          </Text>
+                          <Text variant="caption" color="tertiary">
+                            {week.range}
+                          </Text>
+                          {hasMBM && mbmEvent && (
+                            <div className={styles.mbmBadge}>
+                              <Star size={10} />
+                              <Text variant="caption" color="accent">
+                                {mbmEvent.label}
+                              </Text>
+                            </div>
+                          )}
+                          {"isCurrent" in week && week.isCurrent && (
+                            <Badge variant="success" size="sm">
+                              현재
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Timeline Content */}
+                  <div className={styles.timelineCells}>
+                    {filteredWeeks.map((week, index) => {
+                      const trustData =
+                        selectedCustomer.trustHistory?.[week.key];
+                      const actions = getActionsForWeek(
+                        selectedCustomer,
+                        week.key
+                      );
+                      const trustChange = getTrustChange(
+                        selectedCustomer,
+                        week.key,
+                        index
+                      );
+                      const mbmEvent = getMBMForWeek(
+                        week.startDate,
+                        week.endDate
+                      );
+                      const mbmAttended =
+                        mbmEvent &&
+                        selectedCustomer.attendance?.[
+                          mbmEvent.key as keyof typeof selectedCustomer.attendance
+                        ];
+
+                      return (
+                        <div
+                          key={week.key}
+                          className={`${styles.timelineCell} ${
+                            "isCurrent" in week && week.isCurrent
+                              ? styles.currentCell
+                              : ""
+                          }`}
+                        >
+                          {/* MBM 참석 표시 */}
+                          {mbmAttended && mbmEvent && (
+                            <div className={styles.mbmAttendedBadge}>
+                              <Star size={12} fill="currentColor" />
+                              <Text variant="caption" weight="semibold">
+                                {mbmEvent.label} 참석
+                              </Text>
+                            </div>
+                          )}
+
+                          {/* 신뢰지수 */}
+                          {trustData && (
+                            <div className={styles.trustCell}>
+                              <div className={styles.trustValue}>
+                                <Text variant="body-sm" weight="semibold" mono>
+                                  {trustData.trustIndex}
+                                </Text>
+                                {trustChange !== null &&
+                                  trustChange !== 0 &&
+                                  (() => {
+                                    const weekContents =
+                                      trustChange > 0
+                                        ? getContentsForPeriod(
+                                            selectedCustomer,
+                                            week.startDate,
+                                            week.endDate
+                                          )
+                                        : [];
+                                    const hasContents = weekContents.length > 0;
+                                    return (
+                                      <button
+                                        className={`${
+                                          styles.trustChangeButton
+                                        } ${
+                                          trustChange > 0
+                                            ? styles.up
+                                            : styles.down
+                                        } ${
+                                          hasContents ? styles.clickable : ""
+                                        }`}
+                                        onClick={() =>
+                                          hasContents &&
+                                          openContentModal(week, trustChange)
+                                        }
+                                        title={
+                                          hasContents
+                                            ? `클릭하여 ${weekContents.length}건의 컨텐츠 확인`
+                                            : undefined
+                                        }
+                                        disabled={!hasContents}
+                                      >
+                                        {trustChange > 0 ? (
+                                          <>
+                                            <TrendingUp size={10} /> +
+                                            {trustChange}
+                                          </>
+                                        ) : (
+                                          <>
+                                            <TrendingDown size={10} />{" "}
+                                            {trustChange}
+                                          </>
+                                        )}
+                                      </button>
+                                    );
+                                  })()}
+                              </div>
+                              <Badge
+                                variant={getTrustLevelVariant(
+                                  trustData.trustLevel as Customer["trustLevel"]
+                                )}
+                                size="sm"
+                              >
+                                {trustData.trustLevel}
+                              </Badge>
+                            </div>
+                          )}
+
+                          {/* 영업 액션 */}
+                          {actions.length > 0 && (
+                            <div className={styles.cellActions}>
+                              {actions.map((action, i) => (
+                                <button
+                                  key={i}
+                                  className={`${styles.cellAction} ${
+                                    styles[action.type]
+                                  }`}
+                                  onClick={() =>
+                                    openActionModal(
+                                      action,
+                                      week.label,
+                                      selectedCustomer
+                                    )
+                                  }
+                                  title="클릭하여 상세 정보 확인"
+                                >
+                                  {action.type === "call" ? (
+                                    <Phone size={10} />
+                                  ) : (
+                                    <Users size={10} />
+                                  )}
+                                  <Text variant="caption">
+                                    {action.content.length > 12
+                                      ? action.content.slice(0, 12) + "..."
+                                      : action.content}
+                                  </Text>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* 데이터 없음 */}
+                          {!trustData &&
+                            actions.length === 0 &&
+                            !mbmAttended && (
+                              <Text variant="caption" color="muted">
+                                -
+                              </Text>
+                            )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 하단 상세 정보 - 세로 리스트 */}
+                  <div className={styles.timelineDetails}>
+                    {/* 영업활동 히스토리 */}
+                    {selectedCustomer.salesActions &&
+                      selectedCustomer.salesActions.length > 0 && (
+                        <section className={styles.detailSection}>
+                          <SalesActionHistory 
+                            actions={selectedCustomer.salesActions}
+                            customer={selectedCustomer}
+                            showDescription={false}
+                          />
+                        </section>
+                      )}
+
+                    {/* 콘텐츠 조회 이력 */}
+                    {selectedCustomer.contentEngagements &&
+                      selectedCustomer.contentEngagements.length > 0 && (
+                        <section className={styles.detailSection}>
+                          <Text variant="body-md" weight="semibold">
+                            콘텐츠 조회 이력
+                          </Text>
+                          <div className={styles.contentList}>
+                            {selectedCustomer.contentEngagements
+                              .slice()
+                              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                              .map((content, i) => (
+                                <button 
+                                  key={i} 
+                                  className={styles.contentItem}
+                                  onClick={() => openContentDetail(content)}
+                                  title="클릭하여 상세 보기"
+                                >
+                                  <div className={styles.contentHeader}>
+                                    <ContentCategoryBadge category={content.category} />
+                                    <Text variant="caption" color="tertiary">
+                                      {content.date}
+                                    </Text>
+                                  </div>
+                                  <Text variant="body-sm">{content.title}</Text>
+                                </button>
+                              ))}
+                          </div>
+                        </section>
+                      )}
+
+                    {/* MBM 참석 이력 */}
+                    {selectedCustomer.attendance &&
+                      Object.values(selectedCustomer.attendance).some(Boolean) && (
+                        <section className={styles.detailSection}>
+                          <Text variant="body-md" weight="semibold">
+                            MBM 참석 이력
+                          </Text>
+                          <div className={styles.mbmList}>
+                            {Object.entries(MBM_EVENTS)
+                              .filter(([key]) => selectedCustomer.attendance?.[key as keyof typeof selectedCustomer.attendance])
+                              .sort((a, b) => new Date(b[1].date).getTime() - new Date(a[1].date).getTime())
+                              .map(([key, event]) => (
+                                <div key={key} className={styles.mbmItem}>
+                                  <div className={styles.mbmIcon}>
+                                    <Star size={14} fill="currentColor" />
+                                  </div>
+                                  <div className={styles.mbmContent}>
+                                    <Text variant="caption" color="tertiary">
+                                      {event.date}
+                                    </Text>
+                                    <Text variant="body-sm">{event.label} 참석</Text>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </section>
+                      )}
+                  </div>
+
+                </div>
+              )}
+
               {activeTab === "sales" && (
                 <div className={styles.salesTab}>
-                  {/* 주차별 추이 그래프 */}
+                  {/* 견적 발소 완료 그래프 */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
-                      주차별 추이
+                     팔로업 추이
                     </Text>
                     {selectedCustomer.salesActions && selectedCustomer.salesActions.length > 0 ? (
                       <div className={styles.weeklyChart}>
@@ -1877,13 +2159,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                               .map((action) => ({
                                 date: action.date,
-                                customerResponseIndex: 
-                                  action.customerResponse === "상" ? 3 :
-                                  action.customerResponse === "중" ? 2 :
-                                  action.customerResponse === "하" ? 1 : 0,
-                                targetRevenue: action.targetRevenue ? action.targetRevenue / 100000000 : null,
+                                possibility: action.possibility ? parseInt(action.possibility) : 0,
+                                targetRevenue: action.targetRevenue || null,
                                 expectedRevenue: action.targetRevenue && action.possibility
-                                  ? (action.targetRevenue * parseInt(action.possibility)) / 100 / 100000000
+                                  ? (action.targetRevenue * parseInt(action.possibility)) / 100
                                   : null,
                               }))}
                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -1898,16 +2177,15 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               yAxisId="left"
                               stroke="#a1a1aa"
                               tick={{ fill: "#a1a1aa", fontSize: 12 }}
-                              label={{ value: "고객 반응 지수", angle: -90, position: "insideLeft", fill: "#a1a1aa" }}
-                              domain={[0, 3]}
-                              ticks={[1, 2, 3]}
+                              label={{ value: "가능성", angle: -90, position: "insideLeft", fill: "#a1a1aa" }}
+                              domain={[0, 100]}
                             />
                             <YAxis 
                               yAxisId="right"
                               orientation="right"
                               stroke="#a1a1aa"
                               tick={{ fill: "#a1a1aa", fontSize: 12 }}
-                              label={{ value: "매출 (억원)", angle: 90, position: "insideRight", fill: "#a1a1aa" }}
+                              label={{ value: "매출", angle: 90, position: "insideRight", fill: "#a1a1aa" }}
                             />
                             <Tooltip
                               contentStyle={{
@@ -1916,7 +2194,13 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                 borderRadius: "8px",
                               }}
                               labelStyle={{ color: "#fafafa" }}
-                              itemStyle={{ color: "#a1a1aa" }}
+                              itemStyle={{ color: "#fafafa" }}
+                              formatter={(value: any, name: string) => {
+                                if (name === "가능성") {
+                                  return [`${value}`, name];
+                                }
+                                return [value, name];
+                              }}
                             />
                             <Legend 
                               wrapperStyle={{ color: "#a1a1aa" }}
@@ -1924,10 +2208,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                             <Line
                               yAxisId="left"
                               type="monotone"
-                              dataKey="customerResponseIndex"
+                              dataKey="possibility"
                               stroke="#3b82f6"
                               strokeWidth={2}
-                              name="고객 반응 지수"
+                              name="가능성"
                               dot={{ fill: "#3b82f6", r: 4 }}
                             />
                             <Bar
@@ -1983,15 +2267,15 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                 {action.content || "-"}
                               </Text>
                               <div className={styles.actionTags}>
-                                {action.customerResponse && (
+                                {action.possibility && (
                                   <Badge 
                                     variant={
-                                      action.customerResponse === "상" ? "success" :
-                                      action.customerResponse === "중" ? "warning" : "error"
+                                      parseInt(action.possibility) >= 70 ? "success" :
+                                      parseInt(action.possibility) >= 40 ? "warning" : "error"
                                     }
                                     size="sm"
                                   >
-                                    고객 반응: {action.customerResponse}
+                                    가능성: {action.possibility}%
                                   </Badge>
                                 )}
                                 {action.test || action.quote || action.approval || action.contract ? (
@@ -2029,23 +2313,73 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
               {activeTab === "marketing" && (
                 <div className={styles.marketingTab}>
-                  {/* 콘텐츠 소비 요약 */}
+                  {/* 콘텐츠 퍼널별 조회수 */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
-                      콘텐츠 소비 요약 (최근 30일)
+                      콘텐츠 퍼널별 조회수
                     </Text>
-                    <div className={styles.summaryGrid}>
-                      <div className={styles.summaryItem}>
-                        <Text variant="caption" color="tertiary">최다 소비 퍼널</Text>
-                        <Text variant="body-md" weight="semibold">MOFU</Text>
-                      </div>
-                      <div className={styles.summaryItem}>
-                        <Text variant="caption" color="tertiary">콘텐츠 조회 수</Text>
-                        <Text variant="body-md" weight="semibold">
-                          {selectedCustomer.contentEngagements?.length || 0}
+                    {(() => {
+                      const funnelCounts: { [key: string]: number } = {};
+                      let total = 0;
+                      
+                      // 퍼널별 조회수 집계
+                      selectedCustomer.contentEngagements?.forEach((content) => {
+                        const category = content.category || "기타";
+                        funnelCounts[category] = (funnelCounts[category] || 0) + 1;
+                        total++;
+                      });
+                      
+                      // 퍼널 순서 정의
+                      const funnelOrder = ["TOFU", "MOFU", "BOFU", "기타"];
+                      
+                      return total > 0 ? (
+                        <table className={styles.funnelTable}>
+                          <thead>
+                            <tr>
+                              <th>퍼널</th>
+                              <th>조회수</th>
+                              <th>비율</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {funnelOrder.map((funnel) => {
+                              const count = funnelCounts[funnel] || 0;
+                              const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0";
+                              
+                              if (count === 0 && funnel === "기타") return null;
+                              
+                              return (
+                                <tr key={funnel}>
+                                  <td>
+                                    <Badge 
+                                      variant={
+                                        funnel === "TOFU" ? "info" :
+                                        funnel === "MOFU" ? "purple" :
+                                        funnel === "BOFU" ? "success" : "default"
+                                      } 
+                                      size="sm"
+                                    >
+                                      {funnel}
+                                    </Badge>
+                                  </td>
+                                  <td>{count}회</td>
+                                  <td>{percentage}%</td>
+                                </tr>
+                              );
+                            })}
+                            <tr className={styles.totalRow}>
+                              <td><strong>합계</strong></td>
+                              <td><strong>{total}회</strong></td>
+                              <td><strong>100%</strong></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      ) : (
+                        <Text variant="body-sm" color="tertiary">
+                          콘텐츠 조회 이력이 없습니다.
                         </Text>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </section>
 
                   {/* 콘텐츠 소비 이력 */}
@@ -2059,27 +2393,65 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                           .slice()
                           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                           .slice(0, 10)
-                          .map((content, idx) => (
-                            <a
-                              key={idx}
-                              href={`https://app.hubspot.com/content/${idx}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={styles.contentItem}
-                            >
-                              <div className={styles.contentHeader}>
-                                <Text variant="body-sm" weight="medium">
-                                  {content.title || "콘텐츠 제목"}
-                                </Text>
-                                <Badge variant="info" size="sm">
-                                  {content.category || "MOFU"}
-                                </Badge>
+                          .map((content, idx) => {
+                            const category = content.category || "MOFU";
+                            const viewCount = content.viewCount || Math.floor(Math.random() * 20) + 1;
+                            
+                            return (
+                              <div key={idx} className={styles.contentItem}>
+                                {/* 왼쪽: 아이콘 */}
+                                <div className={styles.contentIcon}>
+                                  <BookOpen size={18} />
+                                </div>
+                                
+                                {/* 중앙: 콘텐츠 정보 */}
+                                <div className={styles.contentInfo}>
+                                  {/* 1. 콘텐츠 제목 (최상단) */}
+                                  <div className={styles.contentTitle}>
+                                    {content.title || "콘텐츠 제목"}
+                                  </div>
+                                  
+                                  {/* 메타 정보 (배지, 조회수, 날짜) */}
+                                  <div className={styles.contentMeta}>
+                                    {/* 0. 콘텐츠 퍼널 배지 */}
+                                    <Badge 
+                                      variant={
+                                        category === "TOFU" ? "info" :
+                                        category === "MOFU" ? "purple" :
+                                        category === "BOFU" ? "success" : "default"
+                                      } 
+                                      size="sm"
+                                    >
+                                      {category}
+                                    </Badge>
+                                    
+                                    {/* 2. 조회수 */}
+                                    <div className={styles.metaItem}>
+                                      <Eye />
+                                      <span>조회 {viewCount}회</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* 3. 최근 조회일자 */}
+                                  <div className={styles.contentDate}>
+                                    최근 조회: {content.date || "-"}
+                                  </div>
+                                </div>
+                                
+                                {/* 4. 콘텐츠 이동 링크 (화살표 버튼) */}
+                                <a
+                                  href={`https://app.hubspot.com/content/${idx}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.contentLink}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="콘텐츠 보기"
+                                >
+                                  <ArrowUpRight />
+                                </a>
                               </div>
-                              <Text variant="caption" color="tertiary">
-                                최근 조회: {content.date || "-"}
-                              </Text>
-                            </a>
-                          ))}
+                            );
+                          })}
                       </div>
                     ) : (
                       <Text variant="body-sm" color="tertiary">
@@ -2107,25 +2479,72 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                             const event = MBM_EVENTS[key];
                             if (!event) return null;
                             return (
-                              <a
-                                key={key}
-                                href={`https://app.hubspot.com/marketing-events/${key}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.mbmItem}
-                              >
+                              <div key={key} className={styles.mbmItem}>
+                                {/* 왼쪽: 아이콘 */}
                                 <div className={styles.mbmIcon}>
-                                  <Calendar size={16} />
+                                  <Calendar size={18} />
                                 </div>
+                                
+                                {/* 중앙: MBM 정보 */}
                                 <div className={styles.mbmContent}>
-                                  <Text variant="body-sm" weight="medium">
+                                  {/* 1. MBM 타이틀 */}
+                                  <div className={styles.mbmTitle}>
                                     {event.label}
-                                  </Text>
-                                  <Text variant="caption" color="tertiary">
+                                  </div>
+                                  
+                                  {/* 메타 정보 */}
+                                  <div className={styles.mbmMeta}>
+                                    {/* 2. 관련 제품 */}
+                                    {event.product && (
+                                      <Badge 
+                                        variant={event.product === "H.채용" ? "info" : "purple"} 
+                                        size="sm"
+                                      >
+                                        {event.product}
+                                      </Badge>
+                                    )}
+                                    
+                                    {/* 4. 행사 대상 */}
+                                    {event.target && (
+                                      <Badge 
+                                        variant={
+                                          event.target === "신규" ? "cyan" :
+                                          event.target === "공공" ? "warning" : "success"
+                                        } 
+                                        size="sm"
+                                      >
+                                        {event.target}
+                                      </Badge>
+                                    )}
+                                    
+                                    {/* 6. 행사 타입 */}
+                                    {event.type && (
+                                      <Badge variant="default" size="sm">
+                                        {event.type}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  {/* 5. 행사 날짜 */}
+                                  <div className={styles.mbmDate}>
                                     진행일: {event.date}
-                                  </Text>
+                                  </div>
                                 </div>
-                              </a>
+                                
+                                {/* 3. 랜딩 페이지 URL (화살표 버튼) */}
+                                {event.landingUrl && (
+                                  <a
+                                    href={event.landingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.mbmLink}
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="랜딩 페이지 보기"
+                                  >
+                                    <ArrowUpRight />
+                                  </a>
+                                )}
+                              </div>
                             );
                           })}
                       </div>
@@ -2137,6 +2556,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                   </section>
                 </div>
               )}
+
             </div>
           </div>
         )}

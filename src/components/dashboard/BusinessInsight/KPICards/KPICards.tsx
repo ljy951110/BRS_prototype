@@ -79,17 +79,17 @@ const KPICardItem = ({
 const COLORS = ["#3b82f6", "#22c55e", "#f97316", "#a855f7", "#06b6d4", "#eab308"];
 
 // 기업 규모 옵션
-const COMPANY_SIZE_OPTIONS = ["전체", "T0 (대기업)", "T1 (중견)", "T2 (중소)", "T3 (소기업)"];
+const COMPANY_SIZE_OPTIONS = ["전체", "T0", "T1", "T2", "T3", "T4", "T9", "T10" ];
 
 // 각 KPI별 더미 데이터
 const modalData = {
   total_customers: {
     title: "고객 구성 요약",
     companySizeData: [
-      { name: "T0 (대기업)", value: 120, color: "#3b82f6" },
-      { name: "T1 (중견)", value: 180, color: "#22c55e" },
-      { name: "T2 (중소)", value: 250, color: "#f97316" },
-      { name: "T3 (소기업)", value: 150, color: "#a855f7" },
+      { name: "T0", value: 120, color: "#3b82f6" },
+      { name: "T1", value: 180, color: "#22c55e" },
+      { name: "T2", value: 250, color: "#f97316" },
+      { name: "T3", value: 150, color: "#a855f7" },
     ],
     productData: [
       { name: "채용", value: 320 },
@@ -110,10 +110,10 @@ const modalData = {
     title: "MBM 현황 상세",
     statusData: {
       all: { invited: 700, participated: 50, followup: 50, stagnant: 0, closed: 3 },
-      "T0 (대기업)": { invited: 120, participated: 10, followup: 10, stagnant: 0, closed: 1 },
-      "T1 (중견)": { invited: 180, participated: 15, followup: 15, stagnant: 0, closed: 1 },
-      "T2 (중소)": { invited: 250, participated: 15, followup: 15, stagnant: 0, closed: 1 },
-      "T3 (소기업)": { invited: 150, participated: 10, followup: 10, stagnant: 0, closed: 0 },
+      "T0": { invited: 120, participated: 10, followup: 10, stagnant: 0, closed: 1 },
+      "T1": { invited: 180, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T2": { invited: 250, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T3": { invited: 150, participated: 10, followup: 10, stagnant: 0, closed: 0 },
     },
     insight: "팔로업 진행 중인 고객이 가장 많으며, 정체 상태의 고객에 대한 관리가 필요합니다.",
   },
@@ -169,10 +169,10 @@ const TotalCustomersModalContent = () => {
   // 필터에 따른 주간 추이 데이터 키 매핑
   const getTrendDataKey = () => {
     switch (sizeFilter) {
-      case "T0 (대기업)": return "t0";
-      case "T1 (중견)": return "t1";
-      case "T2 (중소)": return "t2";
-      case "T3 (소기업)": return "t3";
+      case "T0": return "t0";
+      case "T1": return "t1";
+      case "T2": return "t2";
+      case "T3": return "t3";
       default: return "total";
     }
   };
@@ -222,13 +222,14 @@ const TotalCustomersModalContent = () => {
               <Tooltip 
                 contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
                 labelStyle={{ color: '#fafafa' }}
+                itemStyle={{ color: '#fafafa' }}
               />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <div className={styles.chartSection}>
-          <Text variant="body-sm" weight="medium" color="secondary">제품 구분 분포</Text>
+          <Text variant="body-sm" weight="medium" color="secondary">사업 구분 분포</Text>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={data.productData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -237,6 +238,7 @@ const TotalCustomersModalContent = () => {
               <Tooltip 
                 contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
                 labelStyle={{ color: '#fafafa' }}
+                itemStyle={{ color: '#fafafa' }}
               />
               <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -257,6 +259,7 @@ const TotalCustomersModalContent = () => {
             <Tooltip 
               contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
               labelStyle={{ color: '#fafafa' }}
+              itemStyle={{ color: '#fafafa' }}
             />
             <Line 
               type="monotone" 
@@ -282,35 +285,35 @@ const MBM_OPTIONS = ["전체 MBM", "11/7"];
 // MBM 단계별 기업 리스트 더미 데이터
 const mbmCompanyList = {
   invited: [
-    { companyName: "테크솔루션", companySize: "T1 (중견)", manager: "김민수", adoptionStage: "-" },
-    { companyName: "스마트팩토리", companySize: "T2 (중소)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "글로벌테크", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "이노베이션랩", companySize: "T3 (소기업)", manager: "최서연", adoptionStage: "-" },
+    { companyName: "테크솔루션", companySize: "T1", manager: "김민수", adoptionStage: "-" },
+    { companyName: "스마트팩토리", companySize: "T2", manager: "이지은", adoptionStage: "-" },
+    { companyName: "글로벌테크", companySize: "T0", manager: "박준영", adoptionStage: "-" },
+    { companyName: "이노베이션랩", companySize: "T3", manager: "최서연", adoptionStage: "-" },
   ],
   participated: [
-    { companyName: "비전바이오켐", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "-" },
-    { companyName: "퓨처모빌리티", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "-" },
-    { companyName: "넥스트젠AI", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "-" },
-    { companyName: "블루오션", companySize: "T1 (중견)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "그린에너지", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
+    { companyName: "비전바이오켐", companySize: "T0", manager: "정현우", adoptionStage: "-" },
+    { companyName: "퓨처모빌리티", companySize: "T1", manager: "한지민", adoptionStage: "-" },
+    { companyName: "넥스트젠AI", companySize: "T2", manager: "김민수", adoptionStage: "-" },
+    { companyName: "블루오션", companySize: "T1", manager: "이지은", adoptionStage: "-" },
+    { companyName: "그린에너지", companySize: "T0", manager: "박준영", adoptionStage: "-" },
   ],
   followup: [
-    { companyName: "스카이네트워크", companySize: "T2 (중소)", manager: "최서연", adoptionStage: "견적", lastContact: "2024.12.15" },
-    { companyName: "메가시스템", companySize: "T1 (중견)", manager: "정현우", adoptionStage: "품의", lastContact: "2024.12.14" },
-    { companyName: "알파테크", companySize: "T3 (소기업)", manager: "한지민", adoptionStage: "테스트", lastContact: "2024.12.16" },
-    { companyName: "베타소프트", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "견적", lastContact: "2024.12.10" },
-    { companyName: "델타시스템즈", companySize: "T0 (대기업)", manager: "이지은", adoptionStage: "품의", lastContact: "2024.12.13" },
-    { companyName: "오메가테크", companySize: "T1 (중견)", manager: "박준영", adoptionStage: "테스트", lastContact: "2024.12.12" },
+    { companyName: "스카이네트워크", companySize: "T2", manager: "최서연", adoptionStage: "견적", lastContact: "2024.12.15" },
+    { companyName: "메가시스템", companySize: "T1", manager: "정현우", adoptionStage: "품의", lastContact: "2024.12.14" },
+    { companyName: "알파테크", companySize: "T3", manager: "한지민", adoptionStage: "테스트", lastContact: "2024.12.16" },
+    { companyName: "베타소프트", companySize: "T2", manager: "김민수", adoptionStage: "견적", lastContact: "2024.12.10" },
+    { companyName: "델타시스템즈", companySize: "T0", manager: "이지은", adoptionStage: "품의", lastContact: "2024.12.13" },
+    { companyName: "오메가테크", companySize: "T1", manager: "박준영", adoptionStage: "테스트", lastContact: "2024.12.12" },
   ],
   stagnant: [
-    { companyName: "레드플래닛", companySize: "T3 (소기업)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "옐로우스톤", companySize: "T2 (중소)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "오렌지코퍼", companySize: "T1 (중견)", manager: "최서연", adoptionStage: "-" },
+    { companyName: "레드플래닛", companySize: "T3", manager: "이지은", adoptionStage: "-" },
+    { companyName: "옐로우스톤", companySize: "T2", manager: "박준영", adoptionStage: "-" },
+    { companyName: "오렌지코퍼", companySize: "T1", manager: "최서연", adoptionStage: "-" },
   ],
   closed: [
-    { companyName: "다이아몬드그룹", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "계약" },
-    { companyName: "플래티넘솔루션", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "계약" },
-    { companyName: "골드스타", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "계약" },
+    { companyName: "다이아몬드그룹", companySize: "T0", manager: "정현우", adoptionStage: "계약" },
+    { companyName: "플래티넘솔루션", companySize: "T1", manager: "한지민", adoptionStage: "계약" },
+    { companyName: "골드스타", companySize: "T2", manager: "김민수", adoptionStage: "계약" },
   ],
 };
 
@@ -543,6 +546,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <Tooltip 
                   contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
                   labelStyle={{ color: '#fafafa' }}
+                  itemStyle={{ color: '#fafafa' }}
                 />
                 <Legend />
                 <Line type="monotone" dataKey="target" stroke="#71717a" strokeWidth={2} strokeDasharray="5 5" name="목표" />
@@ -591,6 +595,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <Tooltip 
                   contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
                   labelStyle={{ color: '#fafafa' }}
+                  itemStyle={{ color: '#fafafa' }}
                   formatter={(value: number, name: string) => [
                     `₩${value}M`, 
                     name === 'target' ? '목표' : '예상 매출'
@@ -639,6 +644,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <Tooltip 
                   contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
                   labelStyle={{ color: '#fafafa' }}
+                  itemStyle={{ color: '#fafafa' }}
                   formatter={(value: number) => [`₩${value}M`, '예상 매출']}
                 />
                 <Bar dataKey="amount" fill="#06b6d4" radius={[4, 4, 0, 0]}>
