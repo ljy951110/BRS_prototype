@@ -1,5 +1,9 @@
 // openapi로 가져올때 에러나는 타입들 (ex: 다 한글일 경우)
 
+/**
+ * 시간 기간 타입
+ */
+export type TimePeriodType = '1w' | '1m' | '6m' | '1y';
 
 /**
  * 제품 타입
