@@ -7,8 +7,9 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **trustIndex** | **number** |  | [optional] [default to undefined]
-**possibility** | **string** |  | [optional] [default to '0%']
+**possibility** | **number** |  | [optional] [default to undefined]
 **targetRevenue** | **number** |  | [optional] [default to undefined]
+**expectedRevenue** | **number** |  | [optional] [default to undefined]
 **targetDate** | **string** |  | [optional] [default to undefined]
 **test** | **boolean** |  | [optional] [default to false]
 **quote** | **boolean** |  | [optional] [default to false]
@@ -24,6 +25,7 @@ const instance: CustomerDetailPeriodData = {
     trustIndex,
     possibility,
     targetRevenue,
+    expectedRevenue,
     targetDate,
     test,
     quote,

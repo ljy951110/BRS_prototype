@@ -31,7 +31,7 @@ export interface EngagementItem {
      * @type {string}
      * @memberof EngagementItem
      */
-    'date': string;
+    'latestViewDate': string;
     /**
      * 
      * @type {string}

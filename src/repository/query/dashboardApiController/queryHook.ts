@@ -6,7 +6,6 @@
 import { DashboardApiFactory } from '@/repository/openapi/api/dashboard-api';
 import type {
   Category,
-  CompanySize,
   DashboardTableRequest,
   DashboardTableResponse,
   Possibility,
@@ -14,6 +13,7 @@ import type {
 } from '@/repository/openapi/model';
 import { axios } from '@/repository/query/Axios';
 import { CUSTOM_QUERY_OPTIONS } from '@/repository/query/ReactQueryCustomType';
+import { CompanySizeType } from '@/types/customer';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardQueryKeys } from './queryKey';
 
@@ -29,10 +29,15 @@ import { dashboardQueryKeys } from './queryKey';
  * 필터 옵션 응답 타입
  * (OpenAPI 스펙에 미정의되어 있어 수동으로 정의)
  */
+export interface Manager {
+  owner_id: string;
+  name: string;
+}
+
 export interface DashboardFilterOptionsResponse {
-  managers: string[];
+  managers: Manager[];
   categories: Category[];
-  companySizes: CompanySize[];
+  companySizes: CompanySizeType[];
   possibilities: Possibility[];
   mbmPipelineStatuses: ProgressStage[];
 }

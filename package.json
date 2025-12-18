@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "swagger": "rm -rf src/repository/openapi && npx @openapitools/openapi-generator-cli generate -c openapi.json && rm -f src/repository/openapi/model/product-type.ts src/repository/openapi/model/company-size.ts && sed -i '' '/company-size/d' src/repository/openapi/model/index.ts && sed -i '' '/product-type/d' src/repository/openapi/model/index.ts"
+    "swagger": "rm -rf src/repository/openapi && npx @openapitools/openapi-generator-cli generate -c openapi.json"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

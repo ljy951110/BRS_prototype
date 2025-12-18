@@ -28,16 +28,22 @@ export interface CustomerDetailPeriodData {
     'trustIndex'?: number | null;
     /**
      * 
-     * @type {string}
+     * @type {number}
      * @memberof CustomerDetailPeriodData
      */
-    'possibility'?: string;
+    'possibility'?: number | null;
     /**
      * 
      * @type {number}
      * @memberof CustomerDetailPeriodData
      */
     'targetRevenue'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof CustomerDetailPeriodData
+     */
+    'expectedRevenue'?: number | null;
     /**
      * 
      * @type {string}

@@ -6,8 +6,12 @@
 
 * `ATS` (value: `'ATS'`)
 
-* `` (value: `'역량검사'`)
+* `ACCSR` (value: `'ACCSR'`)
 
-* `2` (value: `'온보딩'`)
+* `INHR_PLUS` (value: `'INHR_PLUS'`)
+
+* `ACC` (value: `'ACC'`)
+
+* `CHURN` (value: `'CHURN'`)
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

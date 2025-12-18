@@ -7,7 +7,7 @@ Engagement Item - 이벤트 기반 활동 (콘텐츠)
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **title** | **string** |  | [default to undefined]
-**date** | **string** |  | [default to undefined]
+**latestViewDate** | **string** |  | [default to undefined]
 **funnelType** | **string** |  | [optional] [default to undefined]
 **contentType** | **string** |  | [optional] [default to undefined]
 **viewCount** | **number** |  | [optional] [default to undefined]
@@ -20,7 +20,7 @@ import { EngagementItem } from './api';
 
 const instance: EngagementItem = {
     title,
-    date,
+    latestViewDate,
     funnelType,
     contentType,
     viewCount,

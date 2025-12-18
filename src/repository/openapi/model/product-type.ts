@@ -15,18 +15,20 @@
 
 
 /**
- * 영업 활동 유형
+ * 제품 타입 (DB using_product 값과 일치)
  * @export
  * @enum {string}
  */
 
-export const SalesActionType = {
-    CALL: 'CALL',
-    MEETING: 'MEETING',
-    EMAIL: 'EMAIL'
+export const ProductType = {
+    ATS: 'ATS',
+    ACCSR: 'ACCSR',
+    INHR_PLUS: 'INHR_PLUS',
+    ACC: 'ACC',
+    CHURN: 'CHURN'
 } as const;
 
-export type SalesActionType = typeof SalesActionType[keyof typeof SalesActionType];
+export type ProductType = typeof ProductType[keyof typeof ProductType];
 
 
 

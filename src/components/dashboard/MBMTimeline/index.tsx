@@ -30,12 +30,10 @@ import {
   PossibilityType,
 } from "@/types/customer";
 import { formatCurrency } from "@/data/mockData";
-import type { TimePeriodType } from "@/types/common";
 import styles from "./index.module.scss";
 
 interface MBMTimelineProps {
   data: Customer[];
-  timePeriod: TimePeriodType;
   filters?: ReactNode;
 }
 
@@ -262,10 +260,9 @@ interface ActionModalData {
 
 export const MBMTimeline = ({
   data,
-  timePeriod,
   filters,
 }: MBMTimelineProps) => {
-  const weeks = useMemo(() => getWeeksForPeriod(timePeriod), [timePeriod]);
+  const weeks = ALL_WEEKS;
   const timelineMaxWidth = weeks.length <= 2 ? 640 : undefined;
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
   const [modalData, setModalData] = useState<ContentModalData | null>(null);

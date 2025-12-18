@@ -7,31 +7,41 @@
 ## 📦 코드 구조 규칙
 
 ### 파일 구조
-- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`만 하는 `index.ts` 파일을 만들지 마세요
+- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`이나 `export { Type }`만 하는 파일을 만들지 마세요
   - ❌ 나쁜 예:
     ```typescript
     // index.ts
     export * from './queryHook';
     export * from './queryKey';
+    
+    // commonMap.ts
+    export { Category, ProductType }; // 단순 re-export 금지
     ```
-  - ✅ 좋은 예: 직접 import 사용
+  - ✅ 좋은 예: 필요한 곳에서 직접 import
     ```typescript
     import { useGetCustomerSummary } from '@/repository/query/customerDetailApiController/queryHook';
+    import { Category, ProductType } from '@/repository/openapi/model';
     ```
 
-### OpenAPI 자동 생성 타입 사용 주의
-- **`ProductType`, `CompanySize` 타입은 `@/types/common`에서 import**
-  - OpenAPI Generator가 한글/특수문자를 잘못 처리하여 `src/repository/openapi/model/product-type.ts`, `company-size.ts`에 오류 발생
-  - 대신 `src/types/common.ts`에 정의된 타입 사용
+### OpenAPI 자동 생성 타입 사용
+- **OpenAPI 타입은 `@/repository/openapi/model`에서 직접 import**
+  - `Category`, `ProductType`, `CompanySize` 등의 타입과 enum 값은 OpenAPI에서 자동 생성됨
+  - 다른 파일에서 re-export하지 말고 필요한 곳에서 직접 import
   
   ❌ 나쁜 예:
   ```typescript
-  import { ProductType, CompanySize } from '@/repository/openapi/model';
+  // commonMap.ts에서 re-export
+  export { Category, ProductType } from '@/repository/openapi/model';
+  
+  // 컴포넌트에서
+  import { Category } from '@/constants/commonMap';
   ```
   
   ✅ 좋은 예:
   ```typescript
-  import { ProductType, CompanySize } from '@/types/common';
+  // 컴포넌트에서 직접 import
+  import { Category, ProductType } from '@/repository/openapi/model';
+  import { CategoryLabel, ProductTypeLabel } from '@/constants/commonMap';
   ```
 
 - **OpenAPI 생성 파일 제외 설정**:

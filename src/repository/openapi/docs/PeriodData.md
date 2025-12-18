@@ -7,8 +7,9 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **trustIndex** | **number** |  | [optional] [default to undefined]
-**possibility** | [**Possibility**](Possibility.md) |  | [optional] [default to undefined]
+**possibility** | **number** |  | [optional] [default to undefined]
 **targetRevenue** | **number** |  | [optional] [default to undefined]
+**expectedRevenue** | **number** |  | [optional] [default to undefined]
 **targetMonth** | **number** |  | [optional] [default to undefined]
 **test** | **boolean** |  | [optional] [default to false]
 **quote** | **boolean** |  | [optional] [default to false]
@@ -24,6 +25,7 @@ const instance: PeriodData = {
     trustIndex,
     possibility,
     targetRevenue,
+    expectedRevenue,
     targetMonth,
     test,
     quote,

@@ -15,18 +15,23 @@
 
 
 /**
- * 영업 활동 유형
+ * 기업 규모 (BigQuery companies.company_size 값과 일치)
  * @export
  * @enum {string}
  */
 
-export const SalesActionType = {
-    CALL: 'CALL',
-    MEETING: 'MEETING',
-    EMAIL: 'EMAIL'
+export const CompanySize = {
+    T0: 'T0',
+    T1: 'T1',
+    T2: 'T2',
+    T3: 'T3',
+    T4: 'T4',
+    T5: 'T5',
+    T10: 'T10',
+    UNKNOWN: 'UNKNOWN'
 } as const;
 
-export type SalesActionType = typeof SalesActionType[keyof typeof SalesActionType];
+export type CompanySize = typeof CompanySize[keyof typeof CompanySize];
 
 
 
