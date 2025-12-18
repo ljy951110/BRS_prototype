@@ -4,6 +4,7 @@ import {
 } from "@/data/mockData";
 import type { SalesAction } from "@/repository/openapi/model";
 import { useGetCustomerSummary, useGetSalesHistory } from "@/repository/query/customerDetailApiController/queryHook";
+import { useGetTrustChangeDetail } from "@/repository/query/trustChangeDetailApiController/queryHook";
 import { Customer, PossibilityType, ProductType } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
@@ -276,6 +277,20 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
       dateRange: {
         startDate: actionDateRange[0].format('YYYY-MM-DD'),
         endDate: actionDateRange[1].format('YYYY-MM-DD'),
+      },
+    },
+    {
+      enabled: !!selectedCustomer,
+    }
+  );
+
+  // 콘텐츠/MBM 상세 조회
+  const { data: trustChangeDetailData, isLoading: isTrustChangeDetailLoading } = useGetTrustChangeDetail(
+    selectedCustomer?.no ?? 0,
+    {
+      dateRange: {
+        startDate: contentDateRange[0].format('YYYY-MM-DD'),
+        endDate: contentDateRange[1].format('YYYY-MM-DD'),
       },
     },
     {
@@ -1901,9 +1916,9 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                       <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
                     ) : (
                       <>
-                        {/* 주차별 추이 그래프 */}
+                        {/* 팔로업 추이 그래프 */}
                         <div style={{ marginBottom: 24 }}>
-                          <Title level={5} style={{ marginBottom: 12 }}>주차별 추이</Title>
+                          <Title level={5} style={{ marginBottom: 12 }}>팔로업 추이</Title>
                           {salesHistoryData?.data?.salesActions && salesHistoryData.data.salesActions.length > 0 ? (
                             <div style={{ width: '100%', height: 300 }}>
                               <ResponsiveContainer>
@@ -2088,68 +2103,93 @@ export const CustomerTable = ({ data, timePeriod, loading, pagination: paginatio
                         />
                       </Space>
                     </div>
-                    <Title level={5} style={{ marginBottom: 8 }}>
-                      콘텐츠 조회 이력
-                    </Title>
-                    <List
-                      bordered
-                      dataSource={
-                        selectedCustomer.contentEngagements
-                          ? [...selectedCustomer.contentEngagements].sort(
-                            (a, b) =>
-                              new Date(b.date).getTime() -
-                              new Date(a.date).getTime()
-                          )
-                          : []
-                      }
-                      locale={{ emptyText: "콘텐츠 조회 이력이 없습니다." }}
-                      renderItem={(item) => (
-                        <List.Item
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            setSelectedContent({
-                              title: item.title,
-                              category: item.category,
-                              date: item.date,
-                            })
-                          }
-                        >
-                          <Space direction="vertical" size={2}>
-                            <Space size={6}>
-                              <Tag color="blue">{item.category}</Tag>
-                              <AntText>{item.title}</AntText>
+
+                    {isTrustChangeDetailLoading ? (
+                      <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>
+                    ) : (
+                      <>
+                        {/* 신뢰지수 변화량 표시 */}
+                        {trustChangeDetailData?.data?.changeAmount !== undefined && (
+                          <div style={{ marginBottom: 16, padding: '12px', backgroundColor: token.colorSuccessBg, borderRadius: token.borderRadius }}>
+                            <Space>
+                              <AntText strong>신뢰지수 변화:</AntText>
+                              <Tag color={trustChangeDetailData.data.changeAmount > 0 ? 'green' : trustChangeDetailData.data.changeAmount < 0 ? 'red' : 'default'}>
+                                {trustChangeDetailData.data.changeAmount > 0 ? '+' : ''}{trustChangeDetailData.data.changeAmount}
+                              </Tag>
                             </Space>
-                            <AntText type="secondary" style={{ fontSize: 12 }}>
-                              {item.date}
-                            </AntText>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
+                          </div>
+                        )}
 
-                    <Divider style={{ margin: "16px 0" }} />
+                        <Title level={5} style={{ marginBottom: 8 }}>
+                          콘텐츠/MBM 활동 이력
+                        </Title>
+                        <List
+                          bordered
+                          dataSource={
+                            trustChangeDetailData?.data?.engagementItems
+                              ? [...trustChangeDetailData.data.engagementItems].sort(
+                                (a, b) =>
+                                  new Date(b.date).getTime() -
+                                  new Date(a.date).getTime()
+                              )
+                              : []
+                          }
+                          locale={{ emptyText: "활동 이력이 없습니다." }}
+                          renderItem={(item) => {
+                            const isMbm = item.actionType === 'ATTENDED' || item.actionType === 'REGISTERED';
+                            return (
+                              <List.Item
+                                style={{ cursor: item.url ? "pointer" : "default" }}
+                                onClick={() => {
+                                  if (item.url) {
+                                    window.open(item.url, '_blank');
+                                  }
+                                }}
+                              >
+                                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                                  <Space size={6}>
+                                    <Tag color={isMbm ? 'green' : 'blue'}>
+                                      {isMbm ? 'MBM' : '콘텐츠'}
+                                    </Tag>
+                                    <AntText strong>{item.title}</AntText>
+                                  </Space>
+                                  <AntText type="secondary" style={{ fontSize: 12 }}>
+                                    {item.date}
+                                  </AntText>
+                                  {item.introducedProduct && (
+                                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                                      소개 제품: {item.introducedProduct}
+                                    </AntText>
+                                  )}
+                                  {item.url && (
+                                    <AntText type="secondary" style={{ fontSize: 12, color: token.colorPrimary }}>
+                                      🔗 링크 보기
+                                    </AntText>
+                                  )}
+                                </Space>
+                              </List.Item>
+                            );
+                          }}
+                        />
 
-                    <Title level={5} style={{ marginBottom: 8 }}>
-                      MBM 참석 여부
-                    </Title>
-                    <Space wrap>
-                      {selectedCustomer.attendance &&
-                        Object.entries(selectedCustomer.attendance).filter(
-                          ([, attended]) => attended
-                        ).length > 0 ? (
-                        Object.entries(selectedCustomer.attendance)
-                          .filter(([, attended]) => attended)
-                          .map(([key]) => (
-                            <Tag key={key} color="green">
-                              참석: {key}
-                            </Tag>
-                          ))
-                      ) : (
-                        <AntText type="secondary" style={{ fontSize: 12 }}>
-                          참석 이력이 없습니다.
-                        </AntText>
-                      )}
-                    </Space>
+                        {/* HubSpot Link */}
+                        {trustChangeDetailData?.data?.hubspotUrl && (
+                          <div style={{ marginTop: 16 }}>
+                            <Button
+                              type="default"
+                              icon={<ArrowRight size={16} />}
+                              iconPosition="end"
+                              href={trustChangeDetailData.data.hubspotUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              block
+                            >
+                              HubSpot Contact 보기
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ),
               },

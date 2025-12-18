@@ -11,6 +11,7 @@ import {
   getDashboardCompaniesHandler,
   getFilterOptionsHandler,
 } from '@/repository/query/dashboardApiController/handler';
+import { getTrustChangeDetailHandler } from '@/repository/query/trustChangeDetailApiController/handler';
 
 /**
  * 모든 MSW handlers
@@ -25,7 +26,7 @@ export const handlers = [
   getCustomerSummaryHandler,
   getSalesHistoryHandler,
 
-  // TODO: 다른 API handlers 추가
   // Trust Change Detail API
+  getTrustChangeDetailHandler,
 ];
 

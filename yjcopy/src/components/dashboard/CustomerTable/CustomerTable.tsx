@@ -1,46 +1,43 @@
-import { useState, useMemo } from "react";
-import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Phone,
-  Users,
-  Building2,
-  Calendar,
-  Star,
-  BookOpen,
-  ArrowRight,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  Filter,
-} from "lucide-react";
-import {
-  ComposedChart,
-  Line,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { Text, Card, Badge, Modal } from "@/components/common/atoms";
-import { SalesActionHistory } from "@/components/dashboard/SalesActionHistory";
-import {
-  Customer,
-  SalesAction,
-  ContentEngagement,
-  Possibility,
-  MBMPipelineStatus,
-} from "@/types/customer";
+import type { TimePeriod } from "@/App";
+import { Badge, Card, Modal, Text } from "@/components/common/atoms";
 import {
   formatCurrency,
-  getDataWithPeriodChange,
-  calculateExpectedRevenue,
+  getDataWithPeriodChange
 } from "@/data/mockData";
-import type { TimePeriod } from "@/App";
+import {
+  ContentEngagement,
+  Customer,
+  MBMPipelineStatus,
+  Possibility,
+  SalesAction,
+} from "@/types/customer";
+import {
+  ArrowRight,
+  BookOpen,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  Eye,
+  Filter,
+  Minus,
+  Phone,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  XCircle
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import styles from "./index.module.scss";
 
 // 금액 축약 포맷
@@ -235,7 +232,7 @@ const MBM_PIPELINE_LABELS: Record<MBMPipelineStatus, { label: string; variant: "
 // 고객 반응 표시용
 const CUSTOMER_RESPONSE_VARIANTS: Record<string, "success" | "warning" | "error"> = {
   상: "success",
-  중: "warning", 
+  중: "warning",
   하: "error",
 };
 
@@ -249,18 +246,18 @@ const parseProductUsage = (usage: string): string[] => {
 // 최근 MBM 날짜 계산
 const getLastMBMDate = (attendance: Customer["attendance"]): string | null => {
   if (!attendance) return null;
-  
+
   const MBM_DATES: Record<string, string> = {
     "1218": "12/18",
-    "1209": "12/09", 
+    "1209": "12/09",
     "1107": "11/07",
   };
-  
+
   // 가장 최근 MBM 참석 찾기 (키 역순으로 정렬)
   const attendedKeys = Object.keys(attendance)
     .filter(key => attendance[key as keyof typeof attendance])
     .sort((a, b) => parseInt(b) - parseInt(a));
-  
+
   if (attendedKeys.length === 0) return null;
   return MBM_DATES[attendedKeys[0]] || attendedKeys[0];
 };
@@ -268,11 +265,11 @@ const getLastMBMDate = (attendance: Customer["attendance"]): string | null => {
 // 마지막 컨택일 계산 (날짜 반환)
 const getLastContactDate = (salesActions: SalesAction[] | undefined): string | null => {
   if (!salesActions || salesActions.length === 0) return null;
-  
+
   const sortedActions = [...salesActions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-  
+
   return sortedActions[0].date;
 };
 
@@ -754,7 +751,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     let prevQuote = false;
     let prevApproval = false;
     let prevContract = false;
-    
+
     const currentPossibility = action.possibility || null;
 
     if (customer?.salesActions) {
@@ -987,9 +984,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         <span className={styles.sortLabel}>정렬</span>
         <div className={styles.sortButtons}>
           <button
-            className={`${styles.sortBtn} ${
-              isActive && sortDirection === "asc" ? styles.active : ""
-            }`}
+            className={`${styles.sortBtn} ${isActive && sortDirection === "asc" ? styles.active : ""
+              }`}
             onClick={() => {
               setSortField(field);
               setSortDirection("asc");
@@ -998,9 +994,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
             오름차순
           </button>
           <button
-            className={`${styles.sortBtn} ${
-              isActive && sortDirection === "desc" ? styles.active : ""
-            }`}
+            className={`${styles.sortBtn} ${isActive && sortDirection === "desc" ? styles.active : ""
+              }`}
             onClick={() => {
               setSortField(field);
               setSortDirection("desc");
@@ -1394,7 +1389,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     type="checkbox"
                     checked={
                       columnFilters.progress[
-                        item.key as keyof typeof columnFilters.progress
+                      item.key as keyof typeof columnFilters.progress
                       ]
                     }
                     onChange={(e) =>
@@ -1494,7 +1489,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                 const lastMBM = getLastMBMDate(customer.attendance);
                 const lastContactDate = getLastContactDate(customer.salesActions);
                 const adoptionStage = getAdoptionStage(customer.adoptionDecision);
-                
+
                 return (
                   <tr
                     key={customer.no}
@@ -1555,7 +1550,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         const isImproved = getAdoptionStageLevel(adoptionStage) > getAdoptionStageLevel(pastStage);
                         const isDeclined = getAdoptionStageLevel(adoptionStage) < getAdoptionStageLevel(pastStage);
                         const changeType = isImproved ? "positive" : isDeclined ? "negative" : "neutral";
-                        
+
                         return (
                           <div className={`${styles.changeTag} ${styles[changeType]}`}>
                             <span>{pastStage}</span>
@@ -1579,7 +1574,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         const isPositive = current > past;
                         const isNegative = current < past;
                         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-                        
+
                         return (
                           <div className={`${styles.changeTag} ${styles[changeType]}`}>
                             <span>{past}</span>
@@ -1597,7 +1592,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         const isPositive = (POSSIBILITY_ORDER[current] ?? 0) > (POSSIBILITY_ORDER[past] ?? 0);
                         const isNegative = (POSSIBILITY_ORDER[current] ?? 0) < (POSSIBILITY_ORDER[past] ?? 0);
                         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-                        
+
                         return (
                           <div className={`${styles.changeTag} ${styles[changeType]}`}>
                             <span>{past}</span>
@@ -1615,7 +1610,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         const isPositive = current > past;
                         const isNegative = current < past;
                         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-                        
+
                         return (
                           <div className={`${styles.changeTag} ${styles[changeType]}`}>
                             <span>{formatCompactCurrency(past)}</span>
@@ -1634,7 +1629,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         const isPositive = past !== "-" && current !== "-" && new Date(current) < new Date(past);
                         const isNegative = past !== "-" && current !== "-" && new Date(current) > new Date(past);
                         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-                        
+
                         return (
                           <div className={`${styles.changeTag} ${styles[changeType]}`}>
                             <span>{past}</span>
@@ -1691,27 +1686,24 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
             {/* Tab Navigation */}
             <div className={styles.tabNav}>
               <button
-                className={`${styles.tabButton} ${
-                  activeTab === "summary" ? styles.active : ""
-                }`}
+                className={`${styles.tabButton} ${activeTab === "summary" ? styles.active : ""
+                  }`}
                 onClick={() => setActiveTab("summary")}
               >
                 <Building2 size={16} />
                 <span>요약</span>
               </button>
               <button
-                className={`${styles.tabButton} ${
-                  activeTab === "sales" ? styles.active : ""
-                }`}
+                className={`${styles.tabButton} ${activeTab === "sales" ? styles.active : ""
+                  }`}
                 onClick={() => setActiveTab("sales")}
               >
                 <Calendar size={16} />
                 <span>영업 히스토리</span>
               </button>
               <button
-                className={`${styles.tabButton} ${
-                  activeTab === "marketing" ? styles.active : ""
-                }`}
+                className={`${styles.tabButton} ${activeTab === "marketing" ? styles.active : ""
+                  }`}
                 onClick={() => setActiveTab("marketing")}
               >
                 <BookOpen size={16} />
@@ -1784,7 +1776,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         </Text>
                         <div className={`${styles.changeTag} ${styles[
                           selectedCustomer.changeDirection === "up" ? "positive" :
-                          selectedCustomer.changeDirection === "down" ? "negative" : "neutral"
+                            selectedCustomer.changeDirection === "down" ? "negative" : "neutral"
                         ]}`}>
                           <span>{(selectedCustomer.trustIndex ?? 0) - (selectedCustomer.changeAmount ?? 0)}</span>
                           <ArrowRight size={10} />
@@ -1846,7 +1838,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
                   {/* HubSpot Link */}
                   <section className={styles.modalSection}>
-                    <a 
+                    <a
                       href={`https://app.hubspot.com/contacts/${selectedCustomer.no}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1863,10 +1855,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
 
               {activeTab === "sales" && (
                 <div className={styles.salesTab}>
-                  {/* 주차별 추이 그래프 */}
+                  {/* 팔로업 추이 그래프 */}
                   <section className={styles.modalSection}>
                     <Text variant="body-md" weight="semibold">
-                      주차별 추이
+                      팔로업 추이
                     </Text>
                     {selectedCustomer.salesActions && selectedCustomer.salesActions.length > 0 ? (
                       <div className={styles.weeklyChart}>
@@ -1877,10 +1869,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                               .map((action) => ({
                                 date: action.date,
-                                customerResponseIndex: 
+                                customerResponseIndex:
                                   action.customerResponse === "상" ? 3 :
-                                  action.customerResponse === "중" ? 2 :
-                                  action.customerResponse === "하" ? 1 : 0,
+                                    action.customerResponse === "중" ? 2 :
+                                      action.customerResponse === "하" ? 1 : 0,
                                 targetRevenue: action.targetRevenue ? action.targetRevenue / 100000000 : null,
                                 expectedRevenue: action.targetRevenue && action.possibility
                                   ? (action.targetRevenue * parseInt(action.possibility)) / 100 / 100000000
@@ -1889,12 +1881,12 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                           >
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                            <XAxis 
-                              dataKey="date" 
+                            <XAxis
+                              dataKey="date"
                               stroke="#a1a1aa"
                               tick={{ fill: "#a1a1aa", fontSize: 12 }}
                             />
-                            <YAxis 
+                            <YAxis
                               yAxisId="left"
                               stroke="#a1a1aa"
                               tick={{ fill: "#a1a1aa", fontSize: 12 }}
@@ -1902,7 +1894,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               domain={[0, 3]}
                               ticks={[1, 2, 3]}
                             />
-                            <YAxis 
+                            <YAxis
                               yAxisId="right"
                               orientation="right"
                               stroke="#a1a1aa"
@@ -1918,7 +1910,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               labelStyle={{ color: "#fafafa" }}
                               itemStyle={{ color: "#a1a1aa" }}
                             />
-                            <Legend 
+                            <Legend
                               wrapperStyle={{ color: "#a1a1aa" }}
                             />
                             <Line
@@ -1984,10 +1976,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                               </Text>
                               <div className={styles.actionTags}>
                                 {action.customerResponse && (
-                                  <Badge 
+                                  <Badge
                                     variant={
                                       action.customerResponse === "상" ? "success" :
-                                      action.customerResponse === "중" ? "warning" : "error"
+                                        action.customerResponse === "중" ? "warning" : "error"
                                     }
                                     size="sm"
                                   >
@@ -2216,8 +2208,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                       actionModalData.currentPossibility === "90%"
                         ? "success"
                         : actionModalData.currentPossibility === "40%"
-                        ? "warning"
-                        : "error"
+                          ? "warning"
+                          : "error"
                     }
                     size="sm"
                   >
@@ -2234,8 +2226,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                   고객반응 변화
                 </Text>
                 <div className={styles.possibilityChange}>
-                  {actionModalData.prevCustomerResponse && 
-                   actionModalData.prevCustomerResponse !== actionModalData.action.customerResponse ? (
+                  {actionModalData.prevCustomerResponse &&
+                    actionModalData.prevCustomerResponse !== actionModalData.action.customerResponse ? (
                     <>
                       <Badge variant="default" size="sm" className={styles.pastValue}>
                         {actionModalData.prevCustomerResponse}
@@ -2248,8 +2240,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                       actionModalData.action.customerResponse === "상"
                         ? "success"
                         : actionModalData.action.customerResponse === "중"
-                        ? "warning"
-                        : "error"
+                          ? "warning"
+                          : "error"
                     }
                     size="sm"
                   >
@@ -2262,9 +2254,9 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                   목표매출 변화
                 </Text>
                 <div className={styles.possibilityChange}>
-                  {actionModalData.prevTargetRevenue !== null && 
-                   actionModalData.prevTargetRevenue !== undefined &&
-                   actionModalData.prevTargetRevenue !== actionModalData.action.targetRevenue ? (
+                  {actionModalData.prevTargetRevenue !== null &&
+                    actionModalData.prevTargetRevenue !== undefined &&
+                    actionModalData.prevTargetRevenue !== actionModalData.action.targetRevenue ? (
                     <>
                       <Text variant="body-sm" color="tertiary" className={styles.pastValue}>
                         {formatCurrency(actionModalData.prevTargetRevenue)}
@@ -2476,8 +2468,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                                 content.category === "BOFU"
                                   ? "success"
                                   : content.category === "MOFU"
-                                  ? "warning"
-                                  : "info"
+                                    ? "warning"
+                                    : "info"
                               }
                               size="sm"
                             >
