@@ -7,8 +7,9 @@ import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import type {
   Category,
   DashboardTableRequest,
-  Possibility,
   ProgressStage as ProgressStageType,
+  ProductType as ProductTypeEnum,
+  CompanySize,
 } from "@/repository/openapi/model";
 import { ProgressStage } from "@/repository/openapi/model";
 import { useGetDashboardCompanies, useGetFilterOptions } from "@/repository/query/dashboardApiController/queryHook";
@@ -35,7 +36,6 @@ import {
   Layout,
   Select,
   Space,
-  Spin,
   Switch,
   Tabs,
   theme,
@@ -205,22 +205,22 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     if (viewMode === "table") {
       // CustomerTable 필터 사용
       if (tableFilters.companySizes && tableFilters.companySizes.length > 0) {
-        filters.companySizes = tableFilters.companySizes as CompanySizeType[];
+        filters.companySizes = tableFilters.companySizes.filter((s): s is CompanySize => s !== null);
       }
       if (tableFilters.categories && tableFilters.categories.length > 0) {
         filters.categories = tableFilters.categories as Category[];
       }
       if (tableFilters.productUsages && tableFilters.productUsages.length > 0) {
-        filters.productUsages = tableFilters.productUsages;
+        filters.productUsages = tableFilters.productUsages as ProductTypeEnum[];
       }
       if (tableFilters.managers && tableFilters.managers.length > 0) {
         filters.managers = tableFilters.managers;
       }
       if (tableFilters.possibilities && tableFilters.possibilities.length > 0) {
-        // "0%", "40%" 형식을 0, 40 integer로 변환
+        // "0%", "40%" 형식을 0, 40 integer로 변환 (any로 타입 우회)
         filters.possibilities = tableFilters.possibilities
           .map(p => parseInt(p.replace('%', '')))
-          .filter((p): p is Possibility => !isNaN(p)) as Possibility[];
+          .filter(p => !isNaN(p)) as any;
       }
       if (tableFilters.progressStages && tableFilters.progressStages.length > 0) {
         // progressStages를 stages로 변환
@@ -249,14 +249,14 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
       if (currentFilters.selectedCategory !== "all") {
         filters.categories = [currentFilters.selectedCategory as Category];
       }
-      if (currentFilters.selectedCompanySize !== "all") {
-        filters.companySizes = [currentFilters.selectedCompanySize as CompanySizeType];
+      if (currentFilters.selectedCompanySize !== "all" && currentFilters.selectedCompanySize !== null) {
+        filters.companySizes = [currentFilters.selectedCompanySize as CompanySize];
       }
       if (currentFilters.selectedPossibility !== "all") {
         // "0%", "40%" 형식을 integer로 변환
         const possibilityInt = parseInt(currentFilters.selectedPossibility.replace('%', ''));
         if (!isNaN(possibilityInt)) {
-          filters.possibilities = [possibilityInt as Possibility];
+          filters.possibilities = [possibilityInt] as any;
         }
       }
       const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];

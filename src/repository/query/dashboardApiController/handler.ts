@@ -7,8 +7,8 @@ import type {
   DashboardTableRequest,
   DashboardTableResponse,
   DashboardTableRow,
-  Possibility,
 } from "@/repository/openapi/model";
+// CompanySize import (사용하지 않음)
 import { http, HttpResponse } from "msw";
 
 // ==================== Mock Data ====================
@@ -30,7 +30,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     lastContactDate: "2024-12-15",
     current: {
       trustIndex: 40,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 1,
       targetRevenue: 5000000,
       test: true,
@@ -40,7 +40,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 36,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -52,7 +52,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 8,
     companyName: "도쿄일렉트론코리아",
-    companySize: "T9",
+    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
     category: "recruit",
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
@@ -61,7 +61,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     lastContactDate: "2024-12-16",
     current: {
       trustIndex: 28,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 5000000,
       test: true,
@@ -71,7 +71,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 25,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 3000000,
       test: false,
@@ -90,7 +90,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 41250000,
     current: {
       trustIndex: 55,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 58000000,
       test: true,
@@ -100,7 +100,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 48,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 40000000,
       test: false,
@@ -112,14 +112,14 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 25,
     companyName: "AJ네트웍스",
-    companySize: "T9",
+    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
     category: "recruit",
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 62400000,
     current: {
       trustIndex: 17,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 1,
       targetRevenue: 8000000,
       test: true,
@@ -129,7 +129,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 19,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -148,7 +148,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 15200000,
     current: {
       trustIndex: 66,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 2,
       targetRevenue: 8000000,
       test: true,
@@ -158,7 +158,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 74,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 2,
       targetRevenue: 10000000,
       test: true,
@@ -177,7 +177,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 10000000,
     current: {
       trustIndex: 39,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -187,7 +187,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 48,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 5000000,
       test: false,
@@ -206,7 +206,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 6300000,
     current: {
       trustIndex: 10,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 6000000,
       test: true,
@@ -216,7 +216,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 10,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 3000000,
       test: false,
@@ -235,7 +235,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 33000000,
     current: {
       trustIndex: 26,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 11,
       targetRevenue: 29600000,
       test: true,
@@ -245,7 +245,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 19,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 11,
       targetRevenue: 20000000,
       test: false,
@@ -257,14 +257,14 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 240,
     companyName: "유라코포레이션",
-    companySize: "T9",
+    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
     category: "recruit",
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 30000000,
     current: {
       trustIndex: 23,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 11,
       targetRevenue: 30000000,
       test: true,
@@ -274,7 +274,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 15,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 11,
       targetRevenue: 20000000,
       test: false,
@@ -293,7 +293,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 10030000,
     current: {
       trustIndex: 21,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 11,
       targetRevenue: 10030000,
       test: true,
@@ -303,7 +303,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 16,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 8000000,
       test: false,
@@ -322,7 +322,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 10000000,
     current: {
       trustIndex: 46,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 3500000,
       test: true,
@@ -332,7 +332,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 49,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 11,
       targetRevenue: 2000000,
       test: false,
@@ -351,7 +351,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 2000000,
     current: {
       trustIndex: 47,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 5000000,
       test: true,
@@ -361,7 +361,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 56,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -380,7 +380,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 2700000,
     current: {
       trustIndex: 96,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 1500000,
       test: true,
@@ -390,7 +390,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 94,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -409,7 +409,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 2700000,
     current: {
       trustIndex: 14,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 6000000,
       test: false,
@@ -419,7 +419,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 15,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 4000000,
       test: false,
@@ -438,7 +438,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 1000000,
     current: {
       trustIndex: 16,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 1000000,
       test: false,
@@ -448,7 +448,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 19,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 500000,
       test: false,
@@ -467,7 +467,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 17000000,
     current: {
       trustIndex: 62,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 8000000,
       test: false,
@@ -477,7 +477,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 57,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 5000000,
       test: false,
@@ -496,7 +496,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 15000000,
     current: {
       trustIndex: 86,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 1,
       targetRevenue: 3750000,
       test: false,
@@ -506,7 +506,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 82,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -518,14 +518,14 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 708,
     companyName: "디비아이엔씨",
-    companySize: "T9",
+    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
     category: "recruit",
     productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 240000000,
     current: {
       trustIndex: 32,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 4000000,
       test: true,
@@ -535,7 +535,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 28,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 3000000,
       test: false,
@@ -554,7 +554,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 50000000,
     current: {
       trustIndex: 35,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 12,
       targetRevenue: 10000000,
       test: true,
@@ -564,7 +564,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 32,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 12,
       targetRevenue: 8000000,
       test: false,
@@ -583,7 +583,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 24000000,
     current: {
       trustIndex: 51,
-      possibility: "90%",
+      possibility: 90,
       targetMonth: 8,
       targetRevenue: 24000000,
       test: false,
@@ -593,7 +593,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 54,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -612,7 +612,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 24800000,
     current: {
       trustIndex: 82,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 1,
       targetRevenue: null,
       test: false,
@@ -622,7 +622,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 78,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -641,7 +641,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     contractAmount: 10000000,
     current: {
       trustIndex: 45,
-      possibility: "40%",
+      possibility: 40,
       targetMonth: 1,
       targetRevenue: null,
       test: false,
@@ -651,7 +651,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     },
     previous: {
       trustIndex: 42,
-      possibility: "0%",
+      possibility: 0,
       targetMonth: null,
       targetRevenue: null,
       test: false,
@@ -786,6 +786,7 @@ export const getFilterOptionsHandler = http.get(
     };
     
     const uniqueManagers = Array.from(new Set(enrichedData.map(d => d.manager)))
+      .filter((name): name is string => name !== null && name !== undefined)
       .map(name => ({
         owner_id: managerMapping[name] || `owner_${name}`,
         name: name
@@ -877,8 +878,8 @@ export const getDashboardCompaniesHandler = http.post(
 
     // 가능성 필터
     if (filters?.possibilities?.length) {
-      const possibilities = new Set(filters.possibilities);
-      rows = rows.filter((row) => row.current.possibility && possibilities.has(row.current.possibility));
+      const possibilities = new Set(filters.possibilities as any);
+      rows = rows.filter((row) => row.current.possibility !== null && row.current.possibility !== undefined && possibilities.has(row.current.possibility as any));
     }
 
     // 진행 단계 필터

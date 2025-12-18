@@ -172,22 +172,24 @@ const ALL_WEEKS: Week[] = [
 
 type WeekKey = Week["key"];
 
-const WEEK_COUNT_BY_PERIOD: Record<TimePeriodType, number> = {
-  "1w": 1,
-  "1m": 4,
-  "6m": 26,
-  "1y": 52,
-};
+// 사용하지 않는 상수 제거
+// const WEEK_COUNT_BY_PERIOD: Record<TimePeriodType, number> = {
+//   "1w": 1,
+//   "1m": 4,
+//   "6m": 26,
+//   "1y": 52,
+// };
 
-const getWeeksForPeriod = (timePeriod: TimePeriodType): Week[] => {
-  const count = WEEK_COUNT_BY_PERIOD[timePeriod] ?? ALL_WEEKS.length;
-  const currentIndex =
-    ALL_WEEKS.findIndex((w) => w.isCurrent) !== -1
-      ? ALL_WEEKS.findIndex((w) => w.isCurrent)
-      : ALL_WEEKS.length - 1;
-  const startIndex = Math.max(0, currentIndex - (count - 1));
-  return ALL_WEEKS.slice(startIndex, currentIndex + 1);
-};
+// 사용하지 않는 함수 제거
+// const getWeeksForPeriod = (timePeriod: TimePeriodType): Week[] => {
+//   const count = WEEK_COUNT_BY_PERIOD[timePeriod] ?? ALL_WEEKS.length;
+//   const currentIndex =
+//     ALL_WEEKS.findIndex((w) => w.isCurrent) !== -1
+//       ? ALL_WEEKS.findIndex((w) => w.isCurrent)
+//       : ALL_WEEKS.length - 1;
+//   const startIndex = Math.max(0, currentIndex - (count - 1));
+//   return ALL_WEEKS.slice(startIndex, currentIndex + 1);
+// };
 
 // 특정 주에 MBM 이벤트가 있는지 확인
 const getMBMForWeek = (

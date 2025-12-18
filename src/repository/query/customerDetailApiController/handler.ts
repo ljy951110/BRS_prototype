@@ -8,11 +8,11 @@ import type {
   CustomerSummaryRequest,
   CustomerSummaryResponse,
   CustomerDetailPeriodData,
-  Possibility,
   SalesHistoryRequest,
   SalesHistoryResponse,
+  CompanySize,
+  ProductType,
 } from "@/repository/openapi/model";
-import { CompanySize, ProductType } from "@/types/common";
 import { http, HttpResponse } from "msw";
 
 // ==================== Mock Data ====================
@@ -352,11 +352,12 @@ const mapCategory = (category: string): Category | null => {
 };
 
 /**
- * 가능성 문자열 → OpenAPI Possibility 타입 매핑
+ * 가능성 문자열 → number 타입 매핑
  */
-const mapPossibility = (possibility: string | undefined): Possibility | null => {
+const mapPossibility = (possibility: string | undefined): number | null => {
   if (!possibility) return null;
-  return possibility as unknown as Possibility;
+  const num = parseInt(possibility.replace('%', ''));
+  return isNaN(num) ? null : num;
 };
 
 /**
@@ -395,7 +396,7 @@ export const getCustomerSummaryHandler = http.post(
     const latestAction = customer.salesActions[customer.salesActions.length - 1];
     const current: CustomerDetailPeriodData = {
       trustIndex: null, // MockCustomerDetail에는 trustIndex가 없음
-      possibility: mapPossibility(latestAction?.possibility) ?? undefined,
+      possibility: mapPossibility(latestAction?.possibility) as any ?? undefined,
       targetRevenue: latestAction?.targetRevenue ?? null,
       targetDate: latestAction?.targetDate ?? null,
       test: latestAction?.test ?? false,
@@ -408,7 +409,7 @@ export const getCustomerSummaryHandler = http.post(
     const firstAction = customer.salesActions[0];
     const previous: CustomerDetailPeriodData = {
       trustIndex: null,
-      possibility: mapPossibility(firstAction?.possibility) ?? undefined,
+      possibility: mapPossibility(firstAction?.possibility) as any ?? undefined,
       targetRevenue: firstAction?.targetRevenue ?? null,
       targetDate: firstAction?.targetDate ?? null,
       test: firstAction?.test ?? false,
@@ -493,7 +494,7 @@ export const getSalesHistoryHandler = http.post(
         date: action.date,
         stateChange: {
           before: prevAction ? {
-            possibility: mapPossibility(prevAction.possibility) ?? undefined,
+            possibility: mapPossibility(prevAction.possibility) as any ?? undefined,
             targetRevenue: prevAction.targetRevenue ?? null,
             targetDate: prevAction.targetDate ?? null,
             test: prevAction.test ?? false,
@@ -510,7 +511,7 @@ export const getSalesHistoryHandler = http.post(
             contract: false,
           },
           after: {
-            possibility: mapPossibility(action.possibility) ?? undefined,
+            possibility: mapPossibility(action.possibility) as any ?? undefined,
             targetRevenue: action.targetRevenue ?? null,
             targetDate: action.targetDate ?? null,
             test: action.test ?? false,
