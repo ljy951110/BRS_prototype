@@ -1,16 +1,17 @@
 # EngagementItem
 
-Engagement Item - 이벤트 기반 활동
+Engagement Item - 이벤트 기반 활동 (콘텐츠)
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **title** | **string** |  | [default to undefined]
-**date** | **string** |  | [default to undefined]
+**latestViewDate** | **string** |  | [default to undefined]
+**funnelType** | **string** |  | [optional] [default to undefined]
+**contentType** | **string** |  | [optional] [default to undefined]
+**viewCount** | **number** |  | [optional] [default to undefined]
 **url** | **string** |  | [optional] [default to undefined]
-**actionType** | [**ContentActionType**](ContentActionType.md) |  | [default to undefined]
-**introducedProduct** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -19,10 +20,11 @@ import { EngagementItem } from './api';
 
 const instance: EngagementItem = {
     title,
-    date,
+    latestViewDate,
+    funnelType,
+    contentType,
+    viewCount,
     url,
-    actionType,
-    introducedProduct,
 };
 ```
 

@@ -22,7 +22,8 @@
 
 export const SalesActionType = {
     CALL: 'CALL',
-    MEETING: 'MEETING'
+    MEETING: 'MEETING',
+    EMAIL: 'EMAIL'
 } as const;
 
 export type SalesActionType = typeof SalesActionType[keyof typeof SalesActionType];

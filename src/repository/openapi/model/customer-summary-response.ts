@@ -86,6 +86,12 @@ export interface CustomerSummaryResponse {
      * @memberof CustomerSummaryResponse
      */
     'previous': CustomerDetailPeriodData;
+    /**
+     * 
+     * @type {string}
+     * @memberof CustomerSummaryResponse
+     */
+    'hubspotUrl': string;
 }
 
 

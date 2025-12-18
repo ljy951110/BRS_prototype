@@ -1,17 +1,17 @@
 # ProductType
 
-제품 타입
+제품 타입 (DB using_product 값과 일치)
 
 ## Enum
 
 * `ATS` (value: `'ATS'`)
 
-* `SR` (value: `'역검SR'`)
+* `ACCSR` (value: `'ACCSR'`)
 
-* `INHR` (value: `'INHR+통합'`)
+* `INHR_PLUS` (value: `'INHR_PLUS'`)
 
-* `` (value: `'역검'`)
+* `ACC` (value: `'ACC'`)
 
-* `2` (value: `'이탈사'`)
+* `CHURN` (value: `'CHURN'`)
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

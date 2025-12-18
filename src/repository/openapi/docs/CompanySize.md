@@ -16,16 +16,8 @@
 
 * `T5` (value: `'T5'`)
 
-* `T6` (value: `'T6'`)
-
-* `T7` (value: `'T7'`)
-
-* `T8` (value: `'T8'`)
-
-* `T9` (value: `'T9'`)
-
 * `T10` (value: `'T10'`)
 
-* `` (value: `'미확인'`)
+* `UNKNOWN` (value: `'UNKNOWN'`)
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -13,12 +13,9 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ContentActionType } from './content-action-type';
 
 /**
- * Engagement Item - 이벤트 기반 활동
+ * Engagement Item - 이벤트 기반 활동 (콘텐츠)
  * @export
  * @interface EngagementItem
  */
@@ -34,26 +31,30 @@ export interface EngagementItem {
      * @type {string}
      * @memberof EngagementItem
      */
-    'date': string;
+    'latestViewDate': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EngagementItem
+     */
+    'funnelType'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof EngagementItem
+     */
+    'contentType'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof EngagementItem
+     */
+    'viewCount'?: number | null;
     /**
      * 
      * @type {string}
      * @memberof EngagementItem
      */
     'url'?: string | null;
-    /**
-     * 
-     * @type {ContentActionType}
-     * @memberof EngagementItem
-     */
-    'actionType': ContentActionType;
-    /**
-     * 
-     * @type {string}
-     * @memberof EngagementItem
-     */
-    'introducedProduct'?: string | null;
 }
-
-
 

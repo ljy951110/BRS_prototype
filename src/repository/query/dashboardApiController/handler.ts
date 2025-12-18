@@ -23,9 +23,11 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "비전바이오켐",
     companySize: "T0",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 11000000,
+    lastMBMDate: "2024-11-07",
+    lastContactDate: "2024-12-15",
     current: {
       trustIndex: 40,
       possibility: "40%",
@@ -52,9 +54,11 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "도쿄일렉트론코리아",
     companySize: "T9",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 50000000,
+    lastMBMDate: "2024-12-09",
+    lastContactDate: "2024-12-16",
     current: {
       trustIndex: 28,
       possibility: "90%",
@@ -81,7 +85,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "서울도시가스",
     companySize: "T5",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 41250000,
     current: {
@@ -110,7 +114,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "AJ네트웍스",
     companySize: "T9",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 62400000,
     current: {
@@ -139,7 +143,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "(주)도루코",
     companySize: "T1",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 15200000,
     current: {
@@ -168,7 +172,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "대한제분",
     companySize: "T1",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 10000000,
     current: {
@@ -197,7 +201,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "한국컴패션",
     companySize: "T1",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 6300000,
     current: {
@@ -226,7 +230,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "빙그레",
     companySize: "T5",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 33000000,
     current: {
@@ -255,7 +259,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "유라코포레이션",
     companySize: "T9",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 30000000,
     current: {
@@ -284,7 +288,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "농우바이오",
     companySize: "T1",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 10030000,
     current: {
@@ -313,7 +317,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "메리츠캐피탈",
     companySize: "T10",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 10000000,
     current: {
@@ -342,7 +346,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "에이플러스에셋어드바이저",
     companySize: "T3",
     category: "recruit",
-    productUsage: ["역검"],
+    productUsage: ["ACC"],
     manager: "이정호",
     contractAmount: 2000000,
     current: {
@@ -371,7 +375,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "안국건강",
     companySize: "T0",
     category: "recruit",
-    productUsage: ["역검"],
+    productUsage: ["ACC"],
     manager: "김택수",
     contractAmount: 2700000,
     current: {
@@ -400,7 +404,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "에스테이트",
     companySize: "T0",
     category: "recruit",
-    productUsage: ["역검"],
+    productUsage: ["ACC"],
     manager: "윤상준",
     contractAmount: 2700000,
     current: {
@@ -429,7 +433,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "에이치비테크놀러지",
     companySize: "T3",
     category: "recruit",
-    productUsage: ["역검"],
+    productUsage: ["ACC"],
     manager: "이지훈",
     contractAmount: 1000000,
     current: {
@@ -516,7 +520,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "디비아이엔씨",
     companySize: "T9",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 240000000,
     current: {
@@ -545,7 +549,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "해안종합건축사사무소",
     companySize: "T5",
     category: "recruit",
-    productUsage: ["ATS", "역검"],
+    productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 50000000,
     current: {
@@ -603,7 +607,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "(주)도루코 성과",
     companySize: "T10",
     category: "performance",
-    productUsage: ["INHR+통합"],
+    productUsage: ["INHR_PLUS"],
     manager: "김용진",
     contractAmount: 24800000,
     current: {
@@ -632,7 +636,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyName: "국가과학기술인력개발원",
     companySize: "T5",
     category: "public",
-    productUsage: ["ATS", "역검SR"],
+    productUsage: ["ATS", "ACCSR"],
     manager: "송병규",
     contractAmount: 10000000,
     current: {
@@ -665,18 +669,81 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
  */
 const calculateExpectedRevenue = (
   targetRevenue: number | null | undefined,
-  possibility: Possibility | null | undefined
+  possibility: number | null | undefined
 ): number => {
-  if (!targetRevenue || !possibility) return 0;
-
-  const possibilityValue: Record<string, number> = {
-    "0%": 0,
-    "40%": 0.4,
-    "90%": 0.9,
-  };
-
-  const rate = possibilityValue[possibility] || 0;
+  if (!targetRevenue || possibility == null) return 0;
+  
+  // possibility는 이제 0, 10, 40, 90, 100 같은 integer 값
+  const rate = possibility / 100;
   return Math.round(targetRevenue * rate);
+};
+
+/**
+ * Mock 데이터에 lastMBMDate, lastContactDate, expectedRevenue 추가 및 possibility 변환
+ * 실제 서비스에서는 DB에서 계산되어 반환됨
+ */
+const enrichMockData = (rows: DashboardTableRow[]): DashboardTableRow[] => {
+  const MBM_DATES = ["2024-11-07", "2024-12-09", "2024-12-18"];
+
+  return rows.map((row) => {
+    // possibility를 string에서 integer로 변환
+    const convertPossibility = (poss: any): number | null => {
+      if (typeof poss === 'number') return poss;
+      if (typeof poss === 'string') {
+        const num = parseInt(poss.replace('%', ''));
+        return isNaN(num) ? null : num;
+      }
+      return null;
+    };
+
+    const currentPossibility = convertPossibility(row.current.possibility);
+    const previousPossibility = convertPossibility(row.previous.possibility);
+
+    // expectedRevenue 계산
+    const currentExpectedRevenue = calculateExpectedRevenue(
+      row.current.targetRevenue,
+      currentPossibility
+    );
+    const previousExpectedRevenue = calculateExpectedRevenue(
+      row.previous.targetRevenue,
+      previousPossibility
+    );
+
+    // lastMBMDate가 이미 있으면 그대로 사용, 없으면 생성
+    if (row.lastMBMDate === undefined) {
+      // 회사 ID에 따라 일관된 MBM 날짜 할당
+      const mbmIndex = row.companyId % 4; // 0, 1, 2, 3
+      row.lastMBMDate = mbmIndex === 3 ? null : MBM_DATES[mbmIndex % MBM_DATES.length];
+    }
+
+    // lastContactDate가 이미 있으면 그대로 사용, 없으면 생성
+    if (row.lastContactDate === undefined) {
+      // 회사 ID에 따라 일관된 컨택 날짜 할당 (2024-11-10 ~ 2024-12-18)
+      const dayOffset = (row.companyId * 7) % 39; // 0~38일 범위
+      const baseDate = new Date("2024-11-10");
+      baseDate.setDate(baseDate.getDate() + dayOffset);
+      row.lastContactDate = baseDate.toISOString().split('T')[0];
+
+      // 일부 회사는 컨택이 없음 (10%는 null)
+      if (row.companyId % 10 === 0) {
+        row.lastContactDate = null;
+      }
+    }
+
+    return {
+      ...row,
+      current: {
+        ...row.current,
+        possibility: currentPossibility,
+        expectedRevenue: currentExpectedRevenue,
+      },
+      previous: {
+        ...row.previous,
+        possibility: previousPossibility,
+        expectedRevenue: previousExpectedRevenue,
+      },
+    };
+  });
 };
 
 /**
@@ -704,10 +771,28 @@ export const getFilterOptionsHandler = http.get(
   () => {
     console.log('[MSW] 📥 Intercepted GET /api/v1/dashboard/companies/filters');
 
-    const uniqueManagers = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.manager)));
-    const uniqueCategories = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.category).filter(Boolean)));
-    const uniqueCompanySizes = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.companySize).filter(Boolean)));
-    const uniquePossibilities = Array.from(new Set(MOCK_DASHBOARD_DATA.map(d => d.current.possibility).filter(Boolean)));
+    const enrichedData = enrichMockData(MOCK_DASHBOARD_DATA);
+    
+    // 담당자 매핑 (이름 -> owner_id)
+    const managerMapping: Record<string, string> = {
+      '이정호': 'owner_001',
+      '윤상준': 'owner_002',
+      '이지훈': 'owner_003',
+      '김택수': 'owner_004',
+      '김종현': 'owner_005',
+      '유재현': 'owner_006',
+      '김용진': 'owner_007',
+      '송병규': 'owner_008',
+    };
+    
+    const uniqueManagers = Array.from(new Set(enrichedData.map(d => d.manager)))
+      .map(name => ({
+        owner_id: managerMapping[name] || `owner_${name}`,
+        name: name
+      }));
+    const uniqueCategories = Array.from(new Set(enrichedData.map(d => d.category).filter(Boolean)));
+    const uniqueCompanySizes = Array.from(new Set(enrichedData.map(d => d.companySize).filter(Boolean)));
+    const uniquePossibilities = Array.from(new Set(enrichedData.map(d => d.current.possibility).filter(Boolean)));
 
     const response = {
       managers: uniqueManagers,
@@ -740,7 +825,7 @@ export const getDashboardCompaniesHandler = http.post(
     const companyNameSearch = body.search?.companyName?.trim().toLowerCase();
     const filters = body.filters;
 
-    let rows = [...MOCK_DASHBOARD_DATA];
+    let rows = enrichMockData([...MOCK_DASHBOARD_DATA]);
 
     // ==================== 필터링 ====================
 
@@ -760,16 +845,34 @@ export const getDashboardCompaniesHandler = http.post(
       });
     }
 
-    // 담당자 필터
+    // 담당자 필터 (owner_id -> 이름으로 변환)
     if (filters?.managers?.length) {
-      const managers = new Set(filters.managers);
-      rows = rows.filter((row) => row.manager && managers.has(row.manager));
+      const ownerIdToName: Record<string, string> = {
+        'owner_001': '이정호',
+        'owner_002': '윤상준',
+        'owner_003': '이지훈',
+        'owner_004': '김택수',
+        'owner_005': '김종현',
+        'owner_006': '유재현',
+        'owner_007': '김용진',
+        'owner_008': '송병규',
+      };
+      const managerNames = new Set(filters.managers.map(ownerId => ownerIdToName[ownerId] || ownerId));
+      rows = rows.filter((row) => row.manager && managerNames.has(row.manager));
     }
 
     // 카테고리 필터
     if (filters?.categories?.length) {
       const categories = new Set(filters.categories);
       rows = rows.filter((row) => row.category && categories.has(row.category));
+    }
+
+    // 제품 사용 필터
+    if (filters?.productUsages?.length) {
+      const productUsages = new Set(filters.productUsages);
+      rows = rows.filter((row) => 
+        row.productUsage && row.productUsage.some(p => productUsages.has(p))
+      );
     }
 
     // 가능성 필터
@@ -822,6 +925,18 @@ export const getDashboardCompaniesHandler = http.post(
       rows = rows.filter((row) => row.current.targetMonth && months.has(row.current.targetMonth));
     }
 
+    // 마지막 컨택일 범위 필터
+    if (filters?.lastContactDateRange) {
+      const { start, end } = filters.lastContactDateRange;
+      rows = rows.filter((row) => {
+        const contactDate = row.lastContactDate;
+        if (!contactDate) return false;
+        if (start && contactDate < start) return false;
+        if (end && contactDate > end) return false;
+        return true;
+      });
+    }
+
     // ==================== 정렬 ====================
 
     if (body.sort) {
@@ -845,8 +960,8 @@ export const getDashboardCompaniesHandler = http.post(
           case "contractAmount":
             return ((a.contractAmount ?? 0) - (b.contractAmount ?? 0)) * modifier;
           case "possibility": {
-            const aVal = Number((a.current.possibility || "0").replace("%", ""));
-            const bVal = Number((b.current.possibility || "0").replace("%", ""));
+            const aVal = a.current.possibility ?? 0;
+            const bVal = b.current.possibility ?? 0;
             return (aVal - bVal) * modifier;
           }
           case "expectedRevenue": {
@@ -859,6 +974,10 @@ export const getDashboardCompaniesHandler = http.post(
             const bMonth = b.current.targetMonth ?? 0;
             return (aMonth - bMonth) * modifier;
           }
+          case "lastMBMDate":
+            return compareStrings(a.lastMBMDate ?? null, b.lastMBMDate ?? null);
+          case "lastContactDate":
+            return compareStrings(a.lastContactDate ?? null, b.lastContactDate ?? null);
           default:
             return 0;
         }

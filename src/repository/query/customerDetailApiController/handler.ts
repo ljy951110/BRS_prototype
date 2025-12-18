@@ -5,15 +5,14 @@
 
 import type {
   Category,
-  CompanySize,
   CustomerSummaryRequest,
   CustomerSummaryResponse,
-  PeriodData,
+  CustomerDetailPeriodData,
   Possibility,
-  ProductType,
   SalesHistoryRequest,
   SalesHistoryResponse,
 } from "@/repository/openapi/model";
+import { CompanySize, ProductType } from "@/types/common";
 import { http, HttpResponse } from "msw";
 
 // ==================== Mock Data ====================
@@ -28,6 +27,7 @@ interface MockCustomerDetail {
   companySize: string;
   category: string;
   productUsage: string[];
+  hubspotUrl: string;
   manager: string;
   contractAmount: number;
   salesActions: Array<{
@@ -57,6 +57,7 @@ const MOCK_CUSTOMER_DETAILS: MockCustomerDetail[] = [
     companySize: "T0",
     category: "채용",
     productUsage: ["ATS", "역검"],
+    hubspotUrl: "https://app.hubspot.com/contacts/company/mock",
     manager: "이정호",
     contractAmount: 11000000,
     salesActions: [
@@ -147,6 +148,7 @@ const MOCK_CUSTOMER_DETAILS: MockCustomerDetail[] = [
     companySize: "T9",
     category: "채용",
     productUsage: ["ATS", "역검"],
+    hubspotUrl: "https://app.hubspot.com/contacts/company/mock",
     manager: "이정호",
     contractAmount: 50000000,
     salesActions: [
@@ -232,6 +234,7 @@ const MOCK_CUSTOMER_DETAILS: MockCustomerDetail[] = [
     companySize: "T5",
     category: "채용",
     productUsage: ["ATS", "역검"],
+    hubspotUrl: "https://app.hubspot.com/contacts/company/mock",
     manager: "이정호",
     contractAmount: 41250000,
     salesActions: [
@@ -359,19 +362,6 @@ const mapPossibility = (possibility: string | undefined): Possibility | null => 
 /**
  * 목표일자를 월(month)로 변환
  */
-const toMonth = (value: string | null | undefined): number | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.getMonth() + 1;
-  }
-  const match = value.match(/(\d{1,2})/);
-  return match ? Number(match[1]) : null;
-};
-
-/**
- * companyId로 고객 찾기
- */
 const findCustomerById = (companyId: number): MockCustomerDetail | undefined => {
   return MOCK_CUSTOMER_DETAILS.find((c) => c.companyId === companyId);
 };
@@ -403,11 +393,11 @@ export const getCustomerSummaryHandler = http.post(
 
     // 현재 상태 (가장 최신 salesAction 기준)
     const latestAction = customer.salesActions[customer.salesActions.length - 1];
-    const current: PeriodData = {
+    const current: CustomerDetailPeriodData = {
       trustIndex: null, // MockCustomerDetail에는 trustIndex가 없음
       possibility: mapPossibility(latestAction?.possibility) ?? undefined,
       targetRevenue: latestAction?.targetRevenue ?? null,
-      targetMonth: toMonth(latestAction?.targetDate),
+      targetDate: latestAction?.targetDate ?? null,
       test: latestAction?.test ?? false,
       quote: latestAction?.quote ?? false,
       approval: latestAction?.approval ?? false,
@@ -416,11 +406,11 @@ export const getCustomerSummaryHandler = http.post(
 
     // 과거 상태 (첫 번째 salesAction 기준)
     const firstAction = customer.salesActions[0];
-    const previous: PeriodData = {
+    const previous: CustomerDetailPeriodData = {
       trustIndex: null,
       possibility: mapPossibility(firstAction?.possibility) ?? undefined,
       targetRevenue: firstAction?.targetRevenue ?? null,
-      targetMonth: toMonth(firstAction?.targetDate),
+      targetDate: firstAction?.targetDate ?? null,
       test: firstAction?.test ?? false,
       quote: firstAction?.quote ?? false,
       approval: firstAction?.approval ?? false,
@@ -437,6 +427,7 @@ export const getCustomerSummaryHandler = http.post(
       contractAmount: customer.contractAmount ?? null,
       current,
       previous,
+      hubspotUrl: customer.hubspotUrl ?? null,
     };
 
     console.log('[MSW] 📤 Sending customer summary:', response);

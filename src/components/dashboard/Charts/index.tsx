@@ -18,14 +18,14 @@ import {
 } from 'recharts';
 import { Text, Card } from '@/components/common/atoms';
 import { Customer } from '@/types/customer';
-import { formatCompactCurrency, getDataWithPeriodChange } from '@/data/mockData';
-import type { TimePeriodType } from '@/types/common';
+import { formatCompactCurrency } from '@/data/mockData';
 import styles from './index.module.scss';
 
 interface ChartsProps {
   data: Customer[];
-  timePeriod: TimePeriodType;
 }
+
+type TimePeriodType = '1w' | '1m' | '6m' | '1y';
 
 const COLORS = {
   primary: '#3b82f6',
@@ -54,9 +54,9 @@ const PERIOD_WEEKS: Record<TimePeriodType, number> = {
   '1y': 52,
 };
 
-export const Charts = ({ data, timePeriod }: ChartsProps) => {
-  // 기간에 맞게 변화량 재계산
-  const periodData = useMemo(() => getDataWithPeriodChange(data, timePeriod), [data, timePeriod]);
+export const Charts = ({ data }: ChartsProps) => {
+  const timePeriod: TimePeriodType = '1m'; // 기본값 1개월
+  const periodData = data;
   // 담당자별 계약금액
   const revenueByManager = useMemo(() => {
     const grouped = data.reduce((acc, c) => {

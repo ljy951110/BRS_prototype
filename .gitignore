@@ -46,4 +46,4 @@ coverage/
 .vercel
 .env*.local
 
-copy
+yjcopy

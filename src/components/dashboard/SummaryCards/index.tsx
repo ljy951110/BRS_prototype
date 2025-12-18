@@ -1,5 +1,5 @@
 import { ArrowDownOutlined, ArrowUpOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { Badge, Card, Modal, Select, Table, Typography } from "antd";
+import { Alert, Badge, Button, Card, Col, Modal, Row, Select, Statistic, Table, theme, Typography } from "antd";
 import React, { useState } from "react";
 import {
   Bar,
@@ -19,6 +19,21 @@ import {
 import styles from "./index.module.scss";
 
 const { Text } = Typography;
+
+// 다크모드 툴팁 스타일 (고정)
+const DARK_TOOLTIP_STYLE = {
+  contentStyle: {
+    backgroundColor: '#18181b',
+    border: '1px solid #27272a',
+    borderRadius: '8px',
+  },
+  labelStyle: {
+    color: '#fafafa',
+  },
+  itemStyle: {
+    color: '#fafafa',
+  },
+};
 
 interface KPICardProps {
   title: string;
@@ -77,17 +92,17 @@ const KPICardItem = ({
 };
 
 // 기업 규모 옵션
-const COMPANY_SIZE_OPTIONS = ["전체", "T0 (대기업)", "T1 (중견)", "T2 (중소)", "T3 (소기업)"];
+const COMPANY_SIZE_OPTIONS = ["전체", "T0", "T1", "T2", "T3", "T4", "T9", "T10"];
 
 // 각 KPI별 더미 데이터
 const modalData = {
   total_customers: {
     title: "고객 구성 요약",
     companySizeData: [
-      { name: "T0 (대기업)", value: 120, color: "#3b82f6" },
-      { name: "T1 (중견)", value: 180, color: "#22c55e" },
-      { name: "T2 (중소)", value: 250, color: "#f97316" },
-      { name: "T3 (소기업)", value: 150, color: "#a855f7" },
+      { name: "T0", value: 120, color: "#3b82f6" },
+      { name: "T1", value: 180, color: "#22c55e" },
+      { name: "T2", value: 250, color: "#f97316" },
+      { name: "T3", value: 150, color: "#a855f7" },
     ],
     productData: [
       { name: "채용", value: 320 },
@@ -108,10 +123,10 @@ const modalData = {
     title: "MBM 현황 상세",
     statusData: {
       all: { invited: 700, participated: 50, followup: 50, stagnant: 0, closed: 3 },
-      "T0 (대기업)": { invited: 120, participated: 10, followup: 10, stagnant: 0, closed: 1 },
-      "T1 (중견)": { invited: 180, participated: 15, followup: 15, stagnant: 0, closed: 1 },
-      "T2 (중소)": { invited: 250, participated: 15, followup: 15, stagnant: 0, closed: 1 },
-      "T3 (소기업)": { invited: 150, participated: 10, followup: 10, stagnant: 0, closed: 0 },
+      "T0": { invited: 120, participated: 10, followup: 10, stagnant: 0, closed: 1 },
+      "T1": { invited: 180, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T2": { invited: 250, participated: 15, followup: 15, stagnant: 0, closed: 1 },
+      "T3": { invited: 150, participated: 10, followup: 10, stagnant: 0, closed: 0 },
     },
     insight: "팔로업 진행 중인 고객이 가장 많으며, 정체 상태의 고객에 대한 관리가 필요합니다.",
   },
@@ -165,35 +180,35 @@ const MBM_OPTIONS = ["전체 MBM", "11/7"];
 // MBM 단계별 기업 리스트 더미 데이터
 const mbmCompanyList = {
   invited: [
-    { companyName: "테크솔루션", companySize: "T1 (중견)", manager: "김민수", adoptionStage: "-" },
-    { companyName: "스마트팩토리", companySize: "T2 (중소)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "글로벌테크", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "이노베이션랩", companySize: "T3 (소기업)", manager: "최서연", adoptionStage: "-" },
+    { companyName: "테크솔루션", companySize: "T1", manager: "김민수", adoptionStage: "-" },
+    { companyName: "스마트팩토리", companySize: "T2", manager: "이지은", adoptionStage: "-" },
+    { companyName: "글로벌테크", companySize: "T0", manager: "박준영", adoptionStage: "-" },
+    { companyName: "이노베이션랩", companySize: "T3", manager: "최서연", adoptionStage: "-" },
   ],
   participated: [
-    { companyName: "비전바이오켐", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "-" },
-    { companyName: "퓨처모빌리티", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "-" },
-    { companyName: "넥스트젠AI", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "-" },
-    { companyName: "블루오션", companySize: "T1 (중견)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "그린에너지", companySize: "T0 (대기업)", manager: "박준영", adoptionStage: "-" },
+    { companyName: "비전바이오켐", companySize: "T0", manager: "정현우", adoptionStage: "-" },
+    { companyName: "퓨처모빌리티", companySize: "T1", manager: "한지민", adoptionStage: "-" },
+    { companyName: "넥스트젠AI", companySize: "T2", manager: "김민수", adoptionStage: "-" },
+    { companyName: "블루오션", companySize: "T1", manager: "이지은", adoptionStage: "-" },
+    { companyName: "그린에너지", companySize: "T0", manager: "박준영", adoptionStage: "-" },
   ],
   followup: [
-    { companyName: "스카이네트워크", companySize: "T2 (중소)", manager: "최서연", adoptionStage: "견적", lastContact: "2024.12.15" },
-    { companyName: "메가시스템", companySize: "T1 (중견)", manager: "정현우", adoptionStage: "품의", lastContact: "2024.12.14" },
-    { companyName: "알파테크", companySize: "T3 (소기업)", manager: "한지민", adoptionStage: "테스트", lastContact: "2024.12.16" },
-    { companyName: "베타소프트", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "견적", lastContact: "2024.12.10" },
-    { companyName: "델타시스템즈", companySize: "T0 (대기업)", manager: "이지은", adoptionStage: "품의", lastContact: "2024.12.13" },
-    { companyName: "오메가테크", companySize: "T1 (중견)", manager: "박준영", adoptionStage: "테스트", lastContact: "2024.12.12" },
+    { companyName: "스카이네트워크", companySize: "T2", manager: "최서연", adoptionStage: "견적", lastContact: "2024.12.15" },
+    { companyName: "메가시스템", companySize: "T1", manager: "정현우", adoptionStage: "품의", lastContact: "2024.12.14" },
+    { companyName: "알파테크", companySize: "T3", manager: "한지민", adoptionStage: "테스트", lastContact: "2024.12.16" },
+    { companyName: "베타소프트", companySize: "T2", manager: "김민수", adoptionStage: "견적", lastContact: "2024.12.10" },
+    { companyName: "델타시스템즈", companySize: "T0", manager: "이지은", adoptionStage: "품의", lastContact: "2024.12.13" },
+    { companyName: "오메가테크", companySize: "T1", manager: "박준영", adoptionStage: "테스트", lastContact: "2024.12.12" },
   ],
   stagnant: [
-    { companyName: "레드플래닛", companySize: "T3 (소기업)", manager: "이지은", adoptionStage: "-" },
-    { companyName: "옐로우스톤", companySize: "T2 (중소)", manager: "박준영", adoptionStage: "-" },
-    { companyName: "오렌지코퍼", companySize: "T1 (중견)", manager: "최서연", adoptionStage: "-" },
+    { companyName: "레드플래닛", companySize: "T3", manager: "이지은", adoptionStage: "-" },
+    { companyName: "옐로우스톤", companySize: "T2", manager: "박준영", adoptionStage: "-" },
+    { companyName: "오렌지코퍼", companySize: "T1", manager: "최서연", adoptionStage: "-" },
   ],
   closed: [
-    { companyName: "다이아몬드그룹", companySize: "T0 (대기업)", manager: "정현우", adoptionStage: "계약" },
-    { companyName: "플래티넘솔루션", companySize: "T1 (중견)", manager: "한지민", adoptionStage: "계약" },
-    { companyName: "골드스타", companySize: "T2 (중소)", manager: "김민수", adoptionStage: "계약" },
+    { companyName: "다이아몬드그룹", companySize: "T0", manager: "정현우", adoptionStage: "계약" },
+    { companyName: "플래티넘솔루션", companySize: "T1", manager: "한지민", adoptionStage: "계약" },
+    { companyName: "골드스타", companySize: "T2", manager: "김민수", adoptionStage: "계약" },
   ],
 };
 
@@ -207,10 +222,10 @@ const TotalCustomersModalContent = () => {
 
   const getTrendDataKey = () => {
     switch (sizeFilter) {
-      case "T0 (대기업)": return "t0";
-      case "T1 (중견)": return "t1";
-      case "T2 (중소)": return "t2";
-      case "T3 (소기업)": return "t3";
+      case "T0": return "t0";
+      case "T1": return "t1";
+      case "T2": return "t2";
+      case "T3": return "t3";
       default: return "total";
     }
   };
@@ -254,19 +269,19 @@ const TotalCustomersModalContent = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip {...DARK_TOOLTIP_STYLE} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <div className={styles.chartSection}>
-          <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>제품 구분 분포</Text>
+          <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>사업 구분 분포</Text>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={data.productData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" style={{ fontSize: 12 }} />
               <YAxis style={{ fontSize: 12 }} />
-              <Tooltip />
+              <Tooltip {...DARK_TOOLTIP_STYLE} />
               <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -282,7 +297,7 @@ const TotalCustomersModalContent = () => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="week" style={{ fontSize: 11 }} />
             <YAxis style={{ fontSize: 12 }} domain={['dataMin - 10', 'dataMax + 10']} />
-            <Tooltip />
+            <Tooltip {...DARK_TOOLTIP_STYLE} />
             <Line
               type="monotone"
               dataKey={getTrendDataKey()}
@@ -294,9 +309,12 @@ const TotalCustomersModalContent = () => {
         </ResponsiveContainer>
       </div>
 
-      <div className={styles.insightBox}>
-        <Text type="secondary" style={{ fontSize: 13 }}>{data.insight}</Text>
-      </div>
+      <Alert
+        message={data.insight}
+        type="info"
+        showIcon
+        style={{ marginTop: 16 }}
+      />
     </div>
   );
 };
@@ -308,6 +326,7 @@ const MBMStatusModalContent = () => {
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [adoptionFilter, setAdoptionFilter] = useState("전체");
   const data = modalData.mbm_status;
+  const { token } = theme.useToken();
 
   const currentData = sizeFilter === "전체"
     ? data.statusData.all
@@ -345,9 +364,39 @@ const MBMStatusModalContent = () => {
 
   const tableColumns = selectedStage === "followup"
     ? [
-      { title: "기업명", dataIndex: "companyName", key: "companyName" },
-      { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
-      { title: "담당자", dataIndex: "manager", key: "manager" },
+      {
+        title: "기업명",
+        dataIndex: "companyName",
+        key: "companyName",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
+      {
+        title: "기업 규모",
+        dataIndex: "companySize",
+        key: "companySize",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
+      {
+        title: "담당자",
+        dataIndex: "manager",
+        key: "manager",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
       {
         title: (
           <Select
@@ -364,6 +413,12 @@ const MBMStatusModalContent = () => {
         ),
         dataIndex: "adoptionStage",
         key: "adoptionStage",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        }),
         render: (stage: string) => (
           <Badge
             color={
@@ -376,12 +431,53 @@ const MBMStatusModalContent = () => {
           />
         ),
       },
-      { title: "마지막 컨택", dataIndex: "lastContact", key: "lastContact", render: (text: string) => text || "-" },
+      {
+        title: "마지막 컨택",
+        dataIndex: "lastContact",
+        key: "lastContact",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        }),
+        render: (text: string) => text || "-"
+      },
     ]
     : [
-      { title: "기업명", dataIndex: "companyName", key: "companyName" },
-      { title: "기업 규모", dataIndex: "companySize", key: "companySize" },
-      { title: "담당자", dataIndex: "manager", key: "manager" },
+      {
+        title: "기업명",
+        dataIndex: "companyName",
+        key: "companyName",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
+      {
+        title: "기업 규모",
+        dataIndex: "companySize",
+        key: "companySize",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
+      {
+        title: "담당자",
+        dataIndex: "manager",
+        key: "manager",
+        onHeaderCell: () => ({
+          style: {
+            backgroundColor: token.colorFillAlter,
+            borderColor: token.colorSplit,
+          }
+        })
+      },
     ];
 
   return (
@@ -412,22 +508,44 @@ const MBMStatusModalContent = () => {
       <div className={styles.funnelContainer}>
         {funnelStages.map((stage, index) => (
           <React.Fragment key={stage.key}>
-            <div
-              className={`${styles.funnelStage} ${selectedStage === stage.key ? styles.selected : ""}`}
-              style={{ borderColor: stage.color }}
+            <Card
+              hoverable
               onClick={() => handleStageClick(stage.key)}
+              style={{
+                minWidth: 120,
+                borderLeftWidth: 3,
+                borderLeftColor: stage.color,
+                cursor: 'pointer',
+                ...(selectedStage === stage.key && {
+                  boxShadow: `0 0 0 2px ${stage.color}40`,
+                  backgroundColor: token.colorBgTextHover,
+                })
+              }}
+              bodyStyle={{
+                padding: '16px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6
+              }}
             >
               <Text type="secondary" style={{ fontSize: 11 }}>{stage.label}</Text>
               <Text style={{ fontSize: 28, fontWeight: 700, color: stage.color }}>
                 {currentData[stage.key as keyof typeof currentData]}
               </Text>
-            </div>
+            </Card>
             {index < funnelStages.length - 1 && (
               <div className={styles.funnelArrow}>
                 <span className={styles.arrowIcon}>▶</span>
-                <span className={styles.conversionRate}>
-                  {getConversionRate(stage.key, funnelStages[index + 1].key)}%
-                </span>
+                <Badge
+                  count={`${getConversionRate(stage.key, funnelStages[index + 1].key)}%`}
+                  style={{
+                    backgroundColor: token.colorPrimaryBg,
+                    color: token.colorPrimary,
+                    fontWeight: 600,
+                    fontSize: 13
+                  }}
+                />
               </div>
             )}
           </React.Fragment>
@@ -446,13 +564,17 @@ const MBMStatusModalContent = () => {
             pagination={false}
             rowKey={(record) => record.companyName}
             locale={{ emptyText: "해당하는 기업이 없습니다." }}
+            bordered
           />
         </div>
       )}
 
-      <div className={styles.insightBox}>
-        <Text type="secondary" style={{ fontSize: 13 }}>참석했으나, 팔로업 전인 고객 수가 가장 많습니다. 해당 고객에 대한 관리가 필요합니다.</Text>
-      </div>
+      <Alert
+        message="참석했으나, 팔로업 전인 고객 수가 가장 많습니다. 해당 고객에 대한 관리가 필요합니다."
+        type="info"
+        showIcon
+        style={{ marginTop: 16 }}
+      />
     </div>
   );
 };
@@ -481,16 +603,19 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
-                <Tooltip />
+                <Tooltip {...DARK_TOOLTIP_STYLE} />
                 <Legend />
                 <Line type="monotone" dataKey="target" stroke="#71717a" strokeWidth={2} strokeDasharray="5 5" name="목표" />
                 <Line type="monotone" dataKey="actual" stroke="#3b82f6" strokeWidth={2} name="실제" dot={{ fill: '#3b82f6' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className={styles.insightBox}>
-            <Text type="warning" style={{ fontSize: 13 }}>{completenessData.insight}</Text>
-          </div>
+          <Alert
+            message={completenessData.insight}
+            type="warning"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
         </div>
       );
     }
@@ -499,24 +624,50 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
       const targetData = data as typeof modalData.target_vs_revenue;
       return (
         <div className={styles.chartContainer}>
-          <div className={styles.summaryCards}>
-            <div className={styles.summaryCard}>
-              <Text type="secondary" style={{ fontSize: 11 }}>목표 매출</Text>
-              <Text style={{ fontSize: 20, fontWeight: 700 }}>₩{(targetData.summary.targetTotal / 100).toFixed(1)}B</Text>
-            </div>
-            <div className={styles.summaryCard}>
-              <Text type="secondary" style={{ fontSize: 11 }}>예상 매출</Text>
-              <Text style={{ fontSize: 20, fontWeight: 700, color: '#3b82f6' }}>₩{(targetData.summary.expectedTotal / 100).toFixed(2)}B</Text>
-            </div>
-            <div className={`${styles.summaryCard} ${styles.warning}`}>
-              <Text type="secondary" style={{ fontSize: 11 }}>달성률</Text>
-              <Text style={{ fontSize: 20, fontWeight: 700, color: '#f97316' }}>{targetData.summary.achievementRate}%</Text>
-            </div>
-            <div className={`${styles.summaryCard} ${styles.danger}`}>
-              <Text type="secondary" style={{ fontSize: 11 }}>GAP</Text>
-              <Text style={{ fontSize: 20, fontWeight: 700, color: '#ef4444' }}>₩{Math.abs(targetData.summary.gap)}M</Text>
-            </div>
-          </div>
+          <Row gutter={12}>
+            <Col span={6}>
+              <Card>
+                <Statistic
+                  title="목표 매출"
+                  value={(targetData.summary.targetTotal / 100).toFixed(1)}
+                  prefix="₩"
+                  suffix="B"
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card>
+                <Statistic
+                  title="예상 매출"
+                  value={(targetData.summary.expectedTotal / 100).toFixed(2)}
+                  prefix="₩"
+                  suffix="B"
+                  valueStyle={{ color: '#3b82f6' }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card style={{ borderColor: '#f97316' }}>
+                <Statistic
+                  title="달성률"
+                  value={targetData.summary.achievementRate}
+                  suffix="%"
+                  valueStyle={{ color: '#f97316' }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card style={{ borderColor: '#ef4444' }}>
+                <Statistic
+                  title="GAP"
+                  value={Math.abs(targetData.summary.gap)}
+                  prefix="₩"
+                  suffix="M"
+                  valueStyle={{ color: '#ef4444' }}
+                />
+              </Card>
+            </Col>
+          </Row>
 
           <div className={styles.chartSection}>
             <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>주차별 목표 vs 예상 매출 (단위: 백만원)</Text>
@@ -526,6 +677,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <XAxis dataKey="week" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
                 <Tooltip
+                  {...DARK_TOOLTIP_STYLE}
                   formatter={(value: number, name: string) => [
                     `₩${value}M`,
                     name === 'target' ? '목표' : '예상 매출'
@@ -555,9 +707,12 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className={styles.insightBox}>
-            <Text type="warning" style={{ fontSize: 13 }}>{targetData.insight}</Text>
-          </div>
+          <Alert
+            message={targetData.insight}
+            type="warning"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
         </div>
       );
     }
@@ -574,6 +729,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
                 <XAxis dataKey="month" style={{ fontSize: 11 }} />
                 <YAxis style={{ fontSize: 12 }} />
                 <Tooltip
+                  {...DARK_TOOLTIP_STYLE}
                   formatter={(value: number) => [`₩${value}M`, '예상 매출']}
                 />
                 <Bar dataKey="amount" fill="#06b6d4" radius={[4, 4, 0, 0]}>
@@ -587,9 +743,12 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className={styles.insightBox}>
-            <Text type="secondary" style={{ fontSize: 13 }}>{revenueTimingData.insight}</Text>
-          </div>
+          <Alert
+            message={revenueTimingData.insight}
+            type="info"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
         </div>
       );
     }
@@ -601,6 +760,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
 
 export const SummaryCards = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const { token } = theme.useToken();
 
   const kpiData = [
     {
@@ -670,11 +830,14 @@ export const SummaryCards = () => {
         <div className={styles.modalContent}>
           {selectedCard && <ModalContent cardId={selectedCard} />}
 
-          <div className={styles.aiSection}>
-            <div className={styles.aiButton}>
-              <QuestionCircleOutlined style={{ fontSize: 16 }} />
-              <Text style={{ fontWeight: 500 }}>BRS AI로 질문하기</Text>
-            </div>
+          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              type="default"
+              icon={<QuestionCircleOutlined style={{ color: token.colorPrimary }} />}
+              size="large"
+            >
+              BRS AI로 질문하기
+            </Button>
           </div>
         </div>
       </Modal>

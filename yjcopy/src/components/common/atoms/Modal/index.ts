@@ -1,7 +1,0 @@
-export { Modal } from './Modal';
-
-
-
-
-
-

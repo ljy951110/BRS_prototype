@@ -9,6 +9,7 @@ import {
 } from "@/types/customer";
 // 가능성 숫자 변환
 export const POSSIBILITY_VALUE: Record<PossibilityType, number> = {
+  "100%": 1.0,
   "90%": 0.9,
   "40%": 0.4,
   "0%": 0,

@@ -6,21 +6,20 @@
 
 ```ts
 export type SalesActionType = "CALL" | "MEETING"; // 영업 활동 유형
-export type PossibilityType = "90%" | "40%" | "0%"; // 계약 가능성
+export type PossibilityType = "100%" | "90%" | "40%" | "0%"; // 계약 가능성
 ```
 
 ## 요청 (Request)
 
 ```ts
 export interface SalesHistoryRequest {
-  companyId: number;
   dateRange: { startDate: string; endDate: string }; // 조회 기간 (YYYY-MM-DD)
 }
 ```
 
 ### 필드 설명 (Request)
-- `companyId`: 조회할 고객사 ID
 - `dateRange`: 조회 기간 (startDate ~ endDate 범위 내의 영업 액션만 반환)
+  - `companyId`는 URL path parameter로 전달됨
 
 ## 응답 (Response)
 
@@ -81,18 +80,30 @@ export interface ActionState {
 - 상태 변화가 없으면 `stateChange` 전체를 생략 가능
 
 #### ActionState
-- `possibility`: 가능성 (0%/40%/90%)
+- `possibility`: 가능성 (0%/40%/90%/100%)
 - `targetRevenue`: 목표매출 (원)
 - `targetDate`: 목표일자 "YYYY-MM-DD"
 - `test/quote/approval/contract`: 진행상태 (T/Q/A/C), boolean으로 true면 해당 단계 완료
 
 #### 화면 표시 방식
+
+**영업 액션 타임라인:**
 - 영업 액션은 **최신순(날짜 내림차순)**으로 표시
 - 각 액션의 `stateChange`가 있으면 변화 표시:
   - `before → after` 형태로 비교 표시
   - 변경된 항목만 하이라이트
   - 증가/개선: 녹색, 감소/후퇴: 빨간색
 - 타임라인 형태로 시각화
+
+**주차별 추이 그래프:**
+- 프론트엔드에서 `salesActions` 데이터를 가공하여 표시
+- 각 액션의 날짜를 기준으로 시계열 정렬
+- 각 액션의 `stateChange.after` 값을 차트에 표시:
+  - `possibility` → possibilityIndex로 변환 (0%→0, 40%→40, 90%→90, 100%→100)
+  - `targetRevenue` → 만원 단위로 변환
+  - `expectedRevenue` = targetRevenue × (possibility를 숫자로 변환)
+- 왼쪽 Y축: 가능성 지수 (0~100)
+- 오른쪽 Y축: 매출 (만원 단위)
 
 ## API 엔드포인트 예시
 - `POST /dashboard/customer/:companyId/sales-history` → `SalesHistoryResponse`  

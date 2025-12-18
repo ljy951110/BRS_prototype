@@ -15,17 +15,17 @@
 
 
 /**
- * 제품 타입
+ * 제품 타입 (DB using_product 값과 일치)
  * @export
  * @enum {string}
  */
 
 export const ProductType = {
     ATS: 'ATS',
-    SR: '역검SR',
-    INHR: 'INHR+통합',
-    RV: '역검',
-    CHURN: '이탈사'
+    ACCSR: 'ACCSR',
+    INHR_PLUS: 'INHR_PLUS',
+    ACC: 'ACC',
+    CHURN: 'CHURN'
 } as const;
 
 export type ProductType = typeof ProductType[keyof typeof ProductType];

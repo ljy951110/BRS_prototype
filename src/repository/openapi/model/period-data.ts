@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Possibility } from './possibility';
 
 /**
  * 시점별 데이터 (현재/과거 공통)
@@ -31,16 +28,22 @@ export interface PeriodData {
     'trustIndex'?: number | null;
     /**
      * 
-     * @type {Possibility}
+     * @type {number}
      * @memberof PeriodData
      */
-    'possibility'?: Possibility;
+    'possibility'?: number | null;
     /**
      * 
      * @type {number}
      * @memberof PeriodData
      */
     'targetRevenue'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof PeriodData
+     */
+    'expectedRevenue'?: number | null;
     /**
      * 
      * @type {number}
@@ -72,6 +75,4 @@ export interface PeriodData {
      */
     'contract'?: boolean;
 }
-
-
 

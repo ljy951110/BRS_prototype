@@ -21,7 +21,7 @@ import type { Company } from './company';
 import type { EventAttendance } from './event-attendance';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { MarketingEvent } from './marketing-event';
+import type { ModelsHeatmapMarketingEvent } from './models-heatmap-marketing-event';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { TrustScore } from './trust-score';
@@ -55,10 +55,10 @@ export interface HeatmapResponse {
     'scores': Array<TrustScore>;
     /**
      * 
-     * @type {Array<MarketingEvent>}
+     * @type {Array<ModelsHeatmapMarketingEvent>}
      * @memberof HeatmapResponse
      */
-    'events': Array<MarketingEvent>;
+    'events': Array<ModelsHeatmapMarketingEvent>;
     /**
      * 
      * @type {Array<EventAttendance>}

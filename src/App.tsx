@@ -6,14 +6,12 @@ import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import type {
   Category,
-  CompanySize,
   DashboardTableRequest,
   Possibility,
   ProgressStage as ProgressStageType,
 } from "@/repository/openapi/model";
 import { ProgressStage } from "@/repository/openapi/model";
 import { useGetDashboardCompanies, useGetFilterOptions } from "@/repository/query/dashboardApiController/queryHook";
-import { TimePeriodType } from "@/types/common";
 import {
   CategoryType,
   ChangeDirectionType,
@@ -164,6 +162,24 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     chart: { ...DEFAULT_FILTERS },
   });
 
+  // CustomerTable 전용 필터 상태 (계약금액, 예상매출, 목표 월, 정렬 등)
+  interface TableFilters {
+    companySizes?: string[];
+    categories?: string[];
+    productUsages?: string[];
+    managers?: string[];
+    possibilities?: string[];
+    progressStages?: string[];
+    contractAmountRange?: { minMan?: number; maxMan?: number };
+    expectedRevenueRange?: { minMan?: number; maxMan?: number };
+    targetRevenueRange?: { minMan?: number; maxMan?: number };
+    targetMonths?: number[];
+    companyName?: string;
+    lastContactDateRange?: { start?: string; end?: string };
+    sort?: { field: string; order: "asc" | "desc" };
+  }
+  const [tableFilters, setTableFilters] = useState<TableFilters>({});
+
   // 현재 탭의 필터 접근
   const currentFilters = tabFilters[viewMode];
 
@@ -181,34 +197,78 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
     setCurrentPage(1);
   }, [dateRange]);
 
-  // dateRange에서 일수를 계산하여 가장 가까운 TimePeriodType으로 변환
-  const timePeriod: TimePeriodType = useMemo(() => {
-    const days = dateRange[1].diff(dateRange[0], "day");
-    if (days <= 7) return "1w";
-    if (days <= 30) return "1m";
-    if (days <= 180) return "6m";
-    return "1y";
-  }, [dateRange]);
-
   // API 요청 바디 생성
   const requestBody: DashboardTableRequest = useMemo(() => {
     const filters: DashboardTableRequest["filters"] = {};
 
-    if (currentFilters.selectedManager !== "all") {
-      filters.managers = [currentFilters.selectedManager];
+    // 테이블 뷰일 때는 CustomerTable의 필터를 우선 사용
+    if (viewMode === "table") {
+      // CustomerTable 필터 사용
+      if (tableFilters.companySizes && tableFilters.companySizes.length > 0) {
+        filters.companySizes = tableFilters.companySizes as CompanySizeType[];
+      }
+      if (tableFilters.categories && tableFilters.categories.length > 0) {
+        filters.categories = tableFilters.categories as Category[];
+      }
+      if (tableFilters.productUsages && tableFilters.productUsages.length > 0) {
+        filters.productUsages = tableFilters.productUsages;
+      }
+      if (tableFilters.managers && tableFilters.managers.length > 0) {
+        filters.managers = tableFilters.managers;
+      }
+      if (tableFilters.possibilities && tableFilters.possibilities.length > 0) {
+        // "0%", "40%" 형식을 0, 40 integer로 변환
+        filters.possibilities = tableFilters.possibilities
+          .map(p => parseInt(p.replace('%', '')))
+          .filter((p): p is Possibility => !isNaN(p)) as Possibility[];
+      }
+      if (tableFilters.progressStages && tableFilters.progressStages.length > 0) {
+        // progressStages를 stages로 변환
+        filters.stages = tableFilters.progressStages.map(stage => stage as ProgressStageType).filter(Boolean);
+      }
+      if (tableFilters.contractAmountRange) {
+        filters.contractAmountRange = tableFilters.contractAmountRange;
+      }
+      if (tableFilters.targetRevenueRange) {
+        filters.targetRevenueRange = tableFilters.targetRevenueRange;
+      }
+      if (tableFilters.expectedRevenueRange) {
+        filters.expectedRevenueRange = tableFilters.expectedRevenueRange;
+      }
+      if (tableFilters.targetMonths && tableFilters.targetMonths.length > 0) {
+        filters.targetMonths = tableFilters.targetMonths;
+      }
+      if (tableFilters.lastContactDateRange && (tableFilters.lastContactDateRange.start || tableFilters.lastContactDateRange.end)) {
+        filters.lastContactDateRange = tableFilters.lastContactDateRange;
+      }
+    } else {
+      // 다른 뷰에서는 상단 필터 사용
+      if (currentFilters.selectedManager !== "all") {
+        filters.managers = [currentFilters.selectedManager];
+      }
+      if (currentFilters.selectedCategory !== "all") {
+        filters.categories = [currentFilters.selectedCategory as Category];
+      }
+      if (currentFilters.selectedCompanySize !== "all") {
+        filters.companySizes = [currentFilters.selectedCompanySize as CompanySizeType];
+      }
+      if (currentFilters.selectedPossibility !== "all") {
+        // "0%", "40%" 형식을 integer로 변환
+        const possibilityInt = parseInt(currentFilters.selectedPossibility.replace('%', ''));
+        if (!isNaN(possibilityInt)) {
+          filters.possibilities = [possibilityInt as Possibility];
+        }
+      }
+      const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
+      if (stage) {
+        filters.stages = [stage];
+      }
     }
-    if (currentFilters.selectedCategory !== "all") {
-      filters.categories = [currentFilters.selectedCategory as Category];
-    }
-    if (currentFilters.selectedCompanySize !== "all") {
-      filters.companySizes = [currentFilters.selectedCompanySize as CompanySize];
-    }
-    if (currentFilters.selectedPossibility !== "all") {
-      filters.possibilities = [currentFilters.selectedPossibility as Possibility];
-    }
-    const stage = PROGRESS_STAGE_MAP[currentFilters.selectedProgress];
-    if (stage) {
-      filters.stages = [stage];
+
+    // 기업명 검색
+    let searchQuery = currentFilters.searchQuery.trim();
+    if (viewMode === "table" && tableFilters.companyName) {
+      searchQuery = tableFilters.companyName;
     }
 
     return {
@@ -217,13 +277,15 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         endDate: dateRange[1].format('YYYY-MM-DD'),
       },
       search:
-        currentFilters.searchQuery.trim().length > 0
-          ? { companyName: currentFilters.searchQuery.trim() }
+        searchQuery.length > 0
+          ? { companyName: searchQuery }
           : undefined,
       filters: Object.keys(filters).length ? filters : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sort: viewMode === "table" && tableFilters.sort ? tableFilters.sort as any : undefined,
       pagination: { page: currentPage, pageSize },
     };
-  }, [currentFilters, dateRange, currentPage, pageSize]);
+  }, [currentFilters, dateRange, currentPage, pageSize, viewMode, tableFilters]);
 
   // React Query로 API 호출 (약간의 지연으로 MSW 준비 대기)
   const [mswReady, setMswReady] = useState(false);
@@ -297,6 +359,8 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         salesActions: [],
         contentEngagements: [],
         attendance: {},
+        lastMBMDate: row.lastMBMDate ?? null,
+        lastContactDate: row.lastContactDate ?? null,
         trustFormation: {
           customerResponse: '중',
           detail: '',
@@ -307,7 +371,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         },
         valueRecognition: {
           customerResponse: '중',
-          possibility: current.possibility as PossibilityType ?? '0%',
+          possibility: `${current.possibility ?? 0}%` as PossibilityType,
           targetRevenue: current.targetRevenue,
           targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
           test: current.test ?? false,
@@ -318,7 +382,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         },
         adoptionDecision: {
           customerResponse: '중',
-          possibility: current.possibility as PossibilityType ?? '0%',
+          possibility: `${current.possibility ?? 0}%` as PossibilityType,
           targetRevenue: current.targetRevenue,
           targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}-01` : null,
           test: current.test ?? false,
@@ -329,7 +393,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
         },
         _periodData: {
           pastTrustIndex: previousTrust,
-          pastPossibility: previous.possibility as PossibilityType ?? '0%',
+          pastPossibility: `${previous.possibility ?? 0}%` as PossibilityType,
           pastCustomerResponse: '중',
           pastTargetRevenue: previous.targetRevenue,
           pastTargetDate: previous.targetMonth ? `2024-${String(previous.targetMonth).padStart(2, '0')}-01` : null,
@@ -337,8 +401,8 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           pastQuote: previous.quote ?? false,
           pastApproval: previous.approval ?? false,
           pastContract: previous.contract ?? false,
-          pastExpectedRevenue: previous.targetRevenue ?? 0,
-          currentExpectedRevenue: current.targetRevenue ?? 0,
+          pastExpectedRevenue: previous.expectedRevenue ?? 0,
+          currentExpectedRevenue: current.expectedRevenue ?? 0,
           possibilityChange: 'none',
           responseChange: 'none',
         },
@@ -393,7 +457,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           style={{ minWidth: 160 }}
           options={[
             { value: "all", label: "전체 담당자" },
-            ...managers.map((m: string) => ({ value: m, label: m })),
+            ...managers.map((m) => ({ value: m.owner_id, label: m.name })),
           ]}
         />
       )}
@@ -405,7 +469,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           style={{ minWidth: 160 }}
           options={[
             { value: "all", label: "전체 기업 규모" },
-            ...companySizes.map((size: CompanySize) => ({ value: size, label: size })),
+            ...companySizes.map((size: CompanySizeType) => ({ value: size, label: size })),
           ]}
         />
       )}
@@ -537,8 +601,7 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           />
         </div>
 
-        <Spin spinning={isLoading}>
-          {viewMode === "table" && (
+        {viewMode === "table" && (
             <section className={styles.section}>
               <SummaryCards />
             </section>
@@ -564,12 +627,17 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
                 </div>
                 <CustomerTable
                   data={filteredData}
-                  timePeriod={timePeriod}
                   loading={isLoading}
                   dateRange={{
                     startDate: dateRange[0].format('YYYY-MM-DD'),
                     endDate: dateRange[1].format('YYYY-MM-DD'),
                   }}
+                  filters={tableFilters}
+                  onFiltersChange={(filters) => {
+                    setTableFilters(filters);
+                    setCurrentPage(1); // 필터 변경 시 첫 페이지로
+                  }}
+                  managers={managers}
                   pagination={{
                     current: currentPage,
                     pageSize,
@@ -589,27 +657,24 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
               </>
             )}
             {viewMode === "pipeline" && (
-              <PipelineBoard data={filteredData} timePeriod={timePeriod} />
+              <PipelineBoard data={filteredData} />
             )}
             {viewMode === "chart" && (
-              <Charts data={filteredData} timePeriod={timePeriod} />
+              <Charts data={filteredData} />
             )}
             {viewMode === "timeline" && (
               <MBMTimeline
                 data={filteredData}
-                timePeriod={timePeriod}
                 filters={filterControls}
               />
             )}
             {viewMode === "activity" && (
               <CustomerActivityAnalysis
                 data={filteredData}
-                timePeriod={timePeriod}
                 filters={filterControls}
               />
             )}
           </section>
-        </Spin>
       </Layout.Content>
     </Layout>
   );

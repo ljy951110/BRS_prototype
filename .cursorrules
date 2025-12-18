@@ -7,17 +7,47 @@
 ## 📦 코드 구조 규칙
 
 ### 파일 구조
-- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`만 하는 `index.ts` 파일을 만들지 마세요
+- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`이나 `export { Type }`만 하는 파일을 만들지 마세요
   - ❌ 나쁜 예:
     ```typescript
     // index.ts
     export * from './queryHook';
     export * from './queryKey';
+    
+    // commonMap.ts
+    export { Category, ProductType }; // 단순 re-export 금지
     ```
-  - ✅ 좋은 예: 직접 import 사용
+  - ✅ 좋은 예: 필요한 곳에서 직접 import
     ```typescript
     import { useGetCustomerSummary } from '@/repository/query/customerDetailApiController/queryHook';
+    import { Category, ProductType } from '@/repository/openapi/model';
     ```
+
+### OpenAPI 자동 생성 타입 사용
+- **OpenAPI 타입은 `@/repository/openapi/model`에서 직접 import**
+  - `Category`, `ProductType`, `CompanySize` 등의 타입과 enum 값은 OpenAPI에서 자동 생성됨
+  - 다른 파일에서 re-export하지 말고 필요한 곳에서 직접 import
+  
+  ❌ 나쁜 예:
+  ```typescript
+  // commonMap.ts에서 re-export
+  export { Category, ProductType } from '@/repository/openapi/model';
+  
+  // 컴포넌트에서
+  import { Category } from '@/constants/commonMap';
+  ```
+  
+  ✅ 좋은 예:
+  ```typescript
+  // 컴포넌트에서 직접 import
+  import { Category, ProductType } from '@/repository/openapi/model';
+  import { CategoryLabel, ProductTypeLabel } from '@/constants/commonMap';
+  ```
+
+- **OpenAPI 생성 파일 제외 설정**:
+  - `src/repository/openapi/**` 디렉토리는 TypeScript, ESLint 검사에서 제외됨
+  - `tsconfig.json`의 `exclude`에 설정됨
+  - `eslint.config.js`의 `ignores`에 설정됨
 
 ---
 

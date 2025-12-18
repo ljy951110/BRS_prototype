@@ -17,7 +17,6 @@ docs/AmountRange.md
 docs/Category.md
 docs/Company.md
 docs/CompanySize.md
-docs/ContentActionType.md
 docs/CustomerDetailApi.md
 docs/CustomerDetailPeriodData.md
 docs/CustomerSummaryRequest.md
@@ -35,7 +34,8 @@ docs/EventAttendance.md
 docs/HTTPValidationError.md
 docs/HeatmapApi.md
 docs/HeatmapResponse.md
-docs/MarketingEvent.md
+docs/ModelsHeatmapMarketingEvent.md
+docs/ModelsTrustChangeDetailMarketingEvent.md
 docs/PaginationConfig.md
 docs/PeriodData.md
 docs/Possibility.md
@@ -68,7 +68,6 @@ model/amount-range.ts
 model/category.ts
 model/company-size.ts
 model/company.ts
-model/content-action-type.ts
 model/customer-detail-period-data.ts
 model/customer-summary-request.ts
 model/customer-summary-response.ts
@@ -83,7 +82,8 @@ model/event-attendance.ts
 model/heatmap-response.ts
 model/httpvalidation-error.ts
 model/index.ts
-model/marketing-event.ts
+model/models-heatmap-marketing-event.ts
+model/models-trust-change-detail-marketing-event.ts
 model/pagination-config.ts
 model/period-data.ts
 model/possibility-type.ts

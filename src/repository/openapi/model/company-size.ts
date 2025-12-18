@@ -1,5 +1,5 @@
 /* tslint:disable */
-
+/* eslint-disable */
 /**
  * Trust Score Dashboard API
  * 기업별 신뢰 점수 시계열 데이터 API
@@ -27,12 +27,8 @@ export const CompanySize = {
     T3: 'T3',
     T4: 'T4',
     T5: 'T5',
-    T6: 'T6',
-    T7: 'T7',
-    T8: 'T8',
-    T9: 'T9',
     T10: 'T10',
-    UNKNOWN: '미확인'
+    UNKNOWN: 'UNKNOWN'
 } as const;
 
 export type CompanySize = typeof CompanySize[keyof typeof CompanySize];

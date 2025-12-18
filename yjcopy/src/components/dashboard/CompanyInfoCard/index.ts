@@ -1,2 +1,0 @@
-export { CompanyInfoCard } from './CompanyInfoCard';
-

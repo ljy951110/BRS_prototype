@@ -1,7 +1,7 @@
 import { Badge, Card, Modal, Text } from "@/components/common/atoms";
 import { CompanyInfoCard } from "@/components/dashboard/CompanyInfoCard";
 import { ContentInfoCard } from "@/components/dashboard/ContentInfoCard";
-import type { TimePeriodType } from "@/types/common";
+import { useGetTrustChangeDetail } from "@/repository/query/trustChangeDetailApiController/queryHook";
 import { Customer, ProductType } from "@/types/customer";
 import {
   ArrowRight,
@@ -18,9 +18,10 @@ import styles from "./index.module.scss";
 
 interface ContentAnalysisProps {
   data: Customer[];
-  timePeriod: TimePeriodType;
   filters?: ReactNode;
 }
+
+type TimePeriodType = "1w" | "1m" | "6m" | "1y";
 
 const TIME_PERIOD_LABELS: Record<TimePeriodType, string> = {
   "1w": "1주일",
@@ -59,12 +60,6 @@ const CATEGORY_COLORS: Record<
 const CATEGORY_ORDER: Record<string, number> = { TOFU: 1, MOFU: 2, BOFU: 3 };
 
 const TRUST_HISTORY_YEAR = "2024";
-const MBM_TRUST_POINTS = 3;
-const CONTENT_TRUST_POINTS: Record<string, number> = {
-  TOFU: 1,
-  MOFU: 2,
-  BOFU: 3,
-};
 
 // MBM 이벤트 정의 (액션 타임라인과 동일)
 const MBM_EVENTS: Record<string, { date: string; label: string }> = {
@@ -164,9 +159,9 @@ const getDateFromWeekKey = (key: string) => {
 
 export const CustomerActivityAnalysis = ({
   data,
-  timePeriod,
   filters,
 }: ContentAnalysisProps) => {
+  const [timePeriod, _setTimePeriod] = useState<TimePeriodType>("1m");
   const [activeTab, setActiveTab] = useState<ActivityTab>("content");
   const [selectedContent, setSelectedContent] = useState<ContentStat | null>(
     null
@@ -179,24 +174,20 @@ export const CustomerActivityAnalysis = ({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [trustModalCompanyId, setTrustModalCompanyId] = useState<number | null>(
+    null
+  );
   const [trustModalCompany, setTrustModalCompany] = useState<{
     companyName: string;
     change: number;
     startTrust: number;
     endTrust: number;
-    events: {
-      type: "mbm" | "content";
-      label: string;
-      date: string;
-      points: number;
-      category?: string;
-    }[];
   } | null>(null);
 
   const trustGainCompanies = useMemo(() => {
     const now = new Date("2024-12-10");
     const periodStart = new Date(now);
-    periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
+    periodStart.setDate(periodStart.getDate() - 30); // 기본값 30일 사용
 
     return data
       .map((customer) => {
@@ -235,6 +226,7 @@ export const CustomerActivityAnalysis = ({
         if (change <= 0) return null;
 
         return {
+          companyId: customer.no, // no 필드를 companyId로 사용
           companyName: customer.companyName,
           manager: customer.manager,
           category: customer.category,
@@ -247,57 +239,32 @@ export const CustomerActivityAnalysis = ({
       .filter((item): item is NonNullable<typeof item> => !!item)
       .sort((a, b) => b.change - a.change)
       .slice(0, 5);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, timePeriod]);
 
-  const buildTrustGainEvents = (customerName: string) => {
+  // 날짜 범위 계산
+  const getDateRange = () => {
     const now = new Date("2024-12-10");
     const periodStart = new Date(now);
     periodStart.setDate(periodStart.getDate() - PERIOD_DAYS[timePeriod]);
 
-    const customer = data.find((c) => c.companyName === customerName);
-    if (!customer) return [];
-
-    const events: {
-      type: "mbm" | "content";
-      label: string;
-      date: string;
-      points: number;
-      category?: string;
-    }[] = [];
-
-    // MBM 참석
-    Object.entries(customer.attendance || {}).forEach(([key, attended]) => {
-      if (!attended) return;
-      const event = MBM_EVENTS[key];
-      if (!event) return;
-      const eventDate = new Date(event.date);
-      if (eventDate < periodStart || eventDate > now) return;
-      events.push({
-        type: "mbm",
-        label: event.label,
-        date: event.date,
-        points: MBM_TRUST_POINTS,
-      });
-    });
-
-    // 콘텐츠 조회
-    (customer.contentEngagements || []).forEach((engagement) => {
-      const date = new Date(engagement.date);
-      if (date < periodStart || date > now) return;
-      const points = CONTENT_TRUST_POINTS[engagement.category] ?? 1;
-      events.push({
-        type: "content",
-        label: engagement.title,
-        date: engagement.date,
-        points,
-        category: engagement.category,
-      });
-    });
-
-    return events.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    return {
+      startDate: periodStart.toISOString().split("T")[0],
+      endDate: now.toISOString().split("T")[0],
+    };
   };
+
+  // API로 신뢰지수 변동 상세 조회
+  const dateRange = getDateRange();
+
+  const { data: trustChangeDetailData, isLoading: isTrustChangeDetailLoading } =
+    useGetTrustChangeDetail(
+      trustModalCompanyId ?? 0,
+      { dateRange },
+      {
+        enabled: !!trustModalCompanyId,
+      }
+    );
 
   // 기간 내 콘텐츠 통계 계산
   const contentStats = useMemo(() => {
@@ -682,15 +649,15 @@ export const CustomerActivityAnalysis = ({
                 key={company.companyName}
                 className={styles.trustGainItem}
                 padding="md"
-                onClick={() =>
+                onClick={() => {
+                  setTrustModalCompanyId(company.companyId);
                   setTrustModalCompany({
                     companyName: company.companyName,
                     change: company.change,
                     startTrust: company.startTrust,
                     endTrust: company.endTrust,
-                    events: buildTrustGainEvents(company.companyName),
-                  })
-                }
+                  });
+                }}
               >
                 <div className={styles.trustGainMain}>
                   <Text variant="body-md" weight="semibold">
@@ -725,7 +692,10 @@ export const CustomerActivityAnalysis = ({
       {/* 신뢰 상승 상세 모달 */}
       <Modal
         isOpen={!!trustModalCompany}
-        onClose={() => setTrustModalCompany(null)}
+        onClose={() => {
+          setTrustModalCompany(null);
+          setTrustModalCompanyId(null);
+        }}
         title={trustModalCompany?.companyName || ""}
         size="md"
       >
@@ -741,12 +711,7 @@ export const CustomerActivityAnalysis = ({
                     {trustModalCompany.startTrust}
                   </Text>
                   <ArrowRight size={12} className={styles.arrowIcon} />
-                  <Text
-                    variant="body-md"
-                    weight="bold"
-                    mono
-                    color="success"
-                  >
+                  <Text variant="body-md" weight="bold" mono color="success">
                     {trustModalCompany.endTrust}
                   </Text>
                   <Badge variant="success" size="sm">
@@ -760,38 +725,96 @@ export const CustomerActivityAnalysis = ({
               <Text variant="body-md" weight="semibold">
                 상승 요인
               </Text>
-              {trustModalCompany.events.length > 0 ? (
+              {isTrustChangeDetailLoading ? (
+                <div className={styles.trustGainEmpty}>
+                  <Text variant="body-sm" color="tertiary">
+                    데이터를 불러오는 중...
+                  </Text>
+                </div>
+              ) : trustChangeDetailData?.data ? (
                 <div className={styles.trustEventList}>
-                  {trustModalCompany.events.map((event, idx) => (
-                    <div key={idx} className={styles.trustEventItem}>
-                      <div className={styles.trustEventMeta}>
-                        <Badge
-                          variant={event.type === "mbm" ? "success" : "cyan"}
-                          size="sm"
-                        >
-                          {event.type === "mbm" ? "MBM" : "콘텐츠"}
-                        </Badge>
-                        <Text variant="caption" color="tertiary">
-                          {event.date}
-                        </Text>
-                      </div>
-                      <div className={styles.trustEventContent}>
-                        <Text variant="body-sm" weight="medium">
-                          {event.label}
-                        </Text>
-                        <div className={styles.trustEventPoints}>
-                          {event.category && (
-                            <Badge variant="default" size="sm">
-                              {event.category}
-                            </Badge>
-                          )}
-                          <Badge variant="success" size="sm">
-                            +{event.points}p
+                  {/* 콘텐츠 조회 이벤트 */}
+                  {trustChangeDetailData.data.engagementItems?.map(
+                    (event, idx) => (
+                      <div key={`content-${idx}`} className={styles.trustEventItem}>
+                        <div className={styles.trustEventMeta}>
+                          <Badge variant="cyan" size="sm">
+                            콘텐츠
                           </Badge>
+                          <Text variant="caption" color="tertiary">
+                            {event.latestViewDate}
+                          </Text>
+                        </div>
+                        <div className={styles.trustEventContent}>
+                          <Text variant="body-sm" weight="medium">
+                            {event.title}
+                          </Text>
+                          {event.funnelType && (
+                            <Text variant="caption" color="secondary">
+                              {event.funnelType} · {event.viewCount || 0}회 조회
+                            </Text>
+                          )}
+                          {event.url && (
+                            <a
+                              href={event.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.eventLink}
+                            >
+                              <Text variant="caption" color="primary">
+                                링크 보기
+                              </Text>
+                            </a>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
+                  {/* MBM 이벤트 */}
+                  {trustChangeDetailData.data.marketingEvents?.map(
+                    (event, idx) => (
+                      <div key={`mbm-${idx}`} className={styles.trustEventItem}>
+                        <div className={styles.trustEventMeta}>
+                          <Badge variant="success" size="sm">
+                            MBM
+                          </Badge>
+                          <Text variant="caption" color="tertiary">
+                            {event.date}
+                          </Text>
+                        </div>
+                        <div className={styles.trustEventContent}>
+                          <Text variant="body-sm" weight="medium">
+                            {event.title}
+                          </Text>
+                          {event.product && (
+                            <Text variant="caption" color="secondary">
+                              소개 제품: {event.product}
+                            </Text>
+                          )}
+                          {event.event_url && (
+                            <a
+                              href={event.event_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.eventLink}
+                            >
+                              <Text variant="caption" color="primary">
+                                링크 보기
+                              </Text>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )}
+                  {(!trustChangeDetailData.data.engagementItems?.length &&
+                    !trustChangeDetailData.data.marketingEvents?.length) && (
+                      <div className={styles.trustGainEmpty}>
+                        <Text variant="body-sm" color="tertiary">
+                          기간 내 상승 요인을 찾지 못했습니다.
+                        </Text>
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className={styles.trustGainEmpty}>
@@ -1525,8 +1548,7 @@ export const CustomerActivityAnalysis = ({
         <div className={styles.categoryModalContent}>
           <div className={styles.categoryStats}>
             <Text variant="body-md" color="secondary">
-              최근 {TIME_PERIOD_LABELS[timePeriod]} 동안{" "}
-              {categoryContents.length}개 콘텐츠
+              최근 {categoryContents.length}개 콘텐츠
             </Text>
           </div>
 

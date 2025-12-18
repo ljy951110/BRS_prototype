@@ -1,10 +1,12 @@
+import type { ProductType } from "@/repository/openapi/model";
+
+export type { ProductType };
 export type CompanySizeType = "T0" | "T1" | "T3" | "T5" | "T9" | "T10" | null;
 export type CategoryType = "채용" | "공공" | "병원" | "성과";
-export type ProductType = "ATS" | "역검SR" | "INHR+통합" | "역검" | "이탈사";
 export type TrustLevelType = "P1" | "P2" | "P3" | null;
 export type ChangeDirectionType = "up" | "down" | "none" | null;
 export type CustomerResponseType = "상" | "중" | "하";
-export type PossibilityType = "90%" | "40%" | "0%";
+export type PossibilityType = "100%" | "90%" | "40%" | "0%";
 
 // 조회/참석 기업 상세 정보 (공통 컴포넌트용)
 export interface ViewerDetail {
@@ -147,6 +149,8 @@ export interface Customer {
   salesActions?: SalesAction[]; // 영업 액션 (가능성/고객반응 변화 포함)
   contentEngagements?: ContentEngagement[];
   attendance: Attendance; // MBM 참석 여부 (신뢰지수 변화 포함)
+  lastMBMDate?: string | null; // 최근 MBM 참석날짜 (YYYY-MM-DD, API에서 계산됨)
+  lastContactDate?: string | null; // 마지막 컨택 날짜 (YYYY-MM-DD, API에서 계산됨)
   trustFormation: TrustFormation;
   valueRecognition: ValueRecognition;
   adoptionDecision: AdoptionDecision;
