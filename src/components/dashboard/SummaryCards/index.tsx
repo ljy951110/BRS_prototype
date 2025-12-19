@@ -1,5 +1,9 @@
+import { ProductTypeLabel } from "@/constants/commonMap";
+import { calculateExpectedRevenue } from "@/data/mockData";
+import { ProductType } from "@/repository/openapi/model";
 import { ArrowDownOutlined, ArrowUpOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { Alert, Badge, Button, Card, Col, Modal, Row, Select, Statistic, Table, theme, Typography } from "antd";
+import { Alert, Badge, Button, Card, Col, Modal, Row, Select, Space, Statistic, Table, Tabs, Tag, theme, Typography } from "antd";
+import { ArrowRight, BookOpen, Building2, Calendar, Eye } from "lucide-react";
 import React, { useState } from "react";
 import {
   Bar,
@@ -16,9 +20,53 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import tableStyles from "../CustomerTable/index.module.scss";
 import styles from "./index.module.scss";
 
-const { Text } = Typography;
+const { Text, Title: AntTitle, Text: AntText } = Typography;
+
+// 유틸리티 함수
+const formatMan = (val: number | null | undefined) => {
+  if (val === null || val === undefined) return "-";
+  const man = Math.round(val / 10000);
+  return `${man}만`;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderProgressTags = (customer: any, withColors: boolean, colors: any) => {
+  const progress = customer.adoptionDecision?.progress || {};
+  const stages = [
+    { key: "test", label: "테스트", active: progress.test, past: customer._periodData?.pastProgress?.test },
+    { key: "quote", label: "견적", active: progress.quote, past: customer._periodData?.pastProgress?.quote },
+    { key: "approval", label: "품의", active: progress.approval, past: customer._periodData?.pastProgress?.approval },
+    { key: "contract", label: "계약", active: progress.contract, past: customer._periodData?.pastProgress?.contract },
+  ];
+
+  return (
+    <Space size={4} wrap>
+      {stages.map((stage) => {
+        const isNew = withColors && stage.active && !stage.past;
+        return (
+          <Tag
+            key={stage.key}
+            style={{
+              borderColor: stage.active
+                ? (isNew ? colors.newBorder : colors.activeBorder)
+                : colors.inactiveBorder,
+              color: stage.active
+                ? (isNew ? colors.newText : colors.activeText)
+                : colors.inactiveText,
+              background: isNew ? colors.newBg : 'transparent',
+            }}
+            bordered
+          >
+            {stage.label}
+          </Tag>
+        );
+      })}
+    </Space>
+  );
+};
 
 // 다크모드 툴팁 스타일 (고정)
 const DARK_TOOLTIP_STYLE = {
@@ -325,8 +373,21 @@ const MBMStatusModalContent = () => {
   const [mbmFilter, setMbmFilter] = useState("전체 MBM");
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [adoptionFilter, setAdoptionFilter] = useState("전체");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+
   const data = modalData.mbm_status;
   const { token } = theme.useToken();
+
+  const progressColors = {
+    activeText: token.colorTextBase,
+    activeBorder: token.colorTextBase,
+    inactiveText: token.colorTextTertiary,
+    inactiveBorder: token.colorBorder,
+    newText: token.colorSuccess,
+    newBorder: token.colorSuccess,
+    newBg: token.colorSuccessBg,
+  };
 
   const currentData = sizeFilter === "전체"
     ? data.statusData.all
@@ -565,6 +626,10 @@ const MBMStatusModalContent = () => {
             rowKey={(record) => record.companyName}
             locale={{ emptyText: "해당하는 기업이 없습니다." }}
             bordered
+            onRow={(record) => ({
+              onClick: () => setSelectedCustomer(record),
+              style: { cursor: "pointer" },
+            })}
           />
         </div>
       )}
@@ -575,6 +640,455 @@ const MBMStatusModalContent = () => {
         showIcon
         style={{ marginTop: 16 }}
       />
+
+      {/* 고객 상세 모달 - API 호출 없이 mock 데이터만 사용 */}
+      <Modal
+        open={!!selectedCustomer}
+        onCancel={() => setSelectedCustomer(null)}
+        footer={null}
+        title={selectedCustomer?.companyName || "고객 상세"}
+        width={720}
+      >
+        {selectedCustomer && (
+          <Tabs
+            defaultActiveKey="summary"
+            items={[
+              {
+                key: "summary",
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Building2 size={16} />
+                    <span>요약</span>
+                  </span>
+                ),
+                children: (
+                  <>
+                    {/* 기본 정보 */}
+                    <div style={{ marginBottom: 24 }}>
+                      <AntTitle level={5} style={{ marginBottom: 12 }}>기본 정보</AntTitle>
+                      <div style={{ overflow: 'hidden', borderRadius: token.borderRadius }}>
+                        <Table
+                          dataSource={[
+                            {
+                              key: 'row1',
+                              label1: '담당자',
+                              value1: selectedCustomer.manager,
+                              label2: '카테고리',
+                              value2: selectedCustomer.category
+                            },
+                            {
+                              key: 'row2',
+                              label1: '기업 규모',
+                              value1: selectedCustomer.companySize || '미정',
+                              label2: '계약 금액',
+                              value2: formatMan(selectedCustomer.contractAmount)
+                            },
+                            {
+                              key: 'row3',
+                              label1: '제품 사용',
+                              value1: (
+                                <Space size={4} wrap>
+                                  {selectedCustomer.productUsage?.map((product: string, idx: number) => (
+                                    <Tag key={idx} color="blue">
+                                      {ProductTypeLabel[product as ProductType] || product}
+                                    </Tag>
+                                  )) || "-"}
+                                </Space>
+                              ),
+                              label2: '',
+                              value2: ''
+                            },
+                          ]}
+                          columns={[
+                            {
+                              dataIndex: 'label1',
+                              key: 'label1',
+                              width: 120,
+                              onCell: (record) => ({
+                                style: {
+                                  backgroundColor: token.colorFillAlter,
+                                  fontWeight: 600
+                                },
+                                ...(record.key === 'row3' ? { colSpan: 1 } : {})
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value1',
+                              key: 'value1',
+                              onCell: (record) => ({
+                                ...(record.key === 'row3' ? { colSpan: 3 } : {})
+                              })
+                            },
+                            {
+                              dataIndex: 'label2',
+                              key: 'label2',
+                              width: 120,
+                              onCell: (record) => ({
+                                style: {
+                                  backgroundColor: token.colorFillAlter,
+                                  fontWeight: 600
+                                },
+                                ...(record.key === 'row3' ? { colSpan: 0 } : {})
+                              }),
+                              render: (text) => text ? <AntText strong>{text}</AntText> : null
+                            },
+                            {
+                              dataIndex: 'value2',
+                              key: 'value2',
+                              onCell: (record) => ({
+                                ...(record.key === 'row3' ? { colSpan: 0 } : {})
+                              })
+                            }
+                          ]}
+                          pagination={false}
+                          size="small"
+                          showHeader={false}
+                          bordered
+                        />
+                      </div>
+                    </div>
+
+                    {/* 상태 변화 */}
+                    <div>
+                      <AntTitle level={5} style={{ marginBottom: 12 }}>상태 변화</AntTitle>
+                      <div style={{ overflow: 'hidden', borderRadius: token.borderRadius }}>
+                        <Table
+                          dataSource={[
+                            {
+                              key: 'row1',
+                              label1: '신뢰 점수',
+                              value1: (() => {
+                                const past = selectedCustomer._periodData?.pastTrustIndex ?? null;
+                                const current = selectedCustomer.trustIndex || 0;
+                                const isPositive = past !== null && current > past;
+                                const isNegative = past !== null && current < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${tableStyles.changeTag} ${tableStyles[changeType]}`}>
+                                    <span>{past ?? current}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{current}</span>
+                                  </div>
+                                );
+                              })(),
+                              label2: '목표 매출',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastTargetRevenue ?? null;
+                                const current = selectedCustomer.adoptionDecision?.targetRevenue ?? 0;
+                                const isPositive = past !== null && current > past;
+                                const isNegative = past !== null && current < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${tableStyles.changeTag} ${tableStyles[changeType]}`}>
+                                    <span>{formatMan(past)}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{formatMan(current)}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                            {
+                              key: 'row2',
+                              label1: '가능성',
+                              value1: (() => {
+                                const past = selectedCustomer._periodData?.pastPossibility ?? null;
+                                const current = selectedCustomer.adoptionDecision?.possibility || "0%";
+                                const isPositive = past !== null &&
+                                  Number(current.replace("%", "")) > Number(past.replace("%", ""));
+                                const isNegative = past !== null &&
+                                  Number(current.replace("%", "")) < Number(past.replace("%", ""));
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${tableStyles.changeTag} ${tableStyles[changeType]}`}>
+                                    <span>{past ?? current}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{current}</span>
+                                  </div>
+                                );
+                              })(),
+                              label2: '예상 매출',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastExpectedRevenue ?? null;
+                                const current = selectedCustomer._periodData?.currentExpectedRevenue ??
+                                  calculateExpectedRevenue(
+                                    selectedCustomer.adoptionDecision?.targetRevenue,
+                                    selectedCustomer.adoptionDecision?.possibility
+                                  );
+                                const isPositive = past !== null && (current || 0) > past;
+                                const isNegative = past !== null && (current || 0) < past;
+                                const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+                                return (
+                                  <div className={`${tableStyles.changeTag} ${tableStyles[changeType]}`}>
+                                    <span>{formatMan(past)}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{formatMan(current)}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                            {
+                              key: 'row3',
+                              label1: '도입 결정 단계',
+                              value1: renderProgressTags(selectedCustomer, true, progressColors),
+                              label2: '목표 일자',
+                              value2: (() => {
+                                const past = selectedCustomer._periodData?.pastTargetDate || null;
+                                const current = selectedCustomer.adoptionDecision?.targetDate || null;
+
+                                const toMonth = (dateStr: string | null): string => {
+                                  if (!dateStr || dateStr === '-') return '-';
+                                  const match = dateStr.match(/(\d{4})-(\d{2})/);
+                                  if (match) {
+                                    return `${match[2]}월`;
+                                  }
+                                  return dateStr;
+                                };
+
+                                if (!past && !current) {
+                                  return <span>-</span>;
+                                }
+
+                                const pastMonth = toMonth(past);
+                                const currentMonth = toMonth(current);
+
+                                let changeType = "neutral";
+                                if (past && current && past !== '-' && current !== '-') {
+                                  const pastDate = new Date(past);
+                                  const currentDate = new Date(current);
+                                  if (currentDate < pastDate) {
+                                    changeType = "positive";
+                                  } else if (currentDate > pastDate) {
+                                    changeType = "negative";
+                                  }
+                                }
+
+                                return (
+                                  <div className={`${tableStyles.changeTag} ${tableStyles[changeType]}`}>
+                                    <span>{pastMonth}</span>
+                                    <ArrowRight size={10} />
+                                    <span>{currentMonth}</span>
+                                  </div>
+                                );
+                              })()
+                            },
+                          ]}
+                          columns={[
+                            {
+                              dataIndex: 'label1',
+                              key: 'label1',
+                              width: 120,
+                              onCell: () => ({
+                                style: {
+                                  backgroundColor: token.colorFillAlter,
+                                  fontWeight: 600
+                                }
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value1',
+                              key: 'value1',
+                            },
+                            {
+                              dataIndex: 'label2',
+                              key: 'label2',
+                              width: 120,
+                              onCell: () => ({
+                                style: {
+                                  backgroundColor: token.colorFillAlter,
+                                  fontWeight: 600
+                                }
+                              }),
+                              render: (text) => <AntText strong>{text}</AntText>
+                            },
+                            {
+                              dataIndex: 'value2',
+                              key: 'value2',
+                            }
+                          ]}
+                          pagination={false}
+                          size="small"
+                          showHeader={false}
+                          bordered
+                        />
+                      </div>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                key: "actions",
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={16} />
+                    <span>영업 히스토리</span>
+                  </span>
+                ),
+                children: (
+                  <div>
+                    {/* Mock 영업 액션 데이터 생성 */}
+                    {(() => {
+                      // 임시 mock 데이터 생성
+                      const mockSalesActions = [
+                        {
+                          date: "2024-12-18",
+                          type: "CALL",
+                          content: `${selectedCustomer.manager} 담당자와 제품 도입 관련 전화 미팅 진행. 현재 견적 검토 중이며, 다음 주 추가 미팅 예정.`
+                        },
+                        {
+                          date: "2024-12-15",
+                          type: "MEETING",
+                          content: "사내 의사결정권자와 함께 제품 데모 진행. 긍정적인 반응을 얻었으며, 추가 기능 논의 필요."
+                        },
+                        {
+                          date: "2024-12-10",
+                          type: "CALL",
+                          content: "초기 문의 응대 및 제품 소개. 관심도가 높아 후속 미팅 예정."
+                        }
+                      ];
+
+                      return mockSalesActions.length > 0 ? (
+                        <div>
+                          <AntTitle level={5} style={{ marginBottom: 16 }}>영업 액션 타임라인</AntTitle>
+                          <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                              {mockSalesActions.map((action, idx) => (
+                                <Card
+                                  key={idx}
+                                  size="small"
+                                  style={{ width: '100%' }}
+                                >
+                                  <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                      <AntText strong>{action.date}</AntText>
+                                      <Tag color={action.type === 'CALL' ? 'blue' : 'green'}>
+                                        {action.type === 'CALL' ? '콜' : '미팅'}
+                                      </Tag>
+                                    </Space>
+                                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                                      담당자: {selectedCustomer.manager}
+                                    </AntText>
+                                    <AntText style={{ display: 'block', wordBreak: 'break-word' }}>
+                                      {action.content || '영업 활동 내용'}
+                                    </AntText>
+                                  </Space>
+                                </Card>
+                              ))}
+                            </Space>
+                          </div>
+                        </div>
+                      ) : (
+                        <Alert
+                          message="영업 히스토리가 없습니다"
+                          description="현재 기간 동안의 영업 액션 이력이 없습니다."
+                          type="info"
+                          showIcon
+                        />
+                      );
+                    })()}
+                  </div>
+                ),
+              },
+              {
+                key: "content",
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BookOpen size={16} />
+                    <span>마케팅 히스토리</span>
+                  </span>
+                ),
+                children: (
+                  <div>
+                    {/* Mock 콘텐츠 소비 이력 생성 */}
+                    {(() => {
+                      // 임시 mock 데이터 생성
+                      const mockContentEngagements = [
+                        {
+                          title: "2025 마케팅 트렌드 리포트",
+                          category: "TOFU",
+                          date: "2024-12-17",
+                          views: 3
+                        },
+                        {
+                          title: "성공적인 B2B 세일즈 전략",
+                          category: "MOFU",
+                          date: "2024-12-14",
+                          views: 2
+                        },
+                        {
+                          title: "제품 도입 사례 연구",
+                          category: "BOFU",
+                          date: "2024-12-11",
+                          views: 1
+                        }
+                      ];
+
+                      return mockContentEngagements.length > 0 ? (
+                        <div style={{ marginBottom: 24 }}>
+                          <AntTitle level={5} style={{ marginBottom: 16 }}>콘텐츠 소비 이력</AntTitle>
+                          <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
+                            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                              {mockContentEngagements.map((item, index) => (
+                                <Card
+                                  key={index}
+                                  size="small"
+                                  hoverable
+                                >
+                                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                    <Space size={12}>
+                                      <BookOpen size={20} style={{ color: token.colorPrimary }} />
+                                      <Space direction="vertical" size={4}>
+                                        <Space size={8}>
+                                          <AntText strong style={{ fontSize: 15 }}>
+                                            {item.title}
+                                          </AntText>
+                                        </Space>
+                                        <Space size={8}>
+                                          <Tag color="blue" style={{ margin: 0 }}>
+                                            {item.category || 'TOFU'}
+                                          </Tag>
+                                          <Tag color="gold" style={{ margin: 0 }}>
+                                            아티클
+                                          </Tag>
+                                          <Space size={4}>
+                                            <Eye size={14} style={{ color: token.colorTextSecondary }} />
+                                            <AntText type="secondary" style={{ fontSize: 12 }}>
+                                              조회 {item.views || 1}회
+                                            </AntText>
+                                          </Space>
+                                        </Space>
+                                        <AntText type="secondary" style={{ fontSize: 12 }}>
+                                          최근 조회: {item.date}
+                                        </AntText>
+                                      </Space>
+                                    </Space>
+                                  </Space>
+                                </Card>
+                              ))}
+                            </Space>
+                          </div>
+                        </div>
+                      ) : (
+                        <Alert
+                          message="활동 이력이 없습니다"
+                          description="선택한 기간 동안의 콘텐츠 소비 이력이 없습니다."
+                          type="info"
+                          showIcon
+                        />
+                      );
+                    })()}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        )}
+      </Modal>
     </div>
   );
 };
