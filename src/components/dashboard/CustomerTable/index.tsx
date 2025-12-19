@@ -5,7 +5,7 @@ import {
 import { Category, ProductType, type SalesAction } from "@/repository/openapi/model";
 import { useGetCustomerSummary, useGetSalesHistory } from "@/repository/query/customerDetailApiController/queryHook";
 import { useGetTrustChangeDetail } from "@/repository/query/trustChangeDetailApiController/queryHook";
-import { Customer, PossibilityType } from "@/types/customer";
+import { Customer } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
   Alert,
@@ -680,22 +680,22 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
               return;
             }
 
-          // 드롭다운 닫힐 때 자동 적용
-          setCompanySearch(companySearchDraft);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["companyName"] !== undefined) {
-            finalSortField = sortFieldDraft["companyName"];
-            finalSortOrder = sortOrderDraft["companyName"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            // 드롭다운 닫힐 때 자동 적용
+            setCompanySearch(companySearchDraft);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["companyName"] !== undefined) {
+              finalSortField = sortFieldDraft["companyName"];
+              finalSortOrder = sortOrderDraft["companyName"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              companyName: companySearchDraft,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            companyName: companySearchDraft,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }: FilterDropdownProps) => {
@@ -802,29 +802,29 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "companySize",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          // 버튼으로 이미 적용했으면 자동 적용 건너뛰기
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            // 버튼으로 이미 적용했으면 자동 적용 건너뛰기
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          // 드롭다운 닫힐 때 자동 적용
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["companySize"] !== undefined) {
-            finalSortField = sortFieldDraft["companySize"];
-            finalSortOrder = sortOrderDraft["companySize"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            // 드롭다운 닫힐 때 자동 적용
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["companySize"] !== undefined) {
+              finalSortField = sortFieldDraft["companySize"];
+              finalSortOrder = sortOrderDraft["companySize"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -931,27 +931,27 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "category",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["category"] !== undefined) {
-            finalSortField = sortFieldDraft["category"];
-            finalSortOrder = sortOrderDraft["category"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["category"] !== undefined) {
+              finalSortField = sortFieldDraft["category"];
+              finalSortOrder = sortOrderDraft["category"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1067,27 +1067,27 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "productUsage",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["productUsage"] !== undefined) {
-            finalSortField = sortFieldDraft["productUsage"];
-            finalSortOrder = sortOrderDraft["productUsage"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["productUsage"] !== undefined) {
+              finalSortField = sortFieldDraft["productUsage"];
+              finalSortOrder = sortOrderDraft["productUsage"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1213,27 +1213,27 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "manager",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["manager"] !== undefined) {
-            finalSortField = sortFieldDraft["manager"];
-            finalSortOrder = sortOrderDraft["manager"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["manager"] !== undefined) {
+              finalSortField = sortFieldDraft["manager"];
+              finalSortOrder = sortOrderDraft["manager"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1343,27 +1343,27 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "trustIndex",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["trustIndex"] !== undefined) {
-            finalSortField = sortFieldDraft["trustIndex"];
-            finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["trustIndex"] !== undefined) {
+              finalSortField = sortFieldDraft["trustIndex"];
+              finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm }) => {
@@ -1472,33 +1472,33 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "contractAmount",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          const finalMin = contractAmountMinDraft !== null ? contractAmountMinDraft * 10000 : null;
-          const finalMax = contractAmountMaxDraft !== null ? contractAmountMaxDraft * 10000 : null;
-          setContractAmountMin(finalMin);
-          setContractAmountMax(finalMax);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["contractAmount"] !== undefined) {
-            finalSortField = sortFieldDraft["contractAmount"];
-            finalSortOrder = sortOrderDraft["contractAmount"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            const finalMin = contractAmountMinDraft !== null ? contractAmountMinDraft * 10000 : null;
+            const finalMax = contractAmountMaxDraft !== null ? contractAmountMaxDraft * 10000 : null;
+            setContractAmountMin(finalMin);
+            setContractAmountMax(finalMax);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["contractAmount"] !== undefined) {
+              finalSortField = sortFieldDraft["contractAmount"];
+              finalSortOrder = sortOrderDraft["contractAmount"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              contractAmountMin: contractAmountMinDraft,
+              contractAmountMax: contractAmountMaxDraft,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            contractAmountMin: contractAmountMinDraft,
-            contractAmountMax: contractAmountMaxDraft,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1666,38 +1666,38 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "salesActions",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-          // 드롭다운 열 때 현재 값을 draft에 복사
-          setLastContactStartDraft(lastContactStart ? dayjs(lastContactStart) : null);
-          setLastContactEndDraft(lastContactEnd ? dayjs(lastContactEnd) : null);
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+            // 드롭다운 열 때 현재 값을 draft에 복사
+            setLastContactStartDraft(lastContactStart ? dayjs(lastContactStart) : null);
+            setLastContactEndDraft(lastContactEnd ? dayjs(lastContactEnd) : null);
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          // 날짜 필터 적용
-          const startStr = lastContactStartDraft ? lastContactStartDraft.format('YYYY-MM-DD') : "";
-          const endStr = lastContactEndDraft ? lastContactEndDraft.format('YYYY-MM-DD') : "";
-          setLastContactStart(startStr);
-          setLastContactEnd(endStr);
+            // 날짜 필터 적용
+            const startStr = lastContactStartDraft ? lastContactStartDraft.format('YYYY-MM-DD') : "";
+            const endStr = lastContactEndDraft ? lastContactEndDraft.format('YYYY-MM-DD') : "";
+            setLastContactStart(startStr);
+            setLastContactEnd(endStr);
 
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["lastContact"] !== undefined) {
-            finalSortField = sortFieldDraft["lastContact"];
-            finalSortOrder = sortOrderDraft["lastContact"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["lastContact"] !== undefined) {
+              finalSortField = sortFieldDraft["lastContact"];
+              finalSortOrder = sortOrderDraft["lastContact"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              lastContactStart: startStr,
+              lastContactEnd: endStr,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            lastContactStart: startStr,
-            lastContactEnd: endStr,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1836,33 +1836,33 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "_periodData",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          const finalMin = targetRevenueMinDraft !== null ? targetRevenueMinDraft * 10000 : null;
-          const finalMax = targetRevenueMaxDraft !== null ? targetRevenueMaxDraft * 10000 : null;
-          setTargetRevenueMin(finalMin);
-          setTargetRevenueMax(finalMax);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["targetRevenue"] !== undefined) {
-            finalSortField = sortFieldDraft["targetRevenue"];
-            finalSortOrder = sortOrderDraft["targetRevenue"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            const finalMin = targetRevenueMinDraft !== null ? targetRevenueMinDraft * 10000 : null;
+            const finalMax = targetRevenueMaxDraft !== null ? targetRevenueMaxDraft * 10000 : null;
+            setTargetRevenueMin(finalMin);
+            setTargetRevenueMax(finalMax);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["targetRevenue"] !== undefined) {
+              finalSortField = sortFieldDraft["targetRevenue"];
+              finalSortOrder = sortOrderDraft["targetRevenue"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              targetRevenueMin: targetRevenueMinDraft,
+              targetRevenueMax: targetRevenueMaxDraft,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            targetRevenueMin: targetRevenueMinDraft,
-            targetRevenueMax: targetRevenueMaxDraft,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2008,31 +2008,31 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "_periodData",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          setPossibilityMin(possibilityMinDraft);
-          setPossibilityMax(possibilityMaxDraft);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["possibility"] !== undefined) {
-            finalSortField = sortFieldDraft["possibility"];
-            finalSortOrder = sortOrderDraft["possibility"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            setPossibilityMin(possibilityMinDraft);
+            setPossibilityMax(possibilityMaxDraft);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["possibility"] !== undefined) {
+              finalSortField = sortFieldDraft["possibility"];
+              finalSortOrder = sortOrderDraft["possibility"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              possibilityMin: possibilityMinDraft,
+              possibilityMax: possibilityMaxDraft,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            possibilityMin: possibilityMinDraft,
-            possibilityMax: possibilityMaxDraft,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2176,33 +2176,33 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "_periodData",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          const finalMin = expectedRevenueMinDraft !== null ? expectedRevenueMinDraft * 10000 : null;
-          const finalMax = expectedRevenueMaxDraft !== null ? expectedRevenueMaxDraft * 10000 : null;
-          setExpectedRevenueMin(finalMin);
-          setExpectedRevenueMax(finalMax);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["expectedRevenue"] !== undefined) {
-            finalSortField = sortFieldDraft["expectedRevenue"];
-            finalSortOrder = sortOrderDraft["expectedRevenue"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            const finalMin = expectedRevenueMinDraft !== null ? expectedRevenueMinDraft * 10000 : null;
+            const finalMax = expectedRevenueMaxDraft !== null ? expectedRevenueMaxDraft * 10000 : null;
+            setExpectedRevenueMin(finalMin);
+            setExpectedRevenueMax(finalMax);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["expectedRevenue"] !== undefined) {
+              finalSortField = sortFieldDraft["expectedRevenue"];
+              finalSortOrder = sortOrderDraft["expectedRevenue"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              expectedRevenueMin: expectedRevenueMinDraft,
+              expectedRevenueMax: expectedRevenueMaxDraft,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            expectedRevenueMin: expectedRevenueMinDraft,
-            expectedRevenueMax: expectedRevenueMaxDraft,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2349,33 +2349,33 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       dataIndex: "adoptionDecision",
       filterDropdownProps: {
         onOpenChange: (open) => {
-        if (open) {
-          skipAutoApplyRef.current = false;
-        } else {
-          if (skipAutoApplyRef.current) {
+          if (open) {
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
-          const startDate = targetMonthRangeStartDraft ? targetMonthRangeStartDraft.format('YYYY-MM-DD') : '';
-          const endDate = targetMonthRangeEndDraft ? targetMonthRangeEndDraft.format('YYYY-MM-DD') : '';
-          setTargetMonthRangeStart(startDate);
-          setTargetMonthRangeEnd(endDate);
-          let finalSortField = sortField;
-          let finalSortOrder = sortOrder;
-          if (sortFieldDraft["targetDate"] !== undefined) {
-            finalSortField = sortFieldDraft["targetDate"];
-            finalSortOrder = sortOrderDraft["targetDate"] ?? "asc";
-            setSortField(finalSortField);
-            setSortOrder(finalSortOrder);
+            const startDate = targetMonthRangeStartDraft ? targetMonthRangeStartDraft.format('YYYY-MM-DD') : '';
+            const endDate = targetMonthRangeEndDraft ? targetMonthRangeEndDraft.format('YYYY-MM-DD') : '';
+            setTargetMonthRangeStart(startDate);
+            setTargetMonthRangeEnd(endDate);
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["targetDate"] !== undefined) {
+              finalSortField = sortFieldDraft["targetDate"];
+              finalSortOrder = sortOrderDraft["targetDate"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              targetMonthRangeStart: startDate,
+              targetMonthRangeEnd: endDate,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
           }
-          applyFilters({
-            targetMonthRangeStart: startDate,
-            targetMonthRangeEnd: endDate,
-            sortField: finalSortField,
-            sortOrder: finalSortOrder,
-          });
-        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2465,7 +2465,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                   if (sortField === "targetDate") {
                     setSortField(null);
                   }
-                  applyFilters({ 
+                  applyFilters({
                     targetMonthRangeStart: '',
                     targetMonthRangeEnd: ''
                   });
