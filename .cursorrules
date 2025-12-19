@@ -7,20 +7,46 @@
 ## 📦 코드 구조 규칙
 
 ### 파일 구조
-- **불필요한 re-export 금지**: 폴더 내에 단순히 `export * from './file'`이나 `export { Type }`만 하는 파일을 만들지 마세요
-  - ❌ 나쁜 예:
+- **컴포넌트는 `ComponentName/index.tsx` 패턴 사용**
+  - 컴포넌트별로 폴더를 만들고 `index.tsx` 파일에 구현
+  - 스타일이 필요한 경우 `index.module.scss`도 같은 폴더에 배치
+  
+  - ✅ 좋은 예 (컴포넌트):
+    ```typescript
+    // src/components/common/atoms/PresetDateRangePicker/index.tsx
+    export const PresetDateRangePicker = () => { ... }
+    
+    // 사용하는 곳
+    import { PresetDateRangePicker } from '@/components/common/atoms/PresetDateRangePicker';
+    ```
+  
+  - 폴더 구조 예시:
+    ```
+    src/components/common/atoms/
+      ├── Button/
+      │   ├── index.tsx
+      │   └── index.module.scss
+      ├── PresetDateRangePicker/
+      │   └── index.tsx
+      └── Card/
+          ├── index.tsx
+          └── index.module.scss
+    ```
+
+- **불필요한 re-export 금지**: API 레이어나 유틸리티에서 단순 re-export 파일을 만들지 마세요
+  
+  - ❌ 나쁜 예 (API 레이어):
     ```typescript
     // index.ts
     export * from './queryHook';
     export * from './queryKey';
-    
-    // commonMap.ts
-    export { Category, ProductType }; // 단순 re-export 금지
     ```
-  - ✅ 좋은 예: 필요한 곳에서 직접 import
+  
+  - ✅ 좋은 예 (API 레이어):
     ```typescript
+    // 필요한 곳에서 직접 import
     import { useGetCustomerSummary } from '@/repository/query/customerDetailApiController/queryHook';
-    import { Category, ProductType } from '@/repository/openapi/model';
+    import { customerDetailQueryKeys } from '@/repository/query/customerDetailApiController/queryKey';
     ```
 
 ### OpenAPI 자동 생성 타입 사용

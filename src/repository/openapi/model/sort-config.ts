@@ -45,6 +45,7 @@ export const SortConfigFieldEnum = {
     TARGET_REVENUE: 'targetRevenue',
     POSSIBILITY: 'possibility',
     EXPECTED_REVENUE: 'expectedRevenue',
+    CURRENT_QUARTER_REVENUE: 'currentQuarterRevenue',
     TARGET_DATE: 'targetDate',
     LAST_CONTACT_DATE: 'lastContactDate',
     LAST_MBM_DATE: 'lastMBMDate'

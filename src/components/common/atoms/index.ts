@@ -3,4 +3,5 @@ export { Text } from './Text';
 export { Badge } from './Badge';
 export { Modal } from './Modal';
 export { Drawer } from './Drawer';
+export { PresetDateRangePicker } from './PresetDateRangePicker';
 

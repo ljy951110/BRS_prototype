@@ -119,6 +119,8 @@ export interface PeriodData {
   pastTargetRevenue: number | null;
   pastExpectedRevenue: number;
   currentExpectedRevenue: number;
+  pastCurrentQuarterRevenue: number;
+  currentCurrentQuarterRevenue: number;
   possibilityChange: "up" | "down" | "none";
   responseChange: "up" | "down" | "none";
   // 진행상태 과거값

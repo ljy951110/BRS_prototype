@@ -15,8 +15,10 @@ Name | Type | Description | Notes
 **contractAmountRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
 **targetRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
 **expectedRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
+**currentQuarterRevenueRange** | [**AmountRange**](AmountRange.md) |  | [optional] [default to undefined]
 **targetMonthRange** | [**DateRangeFilter**](DateRangeFilter.md) |  | [optional] [default to undefined]
 **lastContactDateRange** | [**DateRangeFilter**](DateRangeFilter.md) |  | [optional] [default to undefined]
+**lastMBMDateRange** | [**DateRangeFilter**](DateRangeFilter.md) |  | [optional] [default to undefined]
 
 ## Example
 
@@ -33,8 +35,10 @@ const instance: DashboardFilters = {
     contractAmountRange,
     targetRevenueRange,
     expectedRevenueRange,
+    currentQuarterRevenueRange,
     targetMonthRange,
     lastContactDateRange,
+    lastMBMDateRange,
 };
 ```
 

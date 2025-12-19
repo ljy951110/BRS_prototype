@@ -1,3 +1,4 @@
+import { PresetDateRangePicker } from "@/components/common/atoms/PresetDateRangePicker";
 import { Charts } from "@/components/dashboard/Charts";
 import { CustomerActivityAnalysis } from "@/components/dashboard/CustomerActivityAnalysis";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
@@ -6,10 +7,10 @@ import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import type {
   Category,
-  DashboardTableRequest,
-  ProgressStage as ProgressStageType,
-  ProductType as ProductTypeEnum,
   CompanySize,
+  DashboardTableRequest,
+  ProductType as ProductTypeEnum,
+  ProgressStage as ProgressStageType,
 } from "@/repository/openapi/model";
 import { ProgressStage } from "@/repository/openapi/model";
 import { useGetDashboardCompanies, useGetFilterOptions } from "@/repository/query/dashboardApiController/queryHook";
@@ -31,7 +32,6 @@ import {
 } from "@ant-design/icons";
 import {
   ConfigProvider,
-  DatePicker,
   Input,
   Layout,
   Radio,
@@ -45,8 +45,6 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./App.module.scss";
-
-const { RangePicker } = DatePicker;
 
 type ViewMode = "table" | "pipeline" | "chart" | "timeline" | "activity";
 
@@ -181,6 +179,7 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
     targetMonthRange?: { start?: string; end?: string };
     companyName?: string;
     lastContactDateRange?: { start?: string; end?: string };
+    lastMBMDateRange?: { start?: string; end?: string };
     sort?: { field: string; order: "asc" | "desc" };
   }
   const [tableFilters, setTableFilters] = useState<TableFilters>({});
@@ -242,6 +241,9 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
       }
       if (tableFilters.lastContactDateRange && (tableFilters.lastContactDateRange.start || tableFilters.lastContactDateRange.end)) {
         filters.lastContactDateRange = tableFilters.lastContactDateRange;
+      }
+      if (tableFilters.lastMBMDateRange && (tableFilters.lastMBMDateRange.start || tableFilters.lastMBMDateRange.end)) {
+        filters.lastMBMDateRange = tableFilters.lastMBMDateRange;
       }
     } else {
       // 다른 뷰에서는 상단 필터 사용
@@ -342,7 +344,7 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
         no: row.companyId,
         companyName: row.companyName,
         companySize: row.companySize as CompanySizeType,
-        category: mapCategory(row.category),
+        category: mapCategory(row.categories?.[0]),
         productUsage: row.productUsage || [],
         manager: row.manager ?? '',
         renewalDate: null,
@@ -401,6 +403,8 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
           pastContract: previous.contract ?? false,
           pastExpectedRevenue: previous.expectedRevenue ?? 0,
           currentExpectedRevenue: current.expectedRevenue ?? 0,
+          pastCurrentQuarterRevenue: previous.currentQuarterRevenue ?? 0,
+          currentCurrentQuarterRevenue: current.currentQuarterRevenue ?? 0,
           possibilityChange: 'none',
           responseChange: 'none',
         },
@@ -578,8 +582,8 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
           </div>
         </Space>
         <Space align="center" size="middle">
-          <Radio.Group 
-            value={apiMode} 
+          <Radio.Group
+            value={apiMode}
             onChange={(e) => onApiModeChange(e.target.value)}
             size="small"
             buttonStyle="solid"
@@ -609,79 +613,77 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
         </div>
 
         {viewMode === "table" && (
-            <section className={styles.section}>
-              <SummaryCards />
-            </section>
-          )}
-
-          <section className={styles.contentSection}>
-            {viewMode === "table" && (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <Space size="middle" align="center">
-                    <Typography.Text strong>조회 기간</Typography.Text>
-                    <RangePicker
-                      value={dateRange}
-                      onChange={(dates) => {
-                        if (dates && dates[0] && dates[1]) {
-                          setDateRange([dates[0], dates[1]]);
-                        }
-                      }}
-                      format="YYYY-MM-DD"
-                      style={{ width: 280 }}
-                    />
-                  </Space>
-                </div>
-                <CustomerTable
-                  data={filteredData}
-                  loading={isLoading}
-                  dateRange={{
-                    startDate: dateRange[0].format('YYYY-MM-DD'),
-                    endDate: dateRange[1].format('YYYY-MM-DD'),
-                  }}
-                  filters={tableFilters}
-                  onFiltersChange={(filters) => {
-                    setTableFilters(filters);
-                    setCurrentPage(1); // 필터 변경 시 첫 페이지로
-                  }}
-                  managers={managers}
-                  pagination={{
-                    current: currentPage,
-                    pageSize,
-                    total: apiData?.data?.total ?? 0,
-                    showSizeChanger: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} / 전체 ${total}건`,
-                    pageSizeOptions: ['10', '20', '50', '100'],
-                    onChange: (page, newPageSize) => {
-                      setCurrentPage(page);
-                      if (newPageSize !== pageSize) {
-                        setPageSize(newPageSize);
-                        setCurrentPage(1); // 페이지 크기 변경 시 첫 페이지로
-                      }
-                    },
-                  }}
-                />
-              </>
-            )}
-            {viewMode === "pipeline" && (
-              <PipelineBoard data={filteredData} />
-            )}
-            {viewMode === "chart" && (
-              <Charts data={filteredData} />
-            )}
-            {viewMode === "timeline" && (
-              <MBMTimeline
-                data={filteredData}
-                filters={filterControls}
-              />
-            )}
-            {viewMode === "activity" && (
-              <CustomerActivityAnalysis
-                data={filteredData}
-                filters={filterControls}
-              />
-            )}
+          <section className={styles.section}>
+            <SummaryCards />
           </section>
+        )}
+
+        <section className={styles.contentSection}>
+          {viewMode === "table" && (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <Space size="middle" align="center">
+                  <Typography.Text strong>조회 기간</Typography.Text>
+                  <PresetDateRangePicker
+                    value={dateRange}
+                    onChange={(dates) => {
+                      if (dates && dates[0] && dates[1]) {
+                        setDateRange([dates[0], dates[1]]);
+                      }
+                    }}
+                  />
+                </Space>
+              </div>
+              <CustomerTable
+                data={filteredData}
+                loading={isLoading}
+                dateRange={{
+                  startDate: dateRange[0].format('YYYY-MM-DD'),
+                  endDate: dateRange[1].format('YYYY-MM-DD'),
+                }}
+                filters={tableFilters}
+                onFiltersChange={(filters) => {
+                  setTableFilters(filters);
+                  setCurrentPage(1); // 필터 변경 시 첫 페이지로
+                }}
+                managers={managers}
+                pagination={{
+                  current: currentPage,
+                  pageSize,
+                  total: apiData?.data?.total ?? 0,
+                  showSizeChanger: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} / 전체 ${total}건`,
+                  pageSizeOptions: ['10', '20', '50', '100'],
+                  onChange: (page, newPageSize) => {
+                    setCurrentPage(page);
+                    if (newPageSize !== pageSize) {
+                      setPageSize(newPageSize);
+                      setCurrentPage(1); // 페이지 크기 변경 시 첫 페이지로
+                    }
+                  },
+                }}
+              />
+            </>
+          )}
+          {viewMode === "pipeline" && (
+            <PipelineBoard data={filteredData} />
+          )}
+          {viewMode === "chart" && (
+            <Charts data={filteredData} />
+          )}
+          {viewMode === "timeline" && (
+            <MBMTimeline
+              data={filteredData}
+              filters={filterControls}
+            />
+          )}
+          {viewMode === "activity" && (
+            <CustomerActivityAnalysis
+              data={filteredData}
+              filters={filterControls}
+            />
+          )}
+        </section>
       </Layout.Content>
     </Layout>
   );
@@ -701,13 +703,13 @@ function App() {
 
   const handleApiModeChange = (mode: ApiMode) => {
     console.log(`[App] Switching to ${mode.toUpperCase()} mode`);
-    
+
     // localStorage에 저장
     localStorage.setItem('apiMode', mode);
-    
+
     // window 객체에 설정
     window.__API_MODE__ = mode;
-    
+
     // 상태 업데이트 및 페이지 새로고침
     setApiMode(mode);
     window.location.reload();
@@ -719,8 +721,8 @@ function App() {
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
-      <AppContent 
-        isDark={isDark} 
+      <AppContent
+        isDark={isDark}
         onToggleTheme={handleToggleTheme}
         apiMode={apiMode}
         onApiModeChange={handleApiModeChange}

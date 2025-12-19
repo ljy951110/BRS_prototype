@@ -52,10 +52,10 @@ export interface DashboardTableRow {
     'companySize'?: CompanySize | null;
     /**
      * 
-     * @type {Category}
+     * @type {Array<Category>}
      * @memberof DashboardTableRow
      */
-    'category'?: Category | null;
+    'categories'?: Array<Category>;
     /**
      * 
      * @type {Array<ProductType>}

@@ -97,6 +97,12 @@ export interface DashboardFilters {
     'expectedRevenueRange'?: AmountRange | null;
     /**
      * 
+     * @type {AmountRange}
+     * @memberof DashboardFilters
+     */
+    'currentQuarterRevenueRange'?: AmountRange | null;
+    /**
+     * 
      * @type {DateRangeFilter}
      * @memberof DashboardFilters
      */
@@ -107,5 +113,11 @@ export interface DashboardFilters {
      * @memberof DashboardFilters
      */
     'lastContactDateRange'?: DateRangeFilter | null;
+    /**
+     * 
+     * @type {DateRangeFilter}
+     * @memberof DashboardFilters
+     */
+    'lastMBMDateRange'?: DateRangeFilter | null;
 }
 

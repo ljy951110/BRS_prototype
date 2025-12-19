@@ -5,13 +5,13 @@
 
 import type {
   Category,
+  CompanySize,
+  CustomerDetailPeriodData,
   CustomerSummaryRequest,
   CustomerSummaryResponse,
-  CustomerDetailPeriodData,
+  ProductType,
   SalesHistoryRequest,
   SalesHistoryResponse,
-  CompanySize,
-  ProductType,
 } from "@/repository/openapi/model";
 import { http, HttpResponse } from "msw";
 
@@ -359,12 +359,24 @@ const mapCategory = (category: string): Category | null => {
 };
 
 /**
- * 가능성 문자열 → number 타입 매핑
+ * 가능성 문자열 → number 타입 매핑 (CustomerDetailPeriodData용)
  */
-const mapPossibility = (possibility: string | undefined): number | null => {
+const mapPossibilityToNumber = (possibility: string | undefined): number | null => {
   if (!possibility) return null;
   const num = parseInt(possibility.replace('%', ''));
   return isNaN(num) ? null : num;
+};
+
+/**
+ * 가능성 문자열 → PossibilityType 매핑 (ActionState용)
+ */
+const mapPossibilityToType = (possibility: string | undefined): '100%' | '90%' | '40%' | '10%' | '0%' | undefined => {
+  if (!possibility) return undefined;
+  const normalized = possibility.includes('%') ? possibility : `${possibility}%`;
+  if (normalized === '100%' || normalized === '90%' || normalized === '40%' || normalized === '10%' || normalized === '0%') {
+    return normalized;
+  }
+  return undefined;
 };
 
 /**
@@ -383,10 +395,20 @@ const findCustomerById = (companyId: number): MockCustomerDetail | undefined => 
 export const getCustomerSummaryHandler = http.post(
   "/api/v1/dashboard/customer/:company_id/summary",
   async ({ params, request }) => {
+    // API 모드 확인 (디버깅을 위한 상세 로그)
+    const apiModeFromWindow = window.__API_MODE__;
+    const apiModeFromStorage = localStorage.getItem('apiMode');
+    const apiMode = apiModeFromWindow || apiModeFromStorage;
+
+    console.log('[MSW] 🔍 Customer Summary - API Mode Check:', {
+      window: apiModeFromWindow,
+      localStorage: apiModeFromStorage,
+      final: apiMode
+    });
+
     // API 모드일 때는 MSW를 bypass하고 실제 API 호출
-    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
     if (apiMode === 'api') {
-      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      console.log('[MSW] ⏩ Bypassing customer summary to real API (mode: api)');
       return;
     }
 
@@ -410,7 +432,7 @@ export const getCustomerSummaryHandler = http.post(
     const latestAction = customer.salesActions[customer.salesActions.length - 1];
     const current: CustomerDetailPeriodData = {
       trustIndex: null, // MockCustomerDetail에는 trustIndex가 없음
-      possibility: mapPossibility(latestAction?.possibility) as any ?? undefined,
+      possibility: mapPossibilityToNumber(latestAction?.possibility) ?? undefined,
       targetRevenue: latestAction?.targetRevenue ?? null,
       targetDate: latestAction?.targetDate ?? null,
       test: latestAction?.test ?? false,
@@ -423,7 +445,7 @@ export const getCustomerSummaryHandler = http.post(
     const firstAction = customer.salesActions[0];
     const previous: CustomerDetailPeriodData = {
       trustIndex: null,
-      possibility: mapPossibility(firstAction?.possibility) as any ?? undefined,
+      possibility: mapPossibilityToNumber(firstAction?.possibility) ?? undefined,
       targetRevenue: firstAction?.targetRevenue ?? null,
       targetDate: firstAction?.targetDate ?? null,
       test: firstAction?.test ?? false,
@@ -457,10 +479,20 @@ export const getCustomerSummaryHandler = http.post(
 export const getSalesHistoryHandler = http.post(
   "/api/v1/dashboard/customer/:company_id/sales-history",
   async ({ params, request }) => {
+    // API 모드 확인 (디버깅을 위한 상세 로그)
+    const apiModeFromWindow = window.__API_MODE__;
+    const apiModeFromStorage = localStorage.getItem('apiMode');
+    const apiMode = apiModeFromWindow || apiModeFromStorage;
+
+    console.log('[MSW] 🔍 Sales History - API Mode Check:', {
+      window: apiModeFromWindow,
+      localStorage: apiModeFromStorage,
+      final: apiMode
+    });
+
     // API 모드일 때는 MSW를 bypass하고 실제 API 호출
-    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
     if (apiMode === 'api') {
-      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      console.log('[MSW] ⏩ Bypassing sales history to real API (mode: api)');
       return;
     }
 
@@ -515,7 +547,7 @@ export const getSalesHistoryHandler = http.post(
         date: action.date,
         stateChange: {
           before: prevAction ? {
-            possibility: mapPossibility(prevAction.possibility) as any ?? undefined,
+            possibility: mapPossibilityToType(prevAction.possibility),
             targetRevenue: prevAction.targetRevenue ?? null,
             targetDate: prevAction.targetDate ?? null,
             test: prevAction.test ?? false,
@@ -532,7 +564,7 @@ export const getSalesHistoryHandler = http.post(
             contract: false,
           },
           after: {
-            possibility: mapPossibility(action.possibility) as any ?? undefined,
+            possibility: mapPossibilityToType(action.possibility),
             targetRevenue: action.targetRevenue ?? null,
             targetDate: action.targetDate ?? null,
             test: action.test ?? false,

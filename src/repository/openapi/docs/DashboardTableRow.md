@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **companyId** | **number** |  | [default to undefined]
 **companyName** | **string** |  | [default to undefined]
 **companySize** | [**CompanySize**](CompanySize.md) |  | [optional] [default to undefined]
-**category** | [**Category**](Category.md) |  | [optional] [default to undefined]
+**categories** | [**Array&lt;Category&gt;**](Category.md) |  | [optional] [default to undefined]
 **productUsage** | [**Array&lt;ProductType&gt;**](ProductType.md) |  | [optional] [default to undefined]
 **manager** | **string** |  | [optional] [default to undefined]
 **contractAmount** | **number** |  | [optional] [default to undefined]
@@ -27,7 +27,7 @@ const instance: DashboardTableRow = {
     companyId,
     companyName,
     companySize,
-    category,
+    categories,
     productUsage,
     manager,
     contractAmount,

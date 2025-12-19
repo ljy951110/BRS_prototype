@@ -116,11 +116,26 @@ export class RequestClient {
 
   /* ---------------- Interceptors ---------------- */
 
-  /** Request: Authorization 자동주입 */
+  /** Request: Authorization 자동주입 + 동적 baseURL 설정 */
   private setRequestInterceptor() {
     this.axiosInstance.interceptors.request.use((config) => {
-      const accessToken = CookieUtil.getAccessToken();
+      // API 모드 확인 및 baseURL 동적 설정
+      const currentApiMode = window.__API_MODE__ || localStorage.getItem('apiMode') || 'api';
+      const currentBaseURL = currentApiMode === 'msw' ? '' : (import.meta.env.VITE_API_URL || 'https://dashboardapi-mu.vercel.app');
 
+      console.log('[Axios] 📤 Request interceptor:', {
+        url: config.url,
+        method: config.method,
+        apiMode: currentApiMode,
+        currentBaseURL,
+        configBaseURL: config.baseURL
+      });
+
+      // baseURL 동적 업데이트
+      config.baseURL = currentBaseURL;
+
+      // Authorization 토큰 자동주입
+      const accessToken = CookieUtil.getAccessToken();
       if (accessToken) {
         config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${accessToken}`;

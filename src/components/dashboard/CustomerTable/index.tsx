@@ -1,3 +1,4 @@
+import { PresetDateRangePicker } from "@/components/common/atoms/PresetDateRangePicker";
 import { CategoryLabel, ProductTypeLabel } from "@/constants/commonMap";
 import {
   calculateExpectedRevenue,
@@ -11,7 +12,6 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Divider,
   Input,
   InputNumber,
@@ -76,6 +76,7 @@ interface TableFilters {
   targetMonthRange?: { start?: string; end?: string };
   companyName?: string;
   lastContactDateRange?: { start?: string; end?: string };
+  lastMBMDateRange?: { start?: string; end?: string };
   sort?: { field: string; order: "asc" | "desc" };
 }
 
@@ -191,39 +192,82 @@ const renderProgressTags = (
     color: colors.newText,
     background: colors.newBg || "rgba(34,197,94,0.08)",
   };
+  // 자동으로 채워진 이전 단계 스타일 (흰색 테두리)
+  const impliedStyle = {
+    borderColor: "white",
+    color: colors.activeText,
+    background: "transparent",
+  };
+
+  // 상위 단계가 진행되면 하위 단계도 충족된 것으로 표시
+  // C(계약) → T, Q, A 충족
+  // A(승인) → T, Q 충족
+  // Q(견적) → T 충족
+  const isTestActive = !!ad.test || !!ad.quote || !!ad.approval || !!ad.contract;
+  const isQuoteActive = !!ad.quote || !!ad.approval || !!ad.contract;
+  const isApprovalActive = !!ad.approval || !!ad.contract;
+  const isContractActive = !!ad.contract;
+
+  // 이전 기간의 활성화 상태 (상위 단계 포함)
+  const pastTestActive = !!(past?.pastTest || past?.pastQuote || past?.pastApproval || past?.pastContract);
+  const pastQuoteActive = !!(past?.pastQuote || past?.pastApproval || past?.pastContract);
+  const pastApprovalActive = !!(past?.pastApproval || past?.pastContract);
+  const pastContractActive = !!past?.pastContract;
 
   const stages: {
     key: "test" | "quote" | "approval" | "contract";
     label: string;
-    pastFlag?: boolean;
-    active: boolean;
+    pastActive: boolean; // 이전 기간에 활성화되었는지 (상위 단계 포함)
+    currentActive: boolean; // 현재 활성화되었는지
+    actualValue: boolean; // 실제로 이 단계가 진행되었는지
   }[] = [
-      { key: "test", label: "T", pastFlag: past?.pastTest, active: !!ad.test },
-      { key: "quote", label: "Q", pastFlag: past?.pastQuote, active: !!ad.quote },
+      { key: "test", label: "T", pastActive: pastTestActive, currentActive: isTestActive, actualValue: !!ad.test },
+      { key: "quote", label: "Q", pastActive: pastQuoteActive, currentActive: isQuoteActive, actualValue: !!ad.quote },
       {
         key: "approval",
         label: "A",
-        pastFlag: past?.pastApproval,
-        active: !!ad.approval,
+        pastActive: pastApprovalActive,
+        currentActive: isApprovalActive,
+        actualValue: !!ad.approval,
       },
       {
         key: "contract",
         label: "C",
-        pastFlag: past?.pastContract,
-        active: !!ad.contract,
+        pastActive: pastContractActive,
+        currentActive: isContractActive,
+        actualValue: !!ad.contract,
       },
     ];
 
   return (
     <Space size={6}>
       {stages.map((stage) => {
-        const wasPast = !!stage.pastFlag;
-        const isNew = showNew && hasPastData && stage.active && !wasPast;
-        const style = stage.active
-          ? isNew
-            ? newStyle
-            : activeStyle
-          : inactiveStyle;
+        const isNew = showNew && hasPastData && stage.currentActive && !stage.pastActive;
+
+        let style;
+        if (!stage.currentActive) {
+          // 활성화되지 않음
+          style = inactiveStyle;
+        } else if (stage.actualValue) {
+          // 실제로 이 단계가 진행됨
+          if (isNew) {
+            // 이전에는 활성화되지 않았는데 새로 추가됨 → 초록색
+            style = newStyle;
+          } else {
+            // 이전에도 활성화되어 있었음
+            style = activeStyle;
+          }
+        } else {
+          // 상위 단계로 인해 자동 채워짐
+          if (stage.pastActive) {
+            // 이전에도 활성화되어 있었음 (상위 단계 때문이든 실제든)
+            style = activeStyle;
+          } else {
+            // 이전에는 없었는데 현재 상위 단계로 인해 채워짐 → 흰색 테두리
+            style = impliedStyle;
+          }
+        }
+
         return (
           <Tag key={stage.key} style={style} bordered>
             {stage.label}
@@ -338,6 +382,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
   const [lastContactEnd, setLastContactEnd] = useState<string>("");
   const [lastContactStartDraft, setLastContactStartDraft] = useState<dayjs.Dayjs | null>(null);
   const [lastContactEndDraft, setLastContactEndDraft] = useState<dayjs.Dayjs | null>(null);
+  const [lastMBMStart, setLastMBMStart] = useState<string>("");
+  const [lastMBMEnd, setLastMBMEnd] = useState<string>("");
+  const [lastMBMStartDraft, setLastMBMStartDraft] = useState<dayjs.Dayjs | null>(null);
+  const [lastMBMEndDraft, setLastMBMEndDraft] = useState<dayjs.Dayjs | null>(null);
 
   // 컬럼 필터 state (Antd Table 필터용)
   const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([]);
@@ -381,6 +429,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     companyName?: string;
     lastContactStart?: string;
     lastContactEnd?: string;
+    lastMBMStart?: string;
+    lastMBMEnd?: string;
     sortField?: string | null;
     sortOrder?: "asc" | "desc";
   }) => {
@@ -437,6 +487,14 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       currentFilters.lastContactDateRange = {};
       if (finalLastContactStart) currentFilters.lastContactDateRange.start = finalLastContactStart;
       if (finalLastContactEnd) currentFilters.lastContactDateRange.end = finalLastContactEnd;
+    }
+
+    const finalLastMBMStart = overrides?.lastMBMStart !== undefined ? overrides.lastMBMStart : lastMBMStart;
+    const finalLastMBMEnd = overrides?.lastMBMEnd !== undefined ? overrides.lastMBMEnd : lastMBMEnd;
+    if (finalLastMBMStart || finalLastMBMEnd) {
+      currentFilters.lastMBMDateRange = {};
+      if (finalLastMBMStart) currentFilters.lastMBMDateRange.start = finalLastMBMStart;
+      if (finalLastMBMEnd) currentFilters.lastMBMDateRange.end = finalLastMBMEnd;
     }
 
     const finalContractMin = overrides?.contractAmountMin !== undefined ? overrides.contractAmountMin : contractAmountMin;
@@ -604,6 +662,19 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           }
         }
 
+        // 최근 MBM 필터
+        if (lastMBMStart || lastMBMEnd) {
+          const lastMBMDate = row.lastMBMDate;
+          if (!lastMBMDate) return false;
+          const lastMBM = new Date(lastMBMDate).getTime();
+          if (lastMBMStart && lastMBM < new Date(lastMBMStart).getTime()) {
+            return false;
+          }
+          if (lastMBMEnd && lastMBM > new Date(lastMBMEnd).getTime()) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -647,11 +718,18 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             const bTime = bContact ? new Date(bContact).getTime() : 0;
             return (aTime - bTime) * modifier;
           }
+          case "lastMBM": {
+            const aMBM = a.lastMBMDate;
+            const bMBM = b.lastMBMDate;
+            const aTime = aMBM ? new Date(aMBM).getTime() : 0;
+            const bTime = bMBM ? new Date(bMBM).getTime() : 0;
+            return (aTime - bTime) * modifier;
+          }
           default:
             return 0;
         }
       });
-  }, [data, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonthRangeStart, targetMonthRangeEnd, companySearch, lastContactStart, lastContactEnd, sortField, sortOrder]);
+  }, [data, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonthRangeStart, targetMonthRangeEnd, companySearch, lastContactStart, lastContactEnd, lastMBMStart, lastMBMEnd, sortField, sortOrder]);
 
 
   const getProgressLevel = (ad: Customer["adoptionDecision"] | undefined) => {
@@ -1052,12 +1130,22 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       ),
       onFilter: (value, record) => record.category === value,
       render: (category: string) => {
+        // 한글 라벨 -> 영문 키 역매핑
+        const labelToKey: Record<string, Category> = {
+          '채용': Category.RECRUIT,
+          '성과': Category.PERFORMANCE,
+          '공공': Category.PUBLIC,
+        };
+
+        const categoryKey = labelToKey[category] || category;
+
         const colorMap: Record<string, string> = {
           [Category.RECRUIT]: "blue",
           [Category.PUBLIC]: "green",
-          [Category.PERFORMANCE]: "purple",
+          [Category.PERFORMANCE]: "orange",
         };
-        return <Tag color={colorMap[category] || "default"} bordered>{CategoryLabel[category as keyof typeof CategoryLabel] || category}</Tag>;
+
+        return <Tag color={colorMap[categoryKey] || "default"} bordered>{CategoryLabel[category as keyof typeof CategoryLabel] || category}</Tag>;
       },
       minWidth: 100,
     },
@@ -1627,6 +1715,149 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "최근 MBM",
       dataIndex: "lastMBMDate",
+      filterDropdownProps: {
+        onOpenChange: (open) => {
+          if (open) {
+            skipAutoApplyRef.current = false;
+            setLastMBMStartDraft(lastMBMStart ? dayjs(lastMBMStart) : null);
+            setLastMBMEndDraft(lastMBMEnd ? dayjs(lastMBMEnd) : null);
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
+
+            const startStr = lastMBMStartDraft ? lastMBMStartDraft.format('YYYY-MM-DD') : "";
+            const endStr = lastMBMEndDraft ? lastMBMEndDraft.format('YYYY-MM-DD') : "";
+            setLastMBMStart(startStr);
+            setLastMBMEnd(endStr);
+
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["lastMBM"] !== undefined) {
+              finalSortField = sortFieldDraft["lastMBM"];
+              finalSortOrder = sortOrderDraft["lastMBM"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              lastMBMStart: startStr,
+              lastMBMEnd: endStr,
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
+          }
+        }
+      },
+      filterDropdown: ({ confirm, clearFilters }) => {
+        const currentSortField = sortFieldDraft["lastMBM"] ?? (sortField === "lastMBM" ? sortField : null);
+        const currentSortOrder = sortOrderDraft["lastMBM"] ?? (sortField === "lastMBM" ? sortOrder : "asc");
+
+        return (
+          <Space direction="vertical" style={{ padding: 8 }}>
+            <PresetDateRangePicker
+              value={[lastMBMStartDraft, lastMBMEndDraft]}
+              onChange={(dates) => {
+                setLastMBMStartDraft(dates ? dates[0] : null);
+                setLastMBMEndDraft(dates ? dates[1] : null);
+              }}
+            />
+            <Divider style={{ margin: "8px 0" }} />
+            <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+            <Space>
+              <Button
+                size="small"
+                type={currentSortField === "lastMBM" && currentSortOrder === "asc" ? "primary" : "default"}
+                onClick={() => {
+                  setSortFieldDraft({ ...sortFieldDraft, lastMBM: "lastMBM" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastMBM: "asc" });
+                }}
+              >
+                오름차순
+              </Button>
+              <Button
+                size="small"
+                type={currentSortField === "lastMBM" && currentSortOrder === "desc" ? "primary" : "default"}
+                onClick={() => {
+                  setSortFieldDraft({ ...sortFieldDraft, lastMBM: "lastMBM" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastMBM: "desc" });
+                }}
+              >
+                내림차순
+              </Button>
+            </Space>
+            <Divider style={{ margin: "8px 0" }} />
+            <Space>
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => {
+                  skipAutoApplyRef.current = true;
+                  const startStr = lastMBMStartDraft ? lastMBMStartDraft.format('YYYY-MM-DD') : "";
+                  const endStr = lastMBMEndDraft ? lastMBMEndDraft.format('YYYY-MM-DD') : "";
+                  setLastMBMStart(startStr);
+                  setLastMBMEnd(endStr);
+
+                  let finalSortField = sortField;
+                  let finalSortOrder = sortOrder;
+                  if (sortFieldDraft["lastMBM"] !== undefined) {
+                    finalSortField = sortFieldDraft["lastMBM"];
+                    finalSortOrder = sortOrderDraft["lastMBM"] ?? "asc";
+                    setSortField(finalSortField);
+                    setSortOrder(finalSortOrder);
+                  }
+                  applyFilters({
+                    lastMBMStart: startStr,
+                    lastMBMEnd: endStr,
+                    sortField: finalSortField,
+                    sortOrder: finalSortOrder,
+                  });
+                  confirm({ closeDropdown: true });
+                }}
+              >
+                적용
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  skipAutoApplyRef.current = true;
+                  clearFilters?.();
+                  setLastMBMStartDraft(null);
+                  setLastMBMEndDraft(null);
+                  setLastMBMStart("");
+                  setLastMBMEnd("");
+                  const newFieldDraft = { ...sortFieldDraft };
+                  const newOrderDraft = { ...sortOrderDraft };
+                  delete newFieldDraft.lastMBM;
+                  delete newOrderDraft.lastMBM;
+                  setSortFieldDraft(newFieldDraft);
+                  setSortOrderDraft(newOrderDraft);
+                  if (sortField === "lastMBM") {
+                    setSortField(null);
+                  }
+                  applyFilters({
+                    lastMBMStart: "",
+                    lastMBMEnd: "",
+                  });
+                  confirm({ closeDropdown: true });
+                }}
+              >
+                초기화
+              </Button>
+            </Space>
+          </Space>
+        );
+      },
+      filterIcon: () => (
+        <FilterFilled
+          style={{
+            color:
+              lastMBMStart || lastMBMEnd || sortField === "lastMBM"
+                ? token.colorPrimary
+                : undefined,
+          }}
+        />
+      ),
       render: (lastMBMDate: string | null | undefined) => {
         const formattedDate = lastMBMDate ? formatDateShort(lastMBMDate) : "-";
         return (
@@ -1705,14 +1936,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
         return (
           <Space direction="vertical" style={{ padding: 8 }}>
-            <DatePicker.RangePicker
-              style={{ width: 280 }}
+            <PresetDateRangePicker
               value={[lastContactStartDraft, lastContactEndDraft]}
               onChange={(dates) => {
                 setLastContactStartDraft(dates ? dates[0] : null);
                 setLastContactEndDraft(dates ? dates[1] : null);
               }}
-              placeholder={['시작일', '종료일']}
             />
             <Divider style={{ margin: "8px 0" }} />
             <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
@@ -1829,6 +2058,26 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         style: { whiteSpace: 'nowrap' }
       }),
       minWidth: 110,
+    },
+    {
+      title: "달성매출",
+      dataIndex: "_periodData",
+      render: (_, record) => {
+        const past = record._periodData?.pastCurrentQuarterRevenue ?? 0;
+        const current = record._periodData?.currentCurrentQuarterRevenue ?? 0;
+        const isPositive = current > past;
+        const isNegative = current < past;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+        return (
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{formatMan(past)}</span>
+            <ArrowRight size={10} />
+            <span>{formatMan(current)}</span>
+          </div>
+        );
+      },
+      minWidth: 140,
     },
     {
       title: "목표매출",
@@ -2383,14 +2632,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
         return (
           <Space direction="vertical" style={{ padding: 8 }}>
-            <DatePicker.RangePicker
-              style={{ width: 280 }}
+            <PresetDateRangePicker
               value={[targetMonthRangeStartDraft, targetMonthRangeEndDraft]}
               onChange={(dates) => {
                 setTargetMonthRangeStartDraft(dates ? dates[0] : null);
                 setTargetMonthRangeEndDraft(dates ? dates[1] : null);
               }}
-              placeholder={['시작일', '종료일']}
             />
             <Divider style={{ margin: "8px 0" }} />
             <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
@@ -2554,14 +2801,13 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
                         <span>조회 기간</span>
-                        <DatePicker.RangePicker
+                        <PresetDateRangePicker
                           value={summaryDateRange}
                           onChange={(dates) => {
                             if (dates && dates[0] && dates[1]) {
                               setSummaryDateRange([dates[0], dates[1]]);
                             }
                           }}
-                          format="YYYY-MM-DD"
                         />
                       </Space>
                     </div>
@@ -2853,14 +3099,13 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
                         <span>조회 기간</span>
-                        <DatePicker.RangePicker
+                        <PresetDateRangePicker
                           value={actionDateRange}
                           onChange={(dates) => {
                             if (dates && dates[0] && dates[1]) {
                               setActionDateRange([dates[0], dates[1]]);
                             }
                           }}
-                          format="YYYY-MM-DD"
                         />
                       </Space>
                     </div>
@@ -2881,9 +3126,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                                     .map((action) => {
                                       const possibility = action.stateChange?.after?.possibility;
-                                      const possibilityIndex = possibility
-                                        ? parseFloat(possibility.replace('%', ''))
-                                        : 0;
+                                      const possibilityIndex = possibility != null ? Number(possibility) : 0;
 
                                       return {
                                         date: action.date,
@@ -2892,7 +3135,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                           ? action.stateChange.after.targetRevenue / 10000
                                           : null,
                                         expectedRevenue: action.stateChange?.after?.targetRevenue && action.stateChange?.after?.possibility
-                                          ? (action.stateChange.after.targetRevenue * parseFloat(action.stateChange.after.possibility.replace('%', ''))) / 100 / 10000
+                                          ? (action.stateChange.after.targetRevenue * Number(action.stateChange.after.possibility)) / 100 / 10000
                                           : null,
                                       };
                                     })}
@@ -3043,14 +3286,13 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                       <Space>
                         <span>조회 기간</span>
-                        <DatePicker.RangePicker
+                        <PresetDateRangePicker
                           value={contentDateRange}
                           onChange={(dates) => {
                             if (dates && dates[0] && dates[1]) {
                               setContentDateRange([dates[0], dates[1]]);
                             }
                           }}
-                          format="YYYY-MM-DD"
                         />
                       </Space>
                     </div>
@@ -3454,8 +3696,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
                       if (!before && !after) return <span>-</span>;
 
-                      const beforeNum = before ? Number(before.replace('%', '')) : 0;
-                      const afterNum = after ? Number(after.replace('%', '')) : 0;
+                      const beforeNum = before != null ? Number(before) : 0;
+                      const afterNum = after != null ? Number(after) : 0;
                       const changeType = afterNum > beforeNum ? 'positive' : afterNum < beforeNum ? 'negative' : 'neutral';
 
                       return (
