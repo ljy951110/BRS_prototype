@@ -3338,8 +3338,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                 콘텐츠 퍼널별 조회수
                               </Title>
                               {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={250}>
-                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <PieChart>
                                     <Pie
                                       data={(() => {
                                         const funnelStats: Record<string, number> = {};
@@ -3360,8 +3360,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                         }));
                                       })()}
                                       cx="50%"
-                                      cy="50%"
-                                      outerRadius={80}
+                                      cy="40%"
+                                      outerRadius={70}
                                       paddingAngle={2}
                                       dataKey="value"
                                       label={(entry) => {
@@ -3376,7 +3376,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                           return { total };
                                         })();
                                         const percent = ((entry.value / data.total) * 100).toFixed(0);
-                                        return `${entry.name} ${percent}%`;
+                                        return `${percent}%`;
                                       }}
                                       labelLine={false}
                                     >
@@ -3398,6 +3398,11 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                       })()}
                                     </Pie>
                                     <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                    <Legend
+                                      verticalAlign="bottom"
+                                      height={36}
+                                      formatter={(value) => <span style={{ color: token.colorText }}>{value}</span>}
+                                    />
                                   </PieChart>
                                 </ResponsiveContainer>
                               ) : (
@@ -3413,8 +3418,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                 콘텐츠 유형별 조회수
                               </Title>
                               {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={250}>
-                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <PieChart>
                                     <Pie
                                       data={(() => {
                                         const contentStats: Record<string, number> = {};
@@ -3431,8 +3436,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                         }));
                                       })()}
                                       cx="50%"
-                                      cy="50%"
-                                      outerRadius={80}
+                                      cy="40%"
+                                      outerRadius={70}
                                       paddingAngle={2}
                                       dataKey="value"
                                       label={(entry) => {
@@ -3447,7 +3452,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                           return { total };
                                         })();
                                         const percent = ((entry.value / data.total) * 100).toFixed(0);
-                                        return `${entry.name} ${percent}%`;
+                                        return `${percent}%`;
                                       }}
                                       labelLine={false}
                                     >
@@ -3465,6 +3470,11 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, filte
                                       })()}
                                     </Pie>
                                     <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                    <Legend
+                                      verticalAlign="bottom"
+                                      height={36}
+                                      formatter={(value) => <span style={{ color: token.colorText }}>{value}</span>}
+                                    />
                                   </PieChart>
                                 </ResponsiveContainer>
                               ) : (
