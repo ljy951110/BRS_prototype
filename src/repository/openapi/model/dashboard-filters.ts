@@ -97,10 +97,10 @@ export interface DashboardFilters {
     'expectedRevenueRange'?: AmountRange | null;
     /**
      * 
-     * @type {Array<number>}
+     * @type {DateRangeFilter}
      * @memberof DashboardFilters
      */
-    'targetMonths'?: Array<number> | null;
+    'targetMonthRange'?: DateRangeFilter | null;
     /**
      * 
      * @type {DateRangeFilter}

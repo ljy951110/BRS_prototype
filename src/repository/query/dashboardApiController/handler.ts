@@ -11,6 +11,13 @@ import type {
 // CompanySize import (사용하지 않음)
 import { http, HttpResponse } from "msw";
 
+// Window 타입 확장
+declare global {
+  interface Window {
+    __API_MODE__?: 'msw' | 'api';
+  }
+}
+
 // ==================== Mock Data ====================
 
 /**
@@ -769,6 +776,13 @@ const inRange = (
 export const getFilterOptionsHandler = http.get(
   "/api/v1/dashboard/companies/filters",
   () => {
+    // API 모드일 때는 MSW를 bypass하고 실제 API 호출
+    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
+    if (apiMode === 'api') {
+      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      return;
+    }
+
     console.log('[MSW] 📥 Intercepted GET /api/v1/dashboard/companies/filters');
 
     const enrichedData = enrichMockData(MOCK_DASHBOARD_DATA);
@@ -813,6 +827,13 @@ export const getFilterOptionsHandler = http.get(
 export const getDashboardCompaniesHandler = http.post(
   "/api/v1/dashboard/companies",
   async ({ request }) => {
+    // API 모드일 때는 MSW를 bypass하고 실제 API 호출
+    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
+    if (apiMode === 'api') {
+      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      return;
+    }
+
     console.log('[MSW] 📥 Intercepted POST /api/v1/dashboard/companies');
 
     const body = (await request.json()) as DashboardTableRequest;
@@ -924,10 +945,23 @@ export const getDashboardCompaniesHandler = http.post(
       });
     }
 
-    // 목표 월 필터
-    if (filters?.targetMonths?.length) {
-      const months = new Set(filters.targetMonths);
-      rows = rows.filter((row) => row.current.targetMonth && months.has(row.current.targetMonth));
+    // 목표일자 범위 필터
+    if (filters?.targetMonthRange) {
+      const { start, end } = filters.targetMonthRange;
+      rows = rows.filter((row) => {
+        const targetMonth = row.current.targetMonth;
+        if (!targetMonth) return false;
+        // targetMonth를 날짜로 변환 (현재 년도 기준, 또는 다음 년도)
+        const now = new Date("2024-12-10");
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const targetYear = targetMonth < currentMonth ? currentYear + 1 : currentYear;
+        const targetDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
+        
+        if (start && targetDate < start) return false;
+        if (end && targetDate > end) return false;
+        return true;
+      });
     }
 
     // 마지막 컨택일 범위 필터

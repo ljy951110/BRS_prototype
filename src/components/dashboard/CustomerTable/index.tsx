@@ -74,7 +74,7 @@ interface TableFilters {
   contractAmountRange?: { minMan?: number; maxMan?: number };
   expectedRevenueRange?: { minMan?: number; maxMan?: number };
   targetRevenueRange?: { minMan?: number; maxMan?: number };
-  targetMonths?: number[];
+  targetMonthRange?: { start?: string; end?: string };
   companyName?: string;
   lastContactDateRange?: { start?: string; end?: string };
   sort?: { field: string; order: "asc" | "desc" };
@@ -323,14 +323,16 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
   const [targetRevenueMax, setTargetRevenueMax] = useState<number | null>(null);
   const [expectedRevenueMin, setExpectedRevenueMin] = useState<number | null>(null);
   const [expectedRevenueMax, setExpectedRevenueMax] = useState<number | null>(null);
-  const [targetMonths, setTargetMonths] = useState<number[]>([]);
+  const [targetMonthRangeStart, setTargetMonthRangeStart] = useState<string>("");
+  const [targetMonthRangeEnd, setTargetMonthRangeEnd] = useState<string>("");
   const [contractAmountMinDraft, setContractAmountMinDraft] = useState<number | null>(null); // 만원 단위
   const [contractAmountMaxDraft, setContractAmountMaxDraft] = useState<number | null>(null); // 만원 단위
   const [targetRevenueMinDraft, setTargetRevenueMinDraft] = useState<number | null>(null); // 만원 단위
   const [targetRevenueMaxDraft, setTargetRevenueMaxDraft] = useState<number | null>(null); // 만원 단위
   const [expectedRevenueMinDraft, setExpectedRevenueMinDraft] = useState<number | null>(null); // 만원 단위
   const [expectedRevenueMaxDraft, setExpectedRevenueMaxDraft] = useState<number | null>(null); // 만원 단위
-  const [targetMonthsDraft, setTargetMonthsDraft] = useState<number[]>([]);
+  const [targetMonthRangeStartDraft, setTargetMonthRangeStartDraft] = useState<dayjs.Dayjs | null>(null);
+  const [targetMonthRangeEndDraft, setTargetMonthRangeEndDraft] = useState<dayjs.Dayjs | null>(null);
   const [companySearch, setCompanySearch] = useState("");
   const [companySearchDraft, setCompanySearchDraft] = useState("");
   const [lastContactStart, setLastContactStart] = useState<string>("");
@@ -369,7 +371,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     possibilityMin?: number | null;
     possibilityMax?: number | null;
     progressStages?: string[];
-    targetMonths?: number[];
+    targetMonthRangeStart?: string;
+    targetMonthRangeEnd?: string;
     contractAmountMin?: number | null;
     contractAmountMax?: number | null;
     targetRevenueMin?: number | null;
@@ -473,9 +476,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       }
     }
 
-    const finalTargetMonths = overrides?.targetMonths !== undefined ? overrides.targetMonths : targetMonths;
-    if (finalTargetMonths.length > 0) {
-      currentFilters.targetMonths = finalTargetMonths;
+    const finalTargetMonthRangeStart = overrides?.targetMonthRangeStart !== undefined ? overrides.targetMonthRangeStart : targetMonthRangeStart;
+    const finalTargetMonthRangeEnd = overrides?.targetMonthRangeEnd !== undefined ? overrides.targetMonthRangeEnd : targetMonthRangeEnd;
+    if (finalTargetMonthRangeStart || finalTargetMonthRangeEnd) {
+      currentFilters.targetMonthRange = {};
+      if (finalTargetMonthRangeStart) currentFilters.targetMonthRange.start = finalTargetMonthRangeStart;
+      if (finalTargetMonthRangeEnd) currentFilters.targetMonthRange.end = finalTargetMonthRangeEnd;
     }
 
     // 정렬 (override 우선)
@@ -510,7 +516,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     setExpectedRevenueMaxDraft(
       expectedRevenueMax !== null ? Math.round(expectedRevenueMax / 10000) : null
     );
-    setTargetMonthsDraft(targetMonths);
+    setTargetMonthRangeStartDraft(targetMonthRangeStart ? dayjs(targetMonthRangeStart) : null);
+    setTargetMonthRangeEndDraft(targetMonthRangeEnd ? dayjs(targetMonthRangeEnd) : null);
   }, [
     contractAmountMin,
     contractAmountMax,
@@ -518,7 +525,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     targetRevenueMax,
     expectedRevenueMin,
     expectedRevenueMax,
-    targetMonths,
+    targetMonthRangeStart,
+    targetMonthRangeEnd,
   ]);
 
   const progressColors = {
@@ -568,12 +576,13 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           return false;
         }
 
-        // 목표일자 월 필터
-        if (targetMonths.length > 0) {
+        // 목표일자 범위 필터
+        if (targetMonthRangeStart || targetMonthRangeEnd) {
           const targetDate = parseTargetDate(row.adoptionDecision?.targetDate);
           if (!targetDate) return false; // 목표일자가 없으면 제외
-          const month = targetDate.getMonth() + 1;
-          if (!targetMonths.includes(month)) return false;
+          const targetDateStr = targetDate.toISOString().split('T')[0];
+          if (targetMonthRangeStart && targetDateStr < targetMonthRangeStart) return false;
+          if (targetMonthRangeEnd && targetDateStr > targetMonthRangeEnd) return false;
         }
 
         // 기업명 검색 필터
@@ -643,16 +652,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             return 0;
         }
       });
-  }, [data, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonths, companySearch, lastContactStart, lastContactEnd, sortField, sortOrder]);
+  }, [data, contractAmountMin, contractAmountMax, targetRevenueMin, targetRevenueMax, expectedRevenueMin, expectedRevenueMax, targetMonthRangeStart, targetMonthRangeEnd, companySearch, lastContactStart, lastContactEnd, sortField, sortOrder]);
 
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, idx) => ({
-        label: `${idx + 1}월`,
-        value: idx + 1,
-      })),
-    []
-  );
 
   const getProgressLevel = (ad: Customer["adoptionDecision"] | undefined) => {
     if (!ad) return -1;
@@ -667,16 +668,17 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "기업명",
       dataIndex: "companyName",
-      onFilterDropdownOpenChange: (open) => {
-        if (open) {
-          setCompanySearchDraft(companySearch);
-          skipAutoApplyRef.current = false;
-        } else {
-          // 버튼으로 이미 적용했으면 자동 적용 건너뛰기
-          if (skipAutoApplyRef.current) {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
+          if (open) {
+            setCompanySearchDraft(companySearch);
             skipAutoApplyRef.current = false;
-            return;
-          }
+          } else {
+            // 버튼으로 이미 적용했으면 자동 적용 건너뛰기
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
 
           // 드롭다운 닫힐 때 자동 적용
           setCompanySearch(companySearchDraft);
@@ -693,6 +695,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }: FilterDropdownProps) => {
@@ -797,7 +800,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "기업 규모",
       dataIndex: "companySize",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -820,6 +824,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -924,7 +929,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "카테고리",
       dataIndex: "category",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -945,6 +951,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1058,7 +1065,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "제품사용",
       dataIndex: "productUsage",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -1079,6 +1087,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1202,7 +1211,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "담당자",
       dataIndex: "manager",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -1223,6 +1233,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1330,7 +1341,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "신뢰지수",
       dataIndex: "trustIndex",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -1351,6 +1363,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm }) => {
@@ -1457,7 +1470,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "계약금액",
       dataIndex: "contractAmount",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -1484,6 +1498,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1649,7 +1664,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "마지막 컨택",
       dataIndex: "salesActions",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
           // 드롭다운 열 때 현재 값을 draft에 복사
@@ -1682,27 +1698,22 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortOrder: finalSortOrder,
           });
         }
+        }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
         const currentSortField = sortFieldDraft["lastContact"] ?? (sortField === "lastContact" ? sortField : null);
         const currentSortOrder = sortOrderDraft["lastContact"] ?? (sortField === "lastContact" ? sortOrder : "asc");
 
         return (
-          <Space direction="vertical" style={{ padding: 8, width: 250 }}>
-            <Typography.Text strong style={{ fontSize: 12 }}>날짜 범위</Typography.Text>
-            <DatePicker
-              placeholder="시작일"
-              value={lastContactStartDraft}
-              onChange={(date) => setLastContactStartDraft(date)}
-              style={{ width: "100%" }}
-              format="YYYY-MM-DD"
-            />
-            <DatePicker
-              placeholder="종료일"
-              value={lastContactEndDraft}
-              onChange={(date) => setLastContactEndDraft(date)}
-              style={{ width: "100%" }}
-              format="YYYY-MM-DD"
+          <Space direction="vertical" style={{ padding: 8 }}>
+            <DatePicker.RangePicker
+              style={{ width: 280 }}
+              value={[lastContactStartDraft, lastContactEndDraft]}
+              onChange={(dates) => {
+                setLastContactStartDraft(dates ? dates[0] : null);
+                setLastContactEndDraft(dates ? dates[1] : null);
+              }}
+              placeholder={['시작일', '종료일']}
             />
             <Divider style={{ margin: "8px 0" }} />
             <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
@@ -1735,7 +1746,6 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                 size="small"
                 onClick={() => {
                   skipAutoApplyRef.current = true;
-                  // 날짜 필터 적용
                   const startStr = lastContactStartDraft ? lastContactStartDraft.format('YYYY-MM-DD') : "";
                   const endStr = lastContactEndDraft ? lastContactEndDraft.format('YYYY-MM-DD') : "";
                   setLastContactStart(startStr);
@@ -1824,7 +1834,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "목표매출",
       dataIndex: "_periodData",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -1851,6 +1862,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -1994,7 +2006,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "가능성",
       dataIndex: "_periodData",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -2019,6 +2032,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2160,7 +2174,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "예상매출",
       dataIndex: "_periodData",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -2187,6 +2202,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2331,7 +2347,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     {
       title: "목표일자",
       dataIndex: "adoptionDecision",
-      onFilterDropdownOpenChange: (open) => {
+      filterDropdownProps: {
+        onOpenChange: (open) => {
         if (open) {
           skipAutoApplyRef.current = false;
         } else {
@@ -2340,7 +2357,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             return;
           }
 
-          setTargetMonths(targetMonthsDraft);
+          const startDate = targetMonthRangeStartDraft ? targetMonthRangeStartDraft.format('YYYY-MM-DD') : '';
+          const endDate = targetMonthRangeEndDraft ? targetMonthRangeEndDraft.format('YYYY-MM-DD') : '';
+          setTargetMonthRangeStart(startDate);
+          setTargetMonthRangeEnd(endDate);
           let finalSortField = sortField;
           let finalSortOrder = sortOrder;
           if (sortFieldDraft["targetDate"] !== undefined) {
@@ -2350,10 +2370,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             setSortOrder(finalSortOrder);
           }
           applyFilters({
-            targetMonths: targetMonthsDraft,
+            targetMonthRangeStart: startDate,
+            targetMonthRangeEnd: endDate,
             sortField: finalSortField,
             sortOrder: finalSortOrder,
           });
+        }
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
@@ -2362,14 +2384,14 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
         return (
           <Space direction="vertical" style={{ padding: 8 }}>
-            <Select
-              mode="multiple"
-              allowClear
-              placeholder="월 선택"
-              options={monthOptions}
-              style={{ width: 220 }}
-              value={targetMonthsDraft}
-              onChange={(value) => setTargetMonthsDraft(value)}
+            <DatePicker.RangePicker
+              style={{ width: 280 }}
+              value={[targetMonthRangeStartDraft, targetMonthRangeEndDraft]}
+              onChange={(dates) => {
+                setTargetMonthRangeStartDraft(dates ? dates[0] : null);
+                setTargetMonthRangeEndDraft(dates ? dates[1] : null);
+              }}
+              placeholder={['시작일', '종료일']}
             />
             <Divider style={{ margin: "8px 0" }} />
             <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
@@ -2402,7 +2424,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                 size="small"
                 onClick={() => {
                   skipAutoApplyRef.current = true;
-                  setTargetMonths(targetMonthsDraft);
+                  const startDate = targetMonthRangeStartDraft ? targetMonthRangeStartDraft.format('YYYY-MM-DD') : '';
+                  const endDate = targetMonthRangeEndDraft ? targetMonthRangeEndDraft.format('YYYY-MM-DD') : '';
+                  setTargetMonthRangeStart(startDate);
+                  setTargetMonthRangeEnd(endDate);
                   let finalSortField = sortField;
                   let finalSortOrder = sortOrder;
                   if (sortFieldDraft["targetDate"] !== undefined) {
@@ -2412,7 +2437,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     setSortOrder(finalSortOrder);
                   }
                   applyFilters({
-                    targetMonths: targetMonthsDraft,
+                    targetMonthRangeStart: startDate,
+                    targetMonthRangeEnd: endDate,
                     sortField: finalSortField,
                     sortOrder: finalSortOrder,
                   });
@@ -2426,8 +2452,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                 onClick={() => {
                   skipAutoApplyRef.current = true;
                   clearFilters?.();
-                  setTargetMonthsDraft([]);
-                  setTargetMonths([]);
+                  setTargetMonthRangeStartDraft(null);
+                  setTargetMonthRangeEndDraft(null);
+                  setTargetMonthRangeStart('');
+                  setTargetMonthRangeEnd('');
                   const newFieldDraft = { ...sortFieldDraft };
                   const newOrderDraft = { ...sortOrderDraft };
                   delete newFieldDraft.targetDate;
@@ -2437,7 +2465,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                   if (sortField === "targetDate") {
                     setSortField(null);
                   }
-                  applyFilters({ targetMonths: [] });
+                  applyFilters({ 
+                    targetMonthRangeStart: '',
+                    targetMonthRangeEnd: ''
+                  });
                   confirm({ closeDropdown: true });
                 }}
               >
@@ -2451,7 +2482,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         <FilterFilled
           style={{
             color:
-              targetMonths.length > 0 || sortField === "targetDate"
+              (targetMonthRangeStart || targetMonthRangeEnd) || sortField === "targetDate"
                 ? token.colorPrimary
                 : undefined,
           }}

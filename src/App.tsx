@@ -167,7 +167,7 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
     chart: { ...DEFAULT_FILTERS },
   });
 
-  // CustomerTable 전용 필터 상태 (계약금액, 예상매출, 목표 월, 정렬 등)
+  // CustomerTable 전용 필터 상태 (계약금액, 예상매출, 목표일자, 정렬 등)
   interface TableFilters {
     companySizes?: string[];
     categories?: string[];
@@ -178,7 +178,7 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
     contractAmountRange?: { minMan?: number; maxMan?: number };
     expectedRevenueRange?: { minMan?: number; maxMan?: number };
     targetRevenueRange?: { minMan?: number; maxMan?: number };
-    targetMonths?: number[];
+    targetMonthRange?: { start?: string; end?: string };
     companyName?: string;
     lastContactDateRange?: { start?: string; end?: string };
     sort?: { field: string; order: "asc" | "desc" };
@@ -237,8 +237,8 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
       if (tableFilters.expectedRevenueRange) {
         filters.expectedRevenueRange = tableFilters.expectedRevenueRange;
       }
-      if (tableFilters.targetMonths && tableFilters.targetMonths.length > 0) {
-        filters.targetMonths = tableFilters.targetMonths;
+      if (tableFilters.targetMonthRange && (tableFilters.targetMonthRange.start || tableFilters.targetMonthRange.end)) {
+        filters.targetMonthRange = tableFilters.targetMonthRange;
       }
       if (tableFilters.lastContactDateRange && (tableFilters.lastContactDateRange.start || tableFilters.lastContactDateRange.end)) {
         filters.lastContactDateRange = tableFilters.lastContactDateRange;

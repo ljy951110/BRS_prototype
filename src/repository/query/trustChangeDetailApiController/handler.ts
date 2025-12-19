@@ -11,6 +11,13 @@ import type {
 } from '@/repository/openapi/model';
 import { http, HttpResponse } from 'msw';
 
+// Window 타입 확장
+declare global {
+  interface Window {
+    __API_MODE__?: 'msw' | 'api';
+  }
+}
+
 // ==================== Mock Data ====================
 
 /**
@@ -588,6 +595,13 @@ const MOCK_ENGAGEMENT_DATA: Record<
 export const getTrustChangeDetailHandler = http.post(
   '/api/v1/dashboard/trust-change-detail',
   async ({ request }) => {
+    // API 모드일 때는 MSW를 bypass하고 실제 API 호출
+    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
+    if (apiMode === 'api') {
+      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      return;
+    }
+
     console.log(
       '[MSW] 📥 Intercepted POST /api/v1/dashboard/trust-change-detail'
     );

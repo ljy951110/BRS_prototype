@@ -15,6 +15,13 @@ import type {
 } from "@/repository/openapi/model";
 import { http, HttpResponse } from "msw";
 
+// Window 타입 확장
+declare global {
+  interface Window {
+    __API_MODE__?: 'msw' | 'api';
+  }
+}
+
 // ==================== Mock Data ====================
 
 /**
@@ -376,6 +383,13 @@ const findCustomerById = (companyId: number): MockCustomerDetail | undefined => 
 export const getCustomerSummaryHandler = http.post(
   "/api/v1/dashboard/customer/:company_id/summary",
   async ({ params, request }) => {
+    // API 모드일 때는 MSW를 bypass하고 실제 API 호출
+    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
+    if (apiMode === 'api') {
+      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      return;
+    }
+
     console.log('[MSW] 📥 Intercepted POST /api/v1/dashboard/customer/:company_id/summary');
 
     const companyId = Number(params.company_id);
@@ -443,6 +457,13 @@ export const getCustomerSummaryHandler = http.post(
 export const getSalesHistoryHandler = http.post(
   "/api/v1/dashboard/customer/:company_id/sales-history",
   async ({ params, request }) => {
+    // API 모드일 때는 MSW를 bypass하고 실제 API 호출
+    const apiMode = window.__API_MODE__ || localStorage.getItem('apiMode');
+    if (apiMode === 'api') {
+      console.log('[MSW] ⏩ Bypassing to real API (mode: api)');
+      return;
+    }
+
     console.log('[MSW] 📥 Intercepted POST /api/v1/dashboard/customer/:company_id/sales-history');
 
     const companyId = Number(params.company_id);
