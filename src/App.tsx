@@ -637,10 +637,6 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
               <CustomerTable
                 data={filteredData}
                 loading={isLoading}
-                dateRange={{
-                  startDate: dateRange[0].format('YYYY-MM-DD'),
-                  endDate: dateRange[1].format('YYYY-MM-DD'),
-                }}
                 filters={tableFilters}
                 onFiltersChange={(filters) => {
                   setTableFilters(filters);

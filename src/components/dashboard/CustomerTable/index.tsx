@@ -89,10 +89,6 @@ interface CustomerTableProps {
   data: Customer[];
   loading?: boolean;
   pagination?: TablePaginationConfig;
-  dateRange?: {
-    startDate: string;
-    endDate: string;
-  };
   filters?: TableFilters;
   onFiltersChange?: (filters: TableFilters) => void;
   managers?: Manager[];
@@ -278,7 +274,7 @@ const renderProgressTags = (
   );
 };
 
-export const CustomerTable = ({ data, loading, pagination: paginationProp, dateRange, filters: _filters, onFiltersChange, managers = [] }: CustomerTableProps) => {
+export const CustomerTable = ({ data, loading, pagination: paginationProp, filters: _filters, onFiltersChange, managers = [] }: CustomerTableProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -288,12 +284,9 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
     date: string;
   } | null>(null);
 
-  // 각 탭별 조회 기간 (전체 현황의 조회 기간을 초기값으로 사용)
+  // 각 탭별 조회 기간 (모달 열릴 때는 항상 6개월 전부터 현재까지)
   const getInitialDateRange = (): [dayjs.Dayjs, dayjs.Dayjs] => {
-    if (dateRange?.startDate && dateRange?.endDate) {
-      return [dayjs(dateRange.startDate), dayjs(dateRange.endDate)];
-    }
-    return [dayjs().subtract(30, 'day'), dayjs()];
+    return [dayjs().subtract(6, 'month'), dayjs()];
   };
 
   const [summaryDateRange, setSummaryDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(getInitialDateRange);
@@ -314,7 +307,6 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       setActionDateRange(initialRange);
       setContentDateRange(initialRange);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCustomer]);
 
   // 고객 요약 정보 조회
