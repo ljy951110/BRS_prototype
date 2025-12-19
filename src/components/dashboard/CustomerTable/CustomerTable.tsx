@@ -72,6 +72,8 @@ type ColumnFilters = {
   trustMax: string;
   contractMin: string;
   contractMax: string;
+  targetRevenueMin: string;
+  targetRevenueMax: string;
   possibility: string;
   expectedMin: string;
   expectedMax: string;
@@ -95,6 +97,7 @@ type FilterModalTarget =
   | "category"
   | "trust"
   | "contract"
+  | "targetRevenue"
   | "possibility"
   | "expected"
   | "targetDate"
@@ -109,6 +112,7 @@ const FILTER_SORT_FIELD: Record<FilterModalTarget, SortField | null> = {
   category: "category",
   trust: "trustIndex",
   contract: "contractAmount",
+  targetRevenue: "targetRevenue",
   possibility: "possibility",
   expected: "expectedRevenue",
   targetDate: "targetDate",
@@ -153,6 +157,7 @@ type SortField =
   | "trustIndex"
   | "contractAmount"
   | "expectedRevenue"
+  | "targetRevenue"
   | "possibility"
   | "customerResponse"
   | "targetDate";
@@ -519,6 +524,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     trustMax: "",
     contractMin: "",
     contractMax: "",
+    targetRevenueMin: "",
+    targetRevenueMax: "",
     possibility: "all",
     expectedMin: "",
     expectedMax: "",
@@ -591,6 +598,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
     return periodData.filter((customer) => {
       const trustIndex = customer.trustIndex ?? 0;
       const contractAmount = customer.contractAmount ?? 0;
+      const targetRevenue = customer.adoptionDecision.targetRevenue ?? 0;
       const expectedRevenue =
         customer._periodData?.currentExpectedRevenue ?? 0;
       const targetDate = customer.adoptionDecision.targetDate;
@@ -653,6 +661,17 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
           contractAmount,
           columnFilters.contractMin,
           columnFilters.contractMax
+        )
+      ) {
+        return false;
+      }
+
+      if (
+        (columnFilters.targetRevenueMin || columnFilters.targetRevenueMax) &&
+        !matchesNumberRange(
+          targetRevenue,
+          columnFilters.targetRevenueMin,
+          columnFilters.targetRevenueMax
         )
       ) {
         return false;
@@ -745,6 +764,8 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         return customer.contractAmount ?? 0;
       case "expectedRevenue":
         return customer._periodData?.currentExpectedRevenue ?? 0;
+      case "targetRevenue":
+        return customer.adoptionDecision.targetRevenue ?? 0;
       case "possibility":
         return POSSIBILITY_ORDER[customer.adoptionDecision.possibility] ?? 0;
       case "customerResponse":
@@ -1117,6 +1138,10 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
         case "contract":
           next.contractMin = COLUMN_FILTER_DEFAULTS.contractMin;
           next.contractMax = COLUMN_FILTER_DEFAULTS.contractMax;
+          break;
+        case "targetRevenue":
+          next.targetRevenueMin = COLUMN_FILTER_DEFAULTS.targetRevenueMin;
+          next.targetRevenueMax = COLUMN_FILTER_DEFAULTS.targetRevenueMax;
           break;
         case "expected":
           next.expectedMin = COLUMN_FILTER_DEFAULTS.expectedMin;
@@ -1497,30 +1522,30 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                 <SortHeader filterTarget="company">
                   기업명
                 </SortHeader>
-                {/* 2. 기업 규모 */}
+                {/* 2. 규모 */}
                 <SortHeader filterTarget="companySize">
-                  기업 규모
+                  규모
                 </SortHeader>
-                {/* 3. 카테고리 */}
+                {/* 3. 구분 */}
                 <SortHeader filterTarget="category">
-                  카테고리
+                  구분
                 </SortHeader>
-                {/* 4. 제품사용 */}
-                <th className={styles.th}>제품사용</th>
+                {/* 4. 사용제품 */}
+                <th className={styles.th}>사용제품</th>
                 {/* 5. 담당자 */}
                 <SortHeader filterTarget="manager">
                   담당자
                 </SortHeader>
-                {/* 6. 계약 금액 */}
+                {/* 6. 직전반기 매출 */}
                 <SortHeader filterTarget="contract">
-                  계약금액
+                  직전반기 매출
                 </SortHeader>
                 {/* 7. 최근 MBM */}
                 <th className={styles.th}>최근 MBM</th>
-                {/* 8. 도입결정 단계 */}
+                {/* 8. 딜 단계 */}
                 <th className={styles.th}>
                   <div className={styles.filterHeader}>
-                    <span>도입결정</span>
+                    <span>딜 단계</span>
                     <button
                       className={styles.filterBtn}
                       onClick={(e) => {
@@ -1533,7 +1558,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     </button>
                   </div>
                 </th>
-                {/* 9. 마지막 컨택일 */}
+                {/* 9. 마지막 컨택 */}
                 <SortHeader filterTarget="lastContact">
                   마지막 컨택
                 </SortHeader>
@@ -1541,18 +1566,24 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                 <SortHeader filterTarget="trust">
                   신뢰지수
                 </SortHeader>
-                {/* 11. 가능성 */}
+                {/* 11. 목표매출 */}
+                <SortHeader filterTarget="targetRevenue">
+                  목표매출
+                </SortHeader>
+                {/* 12. 가능성 */}
                 <SortHeader filterTarget="possibility">
                   가능성
                 </SortHeader>
-                {/* 12. 예상매출 */}
+                {/* 13. 예상매출 */}
                 <SortHeader filterTarget="expected">
                   예상매출
                 </SortHeader>
-                {/* 13. 목표일자 */}
+                {/* 14. 목표월 */}
                 <SortHeader filterTarget="targetDate">
-                  목표일자
+                  목표월
                 </SortHeader>
+                {/* 15. 이번반기 달성 */}
+                <th className={styles.th}>이번반기 달성</th>
               </tr>
             </thead>
             <tbody>
@@ -1603,7 +1634,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                     <td className={styles.td}>
                       <Text variant="body-sm">{customer.manager}</Text>
                     </td>
-                    {/* 6. 계약 금액 */}
+                    {/* 6. 직전반기 매출 */}
                     <td className={styles.td}>
                       <Text variant="body-sm" mono>
                         {formatCurrency(customer.contractAmount)}
@@ -1615,7 +1646,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         {lastMBM || "-"}
                       </Text>
                     </td>
-                    {/* 8. 도입결정 단계 (변화 표시) */}
+                    {/* 8. 딜 단계 (변화 표시) */}
                     <td className={styles.td}>
                       {(() => {
                         const pastStage = customer._periodData?.pastAdoptionStage || adoptionStage;
@@ -1632,7 +1663,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         );
                       })()}
                     </td>
-                    {/* 9. 마지막 컨택일 */}
+                    {/* 9. 마지막 컨택 */}
                     <td className={styles.td}>
                       <Text variant="body-sm" color={lastContactDate ? "primary" : "tertiary"}>
                         {formatDateShort(lastContactDate)}
@@ -1656,7 +1687,25 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         );
                       })()}
                     </td>
-                    {/* 11. 가능성 (변화 표시) */}
+                    {/* 11. 목표매출 (변화 표시) */}
+                    <td className={styles.td}>
+                      {(() => {
+                        const current = customer.adoptionDecision.targetRevenue ?? 0;
+                        const past = customer._periodData?.pastTargetRevenue ?? current;
+                        const isPositive = current > past;
+                        const isNegative = current < past;
+                        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+                        
+                        return (
+                          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+                            <span>{formatCompactCurrency(past)}</span>
+                            <ArrowRight size={10} />
+                            <span>{formatCompactCurrency(current)}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* 12. 가능성 (변화 표시) */}
                     <td className={styles.td}>
                       {(() => {
                         const past = customer._periodData?.pastPossibility || customer.adoptionDecision.possibility;
@@ -1674,7 +1723,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         );
                       })()}
                     </td>
-                    {/* 12. 예상매출 (변화 표시) */}
+                    {/* 13. 예상매출 (변화 표시) */}
                     <td className={styles.td}>
                       {(() => {
                         const current = customer._periodData?.currentExpectedRevenue ?? 0;
@@ -1692,7 +1741,7 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                         );
                       })()}
                     </td>
-                    {/* 13. 목표일자 (변화 표시) */}
+                    {/* 14. 목표일 (변화 표시) */}
                     <td className={styles.td}>
                       {(() => {
                         const current = customer.adoptionDecision.targetDate || "-";
@@ -1710,6 +1759,12 @@ export const CustomerTable = ({ data, timePeriod }: CustomerTableProps) => {
                           </div>
                         );
                       })()}
+                    </td>
+                    {/* 15. 이번반기 달성 */}
+                    <td className={styles.td}>
+                      <Text variant="body-sm" mono>
+                        {formatCurrency(customer.adoptionDecision?.targetRevenue)}
+                      </Text>
                     </td>
                   </tr>
                 );
