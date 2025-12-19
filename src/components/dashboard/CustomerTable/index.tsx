@@ -3111,7 +3111,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                       <Button
                         type="primary"
                         icon={<Building2 size={16} />}
-                        href={_customerSummary?.data?.hubspotUrl || `https://app.hubspot.com/contacts/companies/${selectedCustomer.no}`}
+                        href={_customerSummary?.data?.hubspotUrl || `https://app-na2.hubspot.com/contacts/21626933/record/0-2/${selectedCustomer.no}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         block
