@@ -221,6 +221,8 @@ export const getDataWithPeriodChange = (
           pastTargetRevenue: null,
           pastExpectedRevenue: 0,
           currentExpectedRevenue: 0,
+          pastCurrentQuarterRevenue: 0,
+          currentCurrentQuarterRevenue: 0,
           possibilityChange: "none",
           responseChange: "none",
           pastTest: false,
@@ -290,6 +292,8 @@ export const getDataWithPeriodChange = (
         pastTargetRevenue: pastAdoption.targetRevenue,
         pastExpectedRevenue,
         currentExpectedRevenue,
+        pastCurrentQuarterRevenue: 0,
+        currentCurrentQuarterRevenue: 0,
         possibilityChange:
           possibilityChange > 0
             ? "up"

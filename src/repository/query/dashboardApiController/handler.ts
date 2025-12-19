@@ -29,7 +29,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 4,
     companyName: "비전바이오켐",
     companySize: "T0",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 11000000,
@@ -60,7 +60,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 8,
     companyName: "도쿄일렉트론코리아",
     companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 50000000,
@@ -91,7 +91,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 24,
     companyName: "서울도시가스",
     companySize: "T5",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 41250000,
@@ -120,7 +120,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 25,
     companyName: "AJ네트웍스",
     companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 62400000,
@@ -149,7 +149,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 30,
     companyName: "(주)도루코",
     companySize: "T1",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 15200000,
@@ -178,7 +178,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 43,
     companyName: "대한제분",
     companySize: "T1",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
     contractAmount: 10000000,
@@ -207,7 +207,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 217,
     companyName: "한국컴패션",
     companySize: "T1",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 6300000,
@@ -236,7 +236,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 237,
     companyName: "빙그레",
     companySize: "T5",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 33000000,
@@ -265,7 +265,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 240,
     companyName: "유라코포레이션",
     companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 30000000,
@@ -294,7 +294,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 242,
     companyName: "농우바이오",
     companySize: "T1",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 10030000,
@@ -323,7 +323,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 272,
     companyName: "메리츠캐피탈",
     companySize: "T10",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
     contractAmount: 10000000,
@@ -352,7 +352,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 299,
     companyName: "에이플러스에셋어드바이저",
     companySize: "T3",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ACC"],
     manager: "이정호",
     contractAmount: 2000000,
@@ -381,7 +381,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 373,
     companyName: "안국건강",
     companySize: "T0",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ACC"],
     manager: "김택수",
     contractAmount: 2700000,
@@ -410,7 +410,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 468,
     companyName: "에스테이트",
     companySize: "T0",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ACC"],
     manager: "윤상준",
     contractAmount: 2700000,
@@ -439,7 +439,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 510,
     companyName: "에이치비테크놀러지",
     companySize: "T3",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ACC"],
     manager: "이지훈",
     contractAmount: 1000000,
@@ -468,7 +468,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 553,
     companyName: "동오그룹",
     companySize: "T5",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS"],
     manager: "김종현",
     contractAmount: 17000000,
@@ -497,7 +497,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 597,
     companyName: "삼우종합건축사사무소",
     companySize: "T5",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS"],
     manager: "유재현",
     contractAmount: 15000000,
@@ -526,7 +526,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 708,
     companyName: "디비아이엔씨",
     companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 240000000,
@@ -555,7 +555,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 709,
     companyName: "해안종합건축사사무소",
     companySize: "T5",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "윤상준",
     contractAmount: 50000000,
@@ -584,7 +584,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 637,
     companyName: "엠로",
     companySize: "T3",
-    category: "recruit",
+    categories: ["recruit"],
     productUsage: ["ATS"],
     manager: "이지훈",
     contractAmount: 24000000,
@@ -613,7 +613,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 1046,
     companyName: "(주)도루코 성과",
     companySize: "T10",
-    category: "performance",
+    categories: ["performance"],
     productUsage: ["INHR_PLUS"],
     manager: "김용진",
     contractAmount: 24800000,
@@ -642,7 +642,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
     companyId: 710,
     companyName: "국가과학기술인력개발원",
     companySize: "T5",
-    category: "public",
+    categories: ["public"],
     productUsage: ["ATS", "ACCSR"],
     manager: "송병규",
     contractAmount: 10000000,
@@ -679,7 +679,7 @@ const calculateExpectedRevenue = (
   possibility: number | null | undefined
 ): number => {
   if (!targetRevenue || possibility == null) return 0;
-  
+
   // possibility는 이제 0, 10, 40, 90, 100 같은 integer 값
   const rate = possibility / 100;
   return Math.round(targetRevenue * rate);
@@ -786,7 +786,7 @@ export const getFilterOptionsHandler = http.get(
     console.log('[MSW] 📥 Intercepted GET /api/v1/dashboard/companies/filters');
 
     const enrichedData = enrichMockData(MOCK_DASHBOARD_DATA);
-    
+
     // 담당자 매핑 (이름 -> owner_id)
     const managerMapping: Record<string, string> = {
       '이정호': 'owner_001',
@@ -798,14 +798,14 @@ export const getFilterOptionsHandler = http.get(
       '김용진': 'owner_007',
       '송병규': 'owner_008',
     };
-    
+
     const uniqueManagers = Array.from(new Set(enrichedData.map(d => d.manager)))
       .filter((name): name is string => name !== null && name !== undefined)
       .map(name => ({
         owner_id: managerMapping[name] || `owner_${name}`,
         name: name
       }));
-    const uniqueCategories = Array.from(new Set(enrichedData.map(d => d.category).filter(Boolean)));
+    const uniqueCategories = Array.from(new Set(enrichedData.flatMap(d => d.categories || []).filter(Boolean)));
     const uniqueCompanySizes = Array.from(new Set(enrichedData.map(d => d.companySize).filter(Boolean)));
 
     const response = {
@@ -884,13 +884,13 @@ export const getDashboardCompaniesHandler = http.post(
     // 카테고리 필터
     if (filters?.categories?.length) {
       const categories = new Set(filters.categories);
-      rows = rows.filter((row) => row.category && categories.has(row.category));
+      rows = rows.filter((row) => row.categories && row.categories.some(c => categories.has(c)));
     }
 
     // 제품 사용 필터
     if (filters?.productUsages?.length) {
       const productUsages = new Set(filters.productUsages);
-      rows = rows.filter((row) => 
+      rows = rows.filter((row) =>
         row.productUsage && row.productUsage.some(p => productUsages.has(p))
       );
     }
@@ -957,7 +957,7 @@ export const getDashboardCompaniesHandler = http.post(
         const currentMonth = now.getMonth() + 1;
         const targetYear = targetMonth < currentMonth ? currentYear + 1 : currentYear;
         const targetDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
-        
+
         if (start && targetDate < start) return false;
         if (end && targetDate > end) return false;
         return true;
@@ -993,7 +993,7 @@ export const getDashboardCompaniesHandler = http.post(
           case "manager":
             return compareStrings(a.manager ?? null, b.manager ?? null);
           case "category":
-            return compareStrings(a.category ?? null, b.category ?? null);
+            return compareStrings(a.categories?.[0] ?? null, b.categories?.[0] ?? null);
           case "trustIndex":
             return ((a.current.trustIndex ?? 0) - (b.current.trustIndex ?? 0)) * modifier;
           case "contractAmount":
