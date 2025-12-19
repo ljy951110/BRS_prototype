@@ -59,7 +59,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 8,
     companyName: "도쿄일렉트론코리아",
-    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
+    companySize: "T10", // T9는 OpenAPI에 없으므로 T10 사용
     categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
@@ -119,7 +119,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 25,
     companyName: "AJ네트웍스",
-    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
+    companySize: "T10", // T9는 OpenAPI에 없으므로 T10 사용
     categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이정호",
@@ -264,7 +264,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 240,
     companyName: "유라코포레이션",
-    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
+    companySize: "T10", // T9는 OpenAPI에 없으므로 T10 사용
     categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "이지훈",
@@ -525,7 +525,7 @@ const MOCK_DASHBOARD_DATA: DashboardTableRow[] = [
   {
     companyId: 708,
     companyName: "디비아이엔씨",
-    companySize: "T10" as any, // T9는 OpenAPI에 없으므로 T10 사용
+    companySize: "T10", // T9는 OpenAPI에 없으므로 T10 사용
     categories: ["recruit"],
     productUsage: ["ATS", "ACC"],
     manager: "윤상준",
@@ -694,7 +694,7 @@ const enrichMockData = (rows: DashboardTableRow[]): DashboardTableRow[] => {
 
   return rows.map((row) => {
     // possibility를 string에서 integer로 변환
-    const convertPossibility = (poss: any): number | null => {
+    const convertPossibility = (poss: string | number | null | undefined): number | null => {
       if (typeof poss === 'number') return poss;
       if (typeof poss === 'string') {
         const num = parseInt(poss.replace('%', ''));
