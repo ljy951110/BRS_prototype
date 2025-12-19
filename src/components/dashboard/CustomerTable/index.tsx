@@ -711,14 +711,14 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             const bDate = new Date(b.adoptionDecision?.targetDate || 0).getTime();
             return (aDate - bDate) * modifier;
           }
-          case "lastContact": {
+          case "lastContactDate": {
             const aContact = a.lastContactDate;
             const bContact = b.lastContactDate;
             const aTime = aContact ? new Date(aContact).getTime() : 0;
             const bTime = bContact ? new Date(bContact).getTime() : 0;
             return (aTime - bTime) * modifier;
           }
-          case "lastMBM": {
+          case "lastMBMDate": {
             const aMBM = a.lastMBMDate;
             const bMBM = b.lastMBMDate;
             const aTime = aMBM ? new Date(aMBM).getTime() : 0;
@@ -872,10 +872,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       filterIcon: (filtered) => (
         <FilterFilled style={{ color: filtered || companySearch || sortField === "companyName" ? token.colorPrimary : undefined }} />
       ),
-      minWidth: 200,
+      width: 200,
     },
     {
-      title: "기업 규모",
+      title: "규모",
       dataIndex: "companySize",
       filterDropdownProps: {
         onOpenChange: (open) => {
@@ -1001,10 +1001,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       filterIcon: () => (
         <FilterFilled style={{ color: selectedCompanySizes.length > 0 || sortField === "companySize" ? token.colorPrimary : undefined }} />
       ),
-      minWidth: 120,
+      width: 120,
     },
     {
-      title: "카테고리",
+      title: "구분",
       dataIndex: "category",
       filterDropdownProps: {
         onOpenChange: (open) => {
@@ -1147,7 +1147,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
         return <Tag color={colorMap[categoryKey] || "default"} bordered>{CategoryLabel[category as keyof typeof CategoryLabel] || category}</Tag>;
       },
-      minWidth: 100,
+      width: 100,
     },
     {
       title: "제품사용",
@@ -1293,7 +1293,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </div>
         );
       },
-      minWidth: 150,
+      width: 150,
     },
     {
       title: "담당자",
@@ -1423,139 +1423,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         <FilterFilled style={{ color: selectedManagers.length > 0 || sortField === "manager" ? token.colorPrimary : undefined }} />
       ),
       onFilter: (value, record) => record.manager === value,
-      minWidth: 100,
+      width: 100,
     },
     {
-      title: "신뢰지수",
-      dataIndex: "trustIndex",
-      filterDropdownProps: {
-        onOpenChange: (open) => {
-          if (open) {
-            skipAutoApplyRef.current = false;
-          } else {
-            if (skipAutoApplyRef.current) {
-              skipAutoApplyRef.current = false;
-              return;
-            }
-
-            let finalSortField = sortField;
-            let finalSortOrder = sortOrder;
-            if (sortFieldDraft["trustIndex"] !== undefined) {
-              finalSortField = sortFieldDraft["trustIndex"];
-              finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
-              setSortField(finalSortField);
-              setSortOrder(finalSortOrder);
-            }
-            applyFilters({
-              sortField: finalSortField,
-              sortOrder: finalSortOrder,
-            });
-          }
-        }
-      },
-      filterDropdown: ({ confirm }) => {
-        const currentSortField = sortFieldDraft["trustIndex"] ?? (sortField === "trustIndex" ? sortField : null);
-        const currentSortOrder = sortOrderDraft["trustIndex"] ?? (sortField === "trustIndex" ? sortOrder : "asc");
-
-        return (
-          <Space direction="vertical" style={{ padding: 8, width: 200 }}>
-            <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
-            <Space>
-              <Button
-                size="small"
-                type={currentSortField === "trustIndex" && currentSortOrder === "asc" ? "primary" : "default"}
-                onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, trustIndex: "trustIndex" });
-                  setSortOrderDraft({ ...sortOrderDraft, trustIndex: "asc" });
-                }}
-              >
-                오름차순
-              </Button>
-              <Button
-                size="small"
-                type={currentSortField === "trustIndex" && currentSortOrder === "desc" ? "primary" : "default"}
-                onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, trustIndex: "trustIndex" });
-                  setSortOrderDraft({ ...sortOrderDraft, trustIndex: "desc" });
-                }}
-              >
-                내림차순
-              </Button>
-            </Space>
-            <Divider style={{ margin: "8px 0" }} />
-            <Space>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  skipAutoApplyRef.current = true;
-                  let finalSortField = sortField;
-                  let finalSortOrder = sortOrder;
-                  if (sortFieldDraft["trustIndex"] !== undefined) {
-                    finalSortField = sortFieldDraft["trustIndex"];
-                    finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
-                    setSortField(finalSortField);
-                    setSortOrder(finalSortOrder);
-                  }
-                  applyFilters({
-                    sortField: finalSortField,
-                    sortOrder: finalSortOrder,
-                  });
-                  confirm({ closeDropdown: true });
-                }}
-              >
-                적용
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  skipAutoApplyRef.current = true;
-                  const newFieldDraft = { ...sortFieldDraft };
-                  const newOrderDraft = { ...sortOrderDraft };
-                  delete newFieldDraft.trustIndex;
-                  delete newOrderDraft.trustIndex;
-                  setSortFieldDraft(newFieldDraft);
-                  setSortOrderDraft(newOrderDraft);
-                  let finalSortField = sortField;
-                  if (sortField === "trustIndex") {
-                    finalSortField = null;
-                    setSortField(null);
-                  }
-                  applyFilters({
-                    sortField: finalSortField,
-                    sortOrder: sortOrder,
-                  });
-                  confirm({ closeDropdown: true });
-                }}
-              >
-                초기화
-              </Button>
-            </Space>
-          </Space>
-        );
-      },
-      filterIcon: () => (
-        <FilterFilled style={{ color: sortField === "trustIndex" ? token.colorPrimary : undefined }} />
-      ),
-      render: (_, record) => {
-        const past = record._periodData?.pastTrustIndex ?? null;
-        const current = record.trustIndex || 0;
-        const isPositive = past !== null && current > past;
-        const isNegative = past !== null && current < past;
-        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
-
-        return (
-          <div className={`${styles.changeTag} ${styles[changeType]}`}>
-            <span>{past ?? current}</span>
-            <ArrowRight size={10} />
-            <span>{current}</span>
-          </div>
-        );
-      },
-      minWidth: 120,
-    },
-    {
-      title: "계약금액",
+      title: "직전반기 매출",
       dataIndex: "contractAmount",
       filterDropdownProps: {
         onOpenChange: (open) => {
@@ -1710,7 +1581,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         />
       ),
       render: (val: number | null) => formatMan(val),
-      minWidth: 120,
+      width: 120,
     },
     {
       title: "최근 MBM",
@@ -1734,9 +1605,9 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
             let finalSortField = sortField;
             let finalSortOrder = sortOrder;
-            if (sortFieldDraft["lastMBM"] !== undefined) {
-              finalSortField = sortFieldDraft["lastMBM"];
-              finalSortOrder = sortOrderDraft["lastMBM"] ?? "asc";
+            if (sortFieldDraft["lastMBMDate"] !== undefined) {
+              finalSortField = sortFieldDraft["lastMBMDate"];
+              finalSortOrder = sortOrderDraft["lastMBMDate"] ?? "asc";
               setSortField(finalSortField);
               setSortOrder(finalSortOrder);
             }
@@ -1750,8 +1621,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
-        const currentSortField = sortFieldDraft["lastMBM"] ?? (sortField === "lastMBM" ? sortField : null);
-        const currentSortOrder = sortOrderDraft["lastMBM"] ?? (sortField === "lastMBM" ? sortOrder : "asc");
+        const currentSortField = sortFieldDraft["lastMBMDate"] ?? (sortField === "lastMBMDate" ? sortField : null);
+        const currentSortOrder = sortOrderDraft["lastMBMDate"] ?? (sortField === "lastMBMDate" ? sortOrder : "asc");
 
         return (
           <Space direction="vertical" style={{ padding: 8 }}>
@@ -1767,20 +1638,20 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             <Space>
               <Button
                 size="small"
-                type={currentSortField === "lastMBM" && currentSortOrder === "asc" ? "primary" : "default"}
+                type={currentSortField === "lastMBMDate" && currentSortOrder === "asc" ? "primary" : "default"}
                 onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, lastMBM: "lastMBM" });
-                  setSortOrderDraft({ ...sortOrderDraft, lastMBM: "asc" });
+                  setSortFieldDraft({ ...sortFieldDraft, lastMBMDate: "lastMBMDate" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastMBMDate: "asc" });
                 }}
               >
                 오름차순
               </Button>
               <Button
                 size="small"
-                type={currentSortField === "lastMBM" && currentSortOrder === "desc" ? "primary" : "default"}
+                type={currentSortField === "lastMBMDate" && currentSortOrder === "desc" ? "primary" : "default"}
                 onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, lastMBM: "lastMBM" });
-                  setSortOrderDraft({ ...sortOrderDraft, lastMBM: "desc" });
+                  setSortFieldDraft({ ...sortFieldDraft, lastMBMDate: "lastMBMDate" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastMBMDate: "desc" });
                 }}
               >
                 내림차순
@@ -1800,9 +1671,9 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
                   let finalSortField = sortField;
                   let finalSortOrder = sortOrder;
-                  if (sortFieldDraft["lastMBM"] !== undefined) {
-                    finalSortField = sortFieldDraft["lastMBM"];
-                    finalSortOrder = sortOrderDraft["lastMBM"] ?? "asc";
+                  if (sortFieldDraft["lastMBMDate"] !== undefined) {
+                    finalSortField = sortFieldDraft["lastMBMDate"];
+                    finalSortOrder = sortOrderDraft["lastMBMDate"] ?? "asc";
                     setSortField(finalSortField);
                     setSortOrder(finalSortOrder);
                   }
@@ -1828,11 +1699,11 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                   setLastMBMEnd("");
                   const newFieldDraft = { ...sortFieldDraft };
                   const newOrderDraft = { ...sortOrderDraft };
-                  delete newFieldDraft.lastMBM;
-                  delete newOrderDraft.lastMBM;
+                  delete newFieldDraft.lastMBMDate;
+                  delete newOrderDraft.lastMBMDate;
                   setSortFieldDraft(newFieldDraft);
                   setSortOrderDraft(newOrderDraft);
-                  if (sortField === "lastMBM") {
+                  if (sortField === "lastMBMDate") {
                     setSortField(null);
                   }
                   applyFilters({
@@ -1852,7 +1723,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         <FilterFilled
           style={{
             color:
-              lastMBMStart || lastMBMEnd || sortField === "lastMBM"
+              lastMBMStart || lastMBMEnd || sortField === "lastMBMDate"
                 ? token.colorPrimary
                 : undefined,
           }}
@@ -1866,10 +1737,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </span>
         );
       },
-      minWidth: 110,
+      width: 110,
     },
     {
-      title: "도입결정",
+      title: "딜 단계",
       dataIndex: "progress",
       filters: [
         { text: "테스트", value: "test" },
@@ -1888,8 +1759,44 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         const currentLevel = getProgressLevel(record.adoptionDecision);
         return currentLevel === requiredLevel;
       },
-      render: (_, record) => renderProgressTags(record, true, progressColors),
-      minWidth: 140,
+      render: (_, record) => {
+        const getProgressLabel = (ad: Customer["adoptionDecision"] | undefined) => {
+          if (!ad) return "-";
+          if (ad.contract) return "계약";
+          if (ad.approval) return "승인";
+          if (ad.quote) return "견적";
+          if (ad.test) return "테스트";
+          return "-";
+        };
+
+        const getPastProgress = (periodData: TableRow["_periodData"]) => {
+          if (!periodData) return "-";
+          if (periodData.pastContract) return "계약";
+          if (periodData.pastApproval) return "승인";
+          if (periodData.pastQuote) return "견적";
+          if (periodData.pastTest) return "테스트";
+          return "-";
+        };
+
+        const past = getPastProgress(record._periodData);
+        const current = getProgressLabel(record.adoptionDecision);
+
+        const pastLevel = past === "계약" ? 3 : past === "승인" ? 2 : past === "견적" ? 1 : past === "테스트" ? 0 : -1;
+        const currentLevel = current === "계약" ? 3 : current === "승인" ? 2 : current === "견적" ? 1 : current === "테스트" ? 0 : -1;
+
+        const isPositive = currentLevel > pastLevel;
+        const isNegative = currentLevel < pastLevel;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+        return (
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{past}</span>
+            <ArrowRight size={10} />
+            <span>{current}</span>
+          </div>
+        );
+      },
+      width: 140,
     },
     {
       title: "마지막 컨택",
@@ -1915,9 +1822,9 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
             let finalSortField = sortField;
             let finalSortOrder = sortOrder;
-            if (sortFieldDraft["lastContact"] !== undefined) {
-              finalSortField = sortFieldDraft["lastContact"];
-              finalSortOrder = sortOrderDraft["lastContact"] ?? "asc";
+            if (sortFieldDraft["lastContactDate"] !== undefined) {
+              finalSortField = sortFieldDraft["lastContactDate"];
+              finalSortOrder = sortOrderDraft["lastContactDate"] ?? "asc";
               setSortField(finalSortField);
               setSortOrder(finalSortOrder);
             }
@@ -1931,8 +1838,8 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         }
       },
       filterDropdown: ({ confirm, clearFilters }) => {
-        const currentSortField = sortFieldDraft["lastContact"] ?? (sortField === "lastContact" ? sortField : null);
-        const currentSortOrder = sortOrderDraft["lastContact"] ?? (sortField === "lastContact" ? sortOrder : "asc");
+        const currentSortField = sortFieldDraft["lastContactDate"] ?? (sortField === "lastContactDate" ? sortField : null);
+        const currentSortOrder = sortOrderDraft["lastContactDate"] ?? (sortField === "lastContactDate" ? sortOrder : "asc");
 
         return (
           <Space direction="vertical" style={{ padding: 8 }}>
@@ -1948,20 +1855,20 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
             <Space>
               <Button
                 size="small"
-                type={currentSortField === "lastContact" && currentSortOrder === "asc" ? "primary" : "default"}
+                type={currentSortField === "lastContactDate" && currentSortOrder === "asc" ? "primary" : "default"}
                 onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, lastContact: "lastContact" });
-                  setSortOrderDraft({ ...sortOrderDraft, lastContact: "asc" });
+                  setSortFieldDraft({ ...sortFieldDraft, lastContactDate: "lastContactDate" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastContactDate: "asc" });
                 }}
               >
                 오름차순
               </Button>
               <Button
                 size="small"
-                type={currentSortField === "lastContact" && currentSortOrder === "desc" ? "primary" : "default"}
+                type={currentSortField === "lastContactDate" && currentSortOrder === "desc" ? "primary" : "default"}
                 onClick={() => {
-                  setSortFieldDraft({ ...sortFieldDraft, lastContact: "lastContact" });
-                  setSortOrderDraft({ ...sortOrderDraft, lastContact: "desc" });
+                  setSortFieldDraft({ ...sortFieldDraft, lastContactDate: "lastContactDate" });
+                  setSortOrderDraft({ ...sortOrderDraft, lastContactDate: "desc" });
                 }}
               >
                 내림차순
@@ -1981,9 +1888,9 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
 
                   let finalSortField = sortField;
                   let finalSortOrder = sortOrder;
-                  if (sortFieldDraft["lastContact"] !== undefined) {
-                    finalSortField = sortFieldDraft["lastContact"];
-                    finalSortOrder = sortOrderDraft["lastContact"] ?? "asc";
+                  if (sortFieldDraft["lastContactDate"] !== undefined) {
+                    finalSortField = sortFieldDraft["lastContactDate"];
+                    finalSortOrder = sortOrderDraft["lastContactDate"] ?? "asc";
                     setSortField(finalSortField);
                     setSortOrder(finalSortOrder);
                   }
@@ -2009,12 +1916,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                   setLastContactEndDraft(null);
                   const newFieldDraft = { ...sortFieldDraft };
                   const newOrderDraft = { ...sortOrderDraft };
-                  delete newFieldDraft.lastContact;
-                  delete newOrderDraft.lastContact;
+                  delete newFieldDraft.lastContactDate;
+                  delete newOrderDraft.lastContactDate;
                   setSortFieldDraft(newFieldDraft);
                   setSortOrderDraft(newOrderDraft);
                   let finalSortField = sortField;
-                  if (sortField === "lastContact") {
+                  if (sortField === "lastContactDate") {
                     finalSortField = null;
                     setSortField(null);
                   }
@@ -2037,7 +1944,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
         <FilterFilled
           style={{
             color:
-              lastContactStart || lastContactEnd || sortField === "lastContact"
+              lastContactStart || lastContactEnd || sortField === "lastContactDate"
                 ? token.colorPrimary
                 : undefined,
           }}
@@ -2057,27 +1964,136 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
       onCell: () => ({
         style: { whiteSpace: 'nowrap' }
       }),
-      minWidth: 110,
+      width: 110,
     },
     {
-      title: "달성매출",
-      dataIndex: "_periodData",
+      title: "신뢰지수",
+      dataIndex: "trustIndex",
+      filterDropdownProps: {
+        onOpenChange: (open) => {
+          if (open) {
+            skipAutoApplyRef.current = false;
+          } else {
+            if (skipAutoApplyRef.current) {
+              skipAutoApplyRef.current = false;
+              return;
+            }
+
+            let finalSortField = sortField;
+            let finalSortOrder = sortOrder;
+            if (sortFieldDraft["trustIndex"] !== undefined) {
+              finalSortField = sortFieldDraft["trustIndex"];
+              finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
+              setSortField(finalSortField);
+              setSortOrder(finalSortOrder);
+            }
+            applyFilters({
+              sortField: finalSortField,
+              sortOrder: finalSortOrder,
+            });
+          }
+        }
+      },
+      filterDropdown: ({ confirm }) => {
+        const currentSortField = sortFieldDraft["trustIndex"] ?? (sortField === "trustIndex" ? sortField : null);
+        const currentSortOrder = sortOrderDraft["trustIndex"] ?? (sortField === "trustIndex" ? sortOrder : "asc");
+
+        return (
+          <Space direction="vertical" style={{ padding: 8, width: 200 }}>
+            <Typography.Text strong style={{ fontSize: 12 }}>정렬</Typography.Text>
+            <Space>
+              <Button
+                size="small"
+                type={currentSortField === "trustIndex" && currentSortOrder === "asc" ? "primary" : "default"}
+                onClick={() => {
+                  setSortFieldDraft({ ...sortFieldDraft, trustIndex: "trustIndex" });
+                  setSortOrderDraft({ ...sortOrderDraft, trustIndex: "asc" });
+                }}
+              >
+                오름차순
+              </Button>
+              <Button
+                size="small"
+                type={currentSortField === "trustIndex" && currentSortOrder === "desc" ? "primary" : "default"}
+                onClick={() => {
+                  setSortFieldDraft({ ...sortFieldDraft, trustIndex: "trustIndex" });
+                  setSortOrderDraft({ ...sortOrderDraft, trustIndex: "desc" });
+                }}
+              >
+                내림차순
+              </Button>
+            </Space>
+            <Divider style={{ margin: "8px 0" }} />
+            <Space>
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => {
+                  skipAutoApplyRef.current = true;
+                  let finalSortField = sortField;
+                  let finalSortOrder = sortOrder;
+                  if (sortFieldDraft["trustIndex"] !== undefined) {
+                    finalSortField = sortFieldDraft["trustIndex"];
+                    finalSortOrder = sortOrderDraft["trustIndex"] ?? "asc";
+                    setSortField(finalSortField);
+                    setSortOrder(finalSortOrder);
+                  }
+                  applyFilters({
+                    sortField: finalSortField,
+                    sortOrder: finalSortOrder,
+                  });
+                  confirm({ closeDropdown: true });
+                }}
+              >
+                적용
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  skipAutoApplyRef.current = true;
+                  const newFieldDraft = { ...sortFieldDraft };
+                  const newOrderDraft = { ...sortOrderDraft };
+                  delete newFieldDraft.trustIndex;
+                  delete newOrderDraft.trustIndex;
+                  setSortFieldDraft(newFieldDraft);
+                  setSortOrderDraft(newOrderDraft);
+                  let finalSortField = sortField;
+                  if (sortField === "trustIndex") {
+                    finalSortField = null;
+                    setSortField(null);
+                  }
+                  applyFilters({
+                    sortField: finalSortField,
+                    sortOrder: sortOrder,
+                  });
+                  confirm({ closeDropdown: true });
+                }}
+              >
+                초기화
+              </Button>
+            </Space>
+          </Space>
+        );
+      },
+      filterIcon: () => (
+        <FilterFilled style={{ color: sortField === "trustIndex" ? token.colorPrimary : undefined }} />
+      ),
       render: (_, record) => {
-        const past = record._periodData?.pastCurrentQuarterRevenue ?? 0;
-        const current = record._periodData?.currentCurrentQuarterRevenue ?? 0;
-        const isPositive = current > past;
-        const isNegative = current < past;
+        const past = record._periodData?.pastTrustIndex ?? null;
+        const current = record.trustIndex || 0;
+        const isPositive = past !== null && current > past;
+        const isNegative = past !== null && current < past;
         const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
 
         return (
           <div className={`${styles.changeTag} ${styles[changeType]}`}>
-            <span>{formatMan(past)}</span>
+            <span>{past ?? current}</span>
             <ArrowRight size={10} />
-            <span>{formatMan(current)}</span>
+            <span>{current}</span>
           </div>
         );
       },
-      minWidth: 140,
+      width: 120,
     },
     {
       title: "목표매출",
@@ -2249,7 +2265,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </div>
         );
       },
-      minWidth: 140,
+      width: 140,
     },
     {
       title: "가능성",
@@ -2417,7 +2433,7 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </div>
         );
       },
-      minWidth: 110,
+      width: 110,
     },
     {
       title: "예상매출",
@@ -2590,10 +2606,10 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </div>
         );
       },
-      minWidth: 140,
+      width: 140,
     },
     {
-      title: "목표일자",
+      title: "목표월",
       dataIndex: "adoptionDecision",
       filterDropdownProps: {
         onOpenChange: (open) => {
@@ -2752,7 +2768,27 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
           </div>
         );
       },
-      minWidth: 120,
+      width: 200,
+    },
+    {
+      title: "이번반기 달성",
+      dataIndex: "_periodData",
+      render: (_, record) => {
+        const past = record._periodData?.pastCurrentQuarterRevenue ?? 0;
+        const current = record._periodData?.currentCurrentQuarterRevenue ?? 0;
+        const isPositive = current > past;
+        const isNegative = current < past;
+        const changeType = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
+        return (
+          <div className={`${styles.changeTag} ${styles[changeType]}`}>
+            <span>{formatMan(past)}</span>
+            <ArrowRight size={10} />
+            <span>{formatMan(current)}</span>
+          </div>
+        );
+      },
+      width: 140,
     },
   ];
 
