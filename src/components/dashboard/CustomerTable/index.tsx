@@ -8,7 +8,6 @@ import { useGetTrustChangeDetail } from "@/repository/query/trustChangeDetailApi
 import { Customer } from "@/types/customer";
 import { FilterFilled } from "@ant-design/icons";
 import {
-  Alert,
   Button,
   Card,
   Col,
@@ -2826,20 +2825,18 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     </div>
 
                     {/* HubSpot Link */}
-                    {_customerSummary?.data?.hubspotUrl && (
-                      <div style={{ marginTop: 16 }}>
-                        <Button
-                          type="primary"
-                          icon={<Building2 size={16} />}
-                          href={_customerSummary.data.hubspotUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          block
-                        >
-                          HubSpot Company 보기
-                        </Button>
-                      </div>
-                    )}
+                    <div style={{ marginTop: 16 }}>
+                      <Button
+                        type="primary"
+                        icon={<Building2 size={16} />}
+                        href={_customerSummary?.data?.hubspotUrl || `https://app.hubspot.com/contacts/companies/${selectedCustomer.no}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        block
+                      >
+                        HubSpot Company 보기
+                      </Button>
+                    </div>
                   </>
                 ),
               },
@@ -3063,14 +3060,14 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                     ) : (
                       <>
                         {/* 차트 영역 */}
-                        {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 && (
-                          <div style={{ marginBottom: 24 }}>
-                            <Row gutter={16}>
-                              {/* 콘텐츠 퍼널별 조회수 */}
-                              <Col span={12}>
-                                <Title level={5} style={{ marginBottom: 16 }}>
-                                  콘텐츠 퍼널별 조회수
-                                </Title>
+                        <div style={{ marginBottom: 24 }}>
+                          <Row gutter={16}>
+                            {/* 콘텐츠 퍼널별 조회수 */}
+                            <Col span={12}>
+                              <Title level={5} style={{ marginBottom: 16 }}>
+                                콘텐츠 퍼널별 조회수
+                              </Title>
+                              {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={250}>
                                   <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                                     <Pie
@@ -3133,13 +3130,19 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                     <Tooltip {...DARK_TOOLTIP_STYLE} />
                                   </PieChart>
                                 </ResponsiveContainer>
-                              </Col>
+                              ) : (
+                                <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                                  콘텐츠 소비 데이터가 없습니다.
+                                </div>
+                              )}
+                            </Col>
 
-                              {/* 콘텐츠 유형별 조회수 */}
-                              <Col span={12}>
-                                <Title level={5} style={{ marginBottom: 16 }}>
-                                  콘텐츠 유형별 조회수
-                                </Title>
+                            {/* 콘텐츠 유형별 조회수 */}
+                            <Col span={12}>
+                              <Title level={5} style={{ marginBottom: 16 }}>
+                                콘텐츠 유형별 조회수
+                              </Title>
+                              {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={250}>
                                   <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                                     <Pie
@@ -3194,17 +3197,21 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                     <Tooltip {...DARK_TOOLTIP_STYLE} />
                                   </PieChart>
                                 </ResponsiveContainer>
-                              </Col>
-                            </Row>
-                          </div>
-                        )}
+                              ) : (
+                                <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                                  콘텐츠 소비 데이터가 없습니다.
+                                </div>
+                              )}
+                            </Col>
+                          </Row>
+                        </div>
 
                         {/* 콘텐츠 소비 이력 */}
-                        {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 && (
-                          <div style={{ marginBottom: 24 }}>
-                            <Title level={5} style={{ marginBottom: 16 }}>
-                              콘텐츠 소비 이력
-                            </Title>
+                        <div style={{ marginBottom: 24 }}>
+                          <Title level={5} style={{ marginBottom: 16 }}>
+                            콘텐츠 소비 이력
+                          </Title>
+                          {trustChangeDetailData?.data?.engagementItems && trustChangeDetailData.data.engagementItems.length > 0 ? (
                             <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
                               <Space direction="vertical" size={12} style={{ width: '100%' }}>
                                 {[...trustChangeDetailData.data.engagementItems]
@@ -3279,15 +3286,19 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                   ))}
                               </Space>
                             </div>
-                          </div>
-                        )}
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                              콘텐츠 소비 이력이 없습니다.
+                            </div>
+                          )}
+                        </div>
 
                         {/* MBM 참여 이력 */}
-                        {trustChangeDetailData?.data?.marketingEvents && trustChangeDetailData.data.marketingEvents.length > 0 && (
-                          <div style={{ marginBottom: 24 }}>
-                            <Title level={5} style={{ marginBottom: 16 }}>
-                              MBM 참여 이력
-                            </Title>
+                        <div style={{ marginBottom: 24 }}>
+                          <Title level={5} style={{ marginBottom: 16 }}>
+                            MBM 참여 이력
+                          </Title>
+                          {trustChangeDetailData?.data?.marketingEvents && trustChangeDetailData.data.marketingEvents.length > 0 ? (
                             <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
                               <Space direction="vertical" size={12} style={{ width: '100%' }}>
                                 {[...trustChangeDetailData.data.marketingEvents]
@@ -3358,19 +3369,12 @@ export const CustomerTable = ({ data, loading, pagination: paginationProp, dateR
                                   })}
                               </Space>
                             </div>
-                          </div>
-                        )}
-
-                        {/* 데이터 없음 */}
-                        {(!trustChangeDetailData?.data?.marketingEvents || trustChangeDetailData.data.marketingEvents.length === 0) &&
-                          (!trustChangeDetailData?.data?.engagementItems || trustChangeDetailData.data.engagementItems.length === 0) && (
-                            <Alert
-                              message="활동 이력이 없습니다"
-                              description="선택한 기간 동안의 MBM 참여 이력 및 콘텐츠 소비 이력이 없습니다."
-                              type="info"
-                              showIcon
-                            />
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                              MBM 참여 이력이 없습니다.
+                            </div>
                           )}
+                        </div>
                       </>
                     )}
                   </div>
