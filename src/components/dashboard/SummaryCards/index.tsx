@@ -10,6 +10,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -358,7 +359,7 @@ const TotalCustomersModalContent = () => {
       </div>
 
       <Alert
-        message={data.insight}
+        title={data.insight}
         type="info"
         showIcon
         style={{ marginTop: 16 }}
@@ -582,12 +583,14 @@ const MBMStatusModalContent = () => {
                   backgroundColor: token.colorBgTextHover,
                 })
               }}
-              bodyStyle={{
-                padding: '16px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6
+              styles={{
+                body: {
+                  padding: '16px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 6
+                }
               }}
             >
               <Text type="secondary" style={{ fontSize: 11 }}>{stage.label}</Text>
@@ -635,7 +638,7 @@ const MBMStatusModalContent = () => {
       )}
 
       <Alert
-        message="참석했으나, 팔로업 전인 고객 수가 가장 많습니다. 해당 고객에 대한 관리가 필요합니다."
+        title="참석했으나, 팔로업 전인 고객 수가 가장 많습니다. 해당 고객에 대한 관리가 필요합니다."
         type="info"
         showIcon
         style={{ marginTop: 16 }}
@@ -938,53 +941,149 @@ const MBMStatusModalContent = () => {
                         {
                           date: "2024-12-18",
                           type: "CALL",
-                          content: `${selectedCustomer.manager} 담당자와 제품 도입 관련 전화 미팅 진행. 현재 견적 검토 중이며, 다음 주 추가 미팅 예정.`
+                          content: `${selectedCustomer.manager} 담당자와 제품 도입 관련 전화 미팅 진행. 현재 견적 검토 중이며, 다음 주 추가 미팅 예정.`,
+                          stateChange: {
+                            after: {
+                              possibility: 60,
+                              targetRevenue: 50000000,
+                            }
+                          }
                         },
                         {
                           date: "2024-12-15",
                           type: "MEETING",
-                          content: "사내 의사결정권자와 함께 제품 데모 진행. 긍정적인 반응을 얻었으며, 추가 기능 논의 필요."
+                          content: "사내 의사결정권자와 함께 제품 데모 진행. 긍정적인 반응을 얻었으며, 추가 기능 논의 필요.",
+                          stateChange: {
+                            after: {
+                              possibility: 50,
+                              targetRevenue: 50000000,
+                            }
+                          }
                         },
                         {
                           date: "2024-12-10",
                           type: "CALL",
-                          content: "초기 문의 응대 및 제품 소개. 관심도가 높아 후속 미팅 예정."
+                          content: "초기 문의 응대 및 제품 소개. 관심도가 높아 후속 미팅 예정.",
+                          stateChange: {
+                            after: {
+                              possibility: 40,
+                              targetRevenue: 45000000,
+                            }
+                          }
                         }
                       ];
 
                       return mockSalesActions.length > 0 ? (
-                        <div>
-                          <AntTitle level={5} style={{ marginBottom: 16 }}>영업 액션 타임라인</AntTitle>
-                          <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
-                            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                              {mockSalesActions.map((action, idx) => (
-                                <Card
-                                  key={idx}
-                                  size="small"
-                                  style={{ width: '100%' }}
-                                >
-                                  <Space direction="vertical" style={{ width: '100%' }} size="small">
-                                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                                      <AntText strong>{action.date}</AntText>
-                                      <Tag color={action.type === 'CALL' ? 'blue' : 'green'}>
-                                        {action.type === 'CALL' ? '콜' : '미팅'}
-                                      </Tag>
-                                    </Space>
-                                    <AntText type="secondary" style={{ fontSize: 12 }}>
-                                      담당자: {selectedCustomer.manager}
-                                    </AntText>
-                                    <AntText style={{ display: 'block', wordBreak: 'break-word' }}>
-                                      {action.content || '영업 활동 내용'}
-                                    </AntText>
-                                  </Space>
-                                </Card>
-                              ))}
-                            </Space>
+                        <>
+                          {/* 팔로업 추이 그래프 */}
+                          <div style={{ marginBottom: 24 }}>
+                            <AntTitle level={5} style={{ marginBottom: 12 }}>팔로업 추이</AntTitle>
+                            {mockSalesActions.length > 0 ? (
+                              <div style={{ width: '100%', height: 300 }}>
+                                <ResponsiveContainer>
+                                  <ComposedChart
+                                    data={mockSalesActions
+                                      .slice()
+                                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                      .map((action) => {
+                                        const possibility = action.stateChange?.after?.possibility;
+                                        const possibilityIndex = possibility != null ? Number(possibility) : 0;
+
+                                        return {
+                                          date: action.date,
+                                          possibilityIndex,
+                                          targetRevenue: action.stateChange?.after?.targetRevenue
+                                            ? action.stateChange.after.targetRevenue / 10000
+                                            : null,
+                                          expectedRevenue: action.stateChange?.after?.targetRevenue && action.stateChange?.after?.possibility
+                                            ? (action.stateChange.after.targetRevenue * Number(action.stateChange.after.possibility)) / 100 / 10000
+                                            : null,
+                                        };
+                                      })}
+                                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                  >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" style={{ fontSize: 12 }} />
+                                    <YAxis
+                                      yAxisId="left"
+                                      style={{ fontSize: 12 }}
+                                      domain={[0, 100]}
+                                      ticks={[0, 40, 90, 100]}
+                                    />
+                                    <YAxis
+                                      yAxisId="right"
+                                      orientation="right"
+                                      style={{ fontSize: 12 }}
+                                    />
+                                    <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                    <Legend />
+                                    <Line
+                                      yAxisId="left"
+                                      type="monotone"
+                                      dataKey="possibilityIndex"
+                                      stroke="#3b82f6"
+                                      strokeWidth={2}
+                                      name="가능성 지수"
+                                      dot={{ fill: '#3b82f6', r: 4 }}
+                                    />
+                                    <Bar
+                                      yAxisId="right"
+                                      dataKey="targetRevenue"
+                                      fill="#f97316"
+                                      name="목표 매출"
+                                      opacity={0.6}
+                                    />
+                                    <Bar
+                                      yAxisId="right"
+                                      dataKey="expectedRevenue"
+                                      fill="#22c55e"
+                                      name="예상 매출"
+                                      opacity={0.8}
+                                    />
+                                  </ComposedChart>
+                                </ResponsiveContainer>
+                              </div>
+                            ) : (
+                              <div style={{ textAlign: 'center', padding: '40px', color: token.colorTextSecondary }}>
+                                영업 액션 데이터가 없습니다.
+                              </div>
+                            )}
                           </div>
-                        </div>
+
+                          {/* 영업 액션 타임라인 */}
+                          <div>
+                            <AntTitle level={5} style={{ marginBottom: 12 }}>영업 액션 타임라인</AntTitle>
+                            <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                {mockSalesActions.map((action, idx) => (
+                                  <Card
+                                    key={idx}
+                                    size="small"
+                                    style={{ width: '100%' }}
+                                  >
+                                    <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                      <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                        <AntText strong>{action.date}</AntText>
+                                        <Tag color={action.type === 'CALL' ? 'blue' : 'green'}>
+                                          {action.type === 'CALL' ? '콜' : '미팅'}
+                                        </Tag>
+                                      </Space>
+                                      <AntText type="secondary" style={{ fontSize: 12 }}>
+                                        담당자: {selectedCustomer.manager}
+                                      </AntText>
+                                      <AntText style={{ display: 'block', wordBreak: 'break-word' }}>
+                                        {action.content || '영업 활동 내용'}
+                                      </AntText>
+                                    </Space>
+                                  </Card>
+                                ))}
+                              </Space>
+                            </div>
+                          </div>
+                        </>
                       ) : (
                         <Alert
-                          message="영업 히스토리가 없습니다"
+                          title="영업 히스토리가 없습니다"
                           description="현재 기간 동안의 영업 액션 이력이 없습니다."
                           type="info"
                           showIcon
@@ -1010,72 +1109,234 @@ const MBMStatusModalContent = () => {
                       const mockContentEngagements = [
                         {
                           title: "2025 마케팅 트렌드 리포트",
-                          category: "TOFU",
+                          funnelType: "TOFU",
+                          contentType: "아티클",
                           date: "2024-12-17",
-                          views: 3
+                          viewCount: 3
                         },
                         {
                           title: "성공적인 B2B 세일즈 전략",
-                          category: "MOFU",
+                          funnelType: "MOFU",
+                          contentType: "웨비나",
                           date: "2024-12-14",
-                          views: 2
+                          viewCount: 5
                         },
                         {
                           title: "제품 도입 사례 연구",
-                          category: "BOFU",
+                          funnelType: "BOFU",
+                          contentType: "케이스스터디",
                           date: "2024-12-11",
-                          views: 1
-                        }
+                          viewCount: 4
+                        },
+                        {
+                          title: "디지털 전환 가이드",
+                          funnelType: "TOFU",
+                          contentType: "eBook",
+                          date: "2024-12-08",
+                          viewCount: 2
+                        },
+                        {
+                          title: "ROI 계산 방법",
+                          funnelType: "MOFU",
+                          contentType: "아티클",
+                          date: "2024-12-05",
+                          viewCount: 3
+                        },
+                        {
+                          title: "제품 데모 영상",
+                          funnelType: "BOFU",
+                          contentType: "영상",
+                          date: "2024-12-03",
+                          viewCount: 6
+                        },
                       ];
 
                       return mockContentEngagements.length > 0 ? (
-                        <div style={{ marginBottom: 24 }}>
-                          <AntTitle level={5} style={{ marginBottom: 16 }}>콘텐츠 소비 이력</AntTitle>
-                          <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
-                            <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                              {mockContentEngagements.map((item, index) => (
-                                <Card
-                                  key={index}
-                                  size="small"
-                                  hoverable
-                                >
-                                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                                    <Space size={12}>
-                                      <BookOpen size={20} style={{ color: token.colorPrimary }} />
-                                      <Space direction="vertical" size={4}>
-                                        <Space size={8}>
-                                          <AntText strong style={{ fontSize: 15 }}>
-                                            {item.title}
-                                          </AntText>
-                                        </Space>
-                                        <Space size={8}>
-                                          <Tag color="blue" style={{ margin: 0 }}>
-                                            {item.category || 'TOFU'}
-                                          </Tag>
-                                          <Tag color="gold" style={{ margin: 0 }}>
-                                            아티클
-                                          </Tag>
-                                          <Space size={4}>
-                                            <Eye size={14} style={{ color: token.colorTextSecondary }} />
-                                            <AntText type="secondary" style={{ fontSize: 12 }}>
-                                              조회 {item.views || 1}회
+                        <>
+                          {/* 차트 영역 */}
+                          <div style={{ marginBottom: 24 }}>
+                            <Row gutter={16}>
+                              {/* 콘텐츠 퍼널별 조회수 */}
+                              <Col span={12}>
+                                <AntTitle level={5} style={{ marginBottom: 16 }}>
+                                  콘텐츠 퍼널별 조회수
+                                </AntTitle>
+                                <ResponsiveContainer width="100%" height={250}>
+                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                    <Pie
+                                      data={(() => {
+                                        const funnelStats: Record<string, number> = {};
+                                        const colors: Record<string, string> = {
+                                          'TOFU': '#3b82f6',
+                                          'MOFU': '#a855f7',
+                                          'BOFU': '#22c55e',
+                                        };
+                                        mockContentEngagements.forEach(item => {
+                                          if (item.funnelType && item.viewCount) {
+                                            funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(funnelStats).map(([name, value]) => ({
+                                          name,
+                                          value,
+                                          color: colors[name] || '#f97316'
+                                        }));
+                                      })()}
+                                      cx="50%"
+                                      cy="50%"
+                                      outerRadius={80}
+                                      paddingAngle={2}
+                                      dataKey="value"
+                                      label={(entry) => {
+                                        const data = (() => {
+                                          const funnelStats: Record<string, number> = {};
+                                          mockContentEngagements.forEach(item => {
+                                            if (item.funnelType && item.viewCount) {
+                                              funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                            }
+                                          });
+                                          const total = Object.values(funnelStats).reduce((sum, val) => sum + val, 0);
+                                          return { total };
+                                        })();
+                                        const percent = ((entry.value / data.total) * 100).toFixed(0);
+                                        return `${entry.name} ${percent}%`;
+                                      }}
+                                      labelLine={false}
+                                    >
+                                      {(() => {
+                                        const funnelStats: Record<string, number> = {};
+                                        const colors: Record<string, string> = {
+                                          'TOFU': '#3b82f6',
+                                          'MOFU': '#a855f7',
+                                          'BOFU': '#22c55e',
+                                        };
+                                        mockContentEngagements.forEach(item => {
+                                          if (item.funnelType && item.viewCount) {
+                                            funnelStats[item.funnelType] = (funnelStats[item.funnelType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(funnelStats).map(([name], index) => (
+                                          <Cell key={`cell-${index}`} fill={colors[name] || '#f97316'} />
+                                        ));
+                                      })()}
+                                    </Pie>
+                                    <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Col>
+
+                              {/* 콘텐츠 유형별 조회수 */}
+                              <Col span={12}>
+                                <AntTitle level={5} style={{ marginBottom: 16 }}>
+                                  콘텐츠 유형별 조회수
+                                </AntTitle>
+                                <ResponsiveContainer width="100%" height={250}>
+                                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                    <Pie
+                                      data={(() => {
+                                        const contentStats: Record<string, number> = {};
+                                        const colors = ['#a855f7', '#ec4899', '#06b6d4', '#14b8a6', '#8b5cf6', '#f59e0b'];
+                                        mockContentEngagements.forEach(item => {
+                                          if (item.contentType && item.viewCount) {
+                                            contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(contentStats).map(([name, value], index) => ({
+                                          name,
+                                          value,
+                                          color: colors[index % colors.length]
+                                        }));
+                                      })()}
+                                      cx="50%"
+                                      cy="50%"
+                                      outerRadius={80}
+                                      paddingAngle={2}
+                                      dataKey="value"
+                                      label={(entry) => {
+                                        const data = (() => {
+                                          const contentStats: Record<string, number> = {};
+                                          mockContentEngagements.forEach(item => {
+                                            if (item.contentType && item.viewCount) {
+                                              contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                            }
+                                          });
+                                          const total = Object.values(contentStats).reduce((sum, val) => sum + val, 0);
+                                          return { total };
+                                        })();
+                                        const percent = ((entry.value / data.total) * 100).toFixed(0);
+                                        return `${entry.name} ${percent}%`;
+                                      }}
+                                      labelLine={false}
+                                    >
+                                      {(() => {
+                                        const contentStats: Record<string, number> = {};
+                                        const colors = ['#a855f7', '#ec4899', '#06b6d4', '#14b8a6', '#8b5cf6', '#f59e0b'];
+                                        mockContentEngagements.forEach(item => {
+                                          if (item.contentType && item.viewCount) {
+                                            contentStats[item.contentType] = (contentStats[item.contentType] || 0) + item.viewCount;
+                                          }
+                                        });
+                                        return Object.entries(contentStats).map(([_name], index) => (
+                                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                        ));
+                                      })()}
+                                    </Pie>
+                                    <Tooltip {...DARK_TOOLTIP_STYLE} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Col>
+                            </Row>
+                          </div>
+
+                          {/* 콘텐츠 소비 이력 */}
+                          <div style={{ marginBottom: 24 }}>
+                            <AntTitle level={5} style={{ marginBottom: 16 }}>콘텐츠 소비 이력</AntTitle>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
+                              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                                {mockContentEngagements.map((item, index) => (
+                                  <Card
+                                    key={index}
+                                    size="small"
+                                    hoverable
+                                  >
+                                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                      <Space size={12}>
+                                        <BookOpen size={20} style={{ color: token.colorPrimary }} />
+                                        <Space direction="vertical" size={4}>
+                                          <Space size={8}>
+                                            <AntText strong style={{ fontSize: 15 }}>
+                                              {item.title}
                                             </AntText>
                                           </Space>
+                                          <Space size={8}>
+                                            <Tag color="blue" style={{ margin: 0 }}>
+                                              {item.funnelType || 'TOFU'}
+                                            </Tag>
+                                            <Tag color="gold" style={{ margin: 0 }}>
+                                              {item.contentType || '아티클'}
+                                            </Tag>
+                                            <Space size={4}>
+                                              <Eye size={14} style={{ color: token.colorTextSecondary }} />
+                                              <AntText type="secondary" style={{ fontSize: 12 }}>
+                                                조회 {item.viewCount || 1}회
+                                              </AntText>
+                                            </Space>
+                                          </Space>
+                                          <AntText type="secondary" style={{ fontSize: 12 }}>
+                                            최근 조회: {item.date}
+                                          </AntText>
                                         </Space>
-                                        <AntText type="secondary" style={{ fontSize: 12 }}>
-                                          최근 조회: {item.date}
-                                        </AntText>
                                       </Space>
                                     </Space>
-                                  </Space>
-                                </Card>
-                              ))}
-                            </Space>
+                                  </Card>
+                                ))}
+                              </Space>
+                            </div>
                           </div>
-                        </div>
+                        </>
                       ) : (
                         <Alert
-                          message="활동 이력이 없습니다"
+                          title="활동 이력이 없습니다"
                           description="선택한 기간 동안의 콘텐츠 소비 이력이 없습니다."
                           type="info"
                           showIcon
@@ -1125,7 +1386,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
             </ResponsiveContainer>
           </div>
           <Alert
-            message={completenessData.insight}
+            title={completenessData.insight}
             type="warning"
             showIcon
             style={{ marginTop: 16 }}
@@ -1222,7 +1483,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
             </ResponsiveContainer>
           </div>
           <Alert
-            message={targetData.insight}
+            title={targetData.insight}
             type="warning"
             showIcon
             style={{ marginTop: 16 }}
@@ -1258,7 +1519,7 @@ const ModalContent = ({ cardId }: { cardId: string }) => {
             </ResponsiveContainer>
           </div>
           <Alert
-            message={revenueTimingData.insight}
+            title={revenueTimingData.insight}
             type="info"
             showIcon
             style={{ marginTop: 16 }}
