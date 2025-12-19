@@ -34,6 +34,7 @@ import {
   DatePicker,
   Input,
   Layout,
+  Radio,
   Select,
   Space,
   Switch,
@@ -135,12 +136,16 @@ const TAB_FILTER_UI: Record<
   },
 };
 
+type ApiMode = 'msw' | 'api';
+
 interface AppContentProps {
   isDark: boolean;
   onToggleTheme: (checked: boolean) => void;
+  apiMode: ApiMode;
+  onApiModeChange: (mode: ApiMode) => void;
 }
 
-function AppContent({ isDark, onToggleTheme }: AppContentProps) {
+function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppContentProps) {
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   // 기본값: 최근 1주일 (오늘 - 7일 ~ 오늘)
@@ -573,6 +578,15 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
           </div>
         </Space>
         <Space align="center" size="middle">
+          <Radio.Group 
+            value={apiMode} 
+            onChange={(e) => onApiModeChange(e.target.value)}
+            size="small"
+            buttonStyle="solid"
+          >
+            <Radio.Button value="msw">MSW</Radio.Button>
+            <Radio.Button value="api">API</Radio.Button>
+          </Radio.Group>
           <Space align="center" size={6}>
             <Typography.Text type="secondary">Light</Typography.Text>
             <Switch checked={isDark} onChange={onToggleTheme} size="small" />
@@ -675,9 +689,28 @@ function AppContent({ isDark, onToggleTheme }: AppContentProps) {
 
 function App() {
   const [isDark, setIsDark] = useState(true);
+  // localStorage에서 초기 API 모드 읽기 (기본값: api)
+  const [apiMode, setApiMode] = useState<ApiMode>(() => {
+    const saved = localStorage.getItem('apiMode');
+    return (saved === 'api' || saved === 'msw') ? saved : 'api';
+  });
 
   const handleToggleTheme = (checked: boolean) => {
     setIsDark(checked);
+  };
+
+  const handleApiModeChange = (mode: ApiMode) => {
+    console.log(`[App] Switching to ${mode.toUpperCase()} mode`);
+    
+    // localStorage에 저장
+    localStorage.setItem('apiMode', mode);
+    
+    // window 객체에 설정
+    window.__API_MODE__ = mode;
+    
+    // 상태 업데이트 및 페이지 새로고침
+    setApiMode(mode);
+    window.location.reload();
   };
 
   return (
@@ -686,7 +719,12 @@ function App() {
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
-      <AppContent isDark={isDark} onToggleTheme={handleToggleTheme} />
+      <AppContent 
+        isDark={isDark} 
+        onToggleTheme={handleToggleTheme}
+        apiMode={apiMode}
+        onApiModeChange={handleApiModeChange}
+      />
     </ConfigProvider>
   );
 }

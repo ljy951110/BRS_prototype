@@ -20,40 +20,40 @@ interface ApiErrorRs<T extends string = string> {
  * Base URL Resolver
  * ============================================================ */
 
+declare global {
+  interface Window {
+    __API_MODE__?: 'msw' | 'api';
+  }
+}
+
 /**
- * 환경변수에 따른 API baseURL을 반환합니다.
- * - VITE_MODE=local: MSW 사용 (baseURL 빈 문자열)
- * - VITE_API_URL 설정: 지정된 URL 사용
- * - 기타: 기본 API 서버 URL
+ * 런타임 API 모드에 따른 baseURL을 반환합니다.
+ * - msw: MSW 사용 (baseURL 빈 문자열)
+ * - api: 실제 API 서버 사용
  */
 export const getBaseUrl = (): string => {
-  const mode = import.meta.env.VITE_MODE || import.meta.env.MODE;
+  // localStorage에서 모드 읽기 (기본값: api)
+  const savedMode = localStorage.getItem('apiMode');
+  const apiMode = savedMode === 'api' || savedMode === 'msw' ? savedMode : 'api';
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  console.log('[Axios] Environment check:', {
-    VITE_MODE: import.meta.env.VITE_MODE,
-    MODE: import.meta.env.MODE,
-    VITE_API_URL: import.meta.env.VITE_API_URL,
-    resolved_mode: mode,
-  });
+  console.log('[Axios] API Mode:', apiMode);
 
-  // MODE가 'local'이면 MSW 사용 (빈 문자열 = 상대 경로)
-  if (mode === 'local') {
-    console.log('[Axios] ✅ Using MSW (MODE: local, baseURL: "")');
+  // MSW 모드
+  if (apiMode === 'msw') {
+    console.log('[Axios] ✅ Using MSW (baseURL: "")');
     return '';
   }
 
-  // 환경 변수로 명시적으로 API URL이 설정된 경우
-  if (apiUrl) {
-    console.log('[Axios] Using API URL from env:', apiUrl);
-    return apiUrl;
-  }
-
-  // 기본: 실제 API 서버 URL
-  console.log('[Axios] Using default API URL');
-  return 'https://dashboardapi-mu.vercel.app';
+  // API 모드: 환경 변수 우선, 없으면 기본 URL
+  const url = apiUrl || 'https://dashboardapi-mu.vercel.app';
+  console.log('[Axios] ✅ Using API:', url);
+  return url;
 };
 
+// 초기 API 모드 설정 (localStorage 또는 기본값: api)
+const savedMode = localStorage.getItem('apiMode');
+window.__API_MODE__ = savedMode === 'api' || savedMode === 'msw' ? savedMode : 'api';
 const baseURL = getBaseUrl();
 
 /* ============================================================

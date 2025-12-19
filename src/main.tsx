@@ -109,18 +109,17 @@ const queryClient = new QueryClient(queryClientConfig);
  * MSW (Mock Service Worker) Setup
  * ============================================================ */
 
+declare global {
+  interface Window {
+    __API_MODE__?: 'msw' | 'api';
+  }
+}
+
 /**
- * MSW 초기화 (MODE가 'local'일 때만 활성화)
+ * MSW 초기화 (항상 실행, 런타임에 enable/disable 제어)
  */
 async function initializeMSW() {
-  const mode = import.meta.env.VITE_MODE || import.meta.env.MODE;
-
-  if (mode !== 'local') {
-    console.log(`[MSW] Skipping - MODE is not "local" (current: ${mode})`);
-    return;
-  }
-
-  console.log('[MSW] Initializing... (MODE: local)');
+  console.log('[MSW] Initializing...');
   console.log('[MSW] DEV mode:', import.meta.env.DEV);
   console.log('[MSW] Service Worker support:', 'serviceWorker' in navigator);
 
@@ -134,9 +133,16 @@ async function initializeMSW() {
     });
 
     console.log('[MSW] ✅ Mock Service Worker started successfully');
+    
+    // localStorage에서 모드 읽기 (기본값: api)
+    const savedMode = localStorage.getItem('apiMode');
+    window.__API_MODE__ = savedMode === 'api' || savedMode === 'msw' ? savedMode : 'api';
+    console.log('[MSW] Initial API mode:', window.__API_MODE__);
   } catch (error) {
     console.error('[MSW] ❌ Failed to initialize:', error);
-    console.warn('[MSW] Continuing without MSW - will use actual API if available');
+    console.warn('[MSW] Continuing without MSW - will use actual API');
+    window.__API_MODE__ = 'api';
+    localStorage.setItem('apiMode', 'api');
   }
 }
 
