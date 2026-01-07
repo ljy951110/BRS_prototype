@@ -502,14 +502,110 @@ export const getSalesHistoryHandler = http.post(
     const body = (await request.json()) as SalesHistoryRequest;
     console.log('[MSW] Request:', { companyId, body });
 
-    const customer = findCustomerById(companyId);
+    let customer = findCustomerById(companyId);
 
+    // 고객이 없으면 기본 mock 데이터 생성
     if (!customer) {
-      console.log('[MSW] ❌ Customer not found:', companyId);
-      return HttpResponse.json(
-        { detail: 'Customer not found' },
-        { status: 404 }
-      );
+      console.log('[MSW] ⚠️ Customer not found, using default mock data for:', companyId);
+      customer = {
+        companyId: companyId,
+        companyName: "샘플 고객사",
+        companySize: "T3",
+        category: "채용",
+        productUsage: ["ATS"],
+        hubspotUrl: "https://app.hubspot.com/contacts/company/mock",
+        manager: "담당자",
+        contractAmount: 10000000,
+        salesActions: [
+          {
+            type: "meeting",
+            content: "첫 미팅 - 서비스 소개 및 니즈 파악",
+            date: "2025-11-15",
+            possibility: "0%",
+            customerResponse: "하",
+            targetRevenue: null,
+            targetDate: null,
+            test: false,
+            quote: false,
+            approval: false,
+            contract: false,
+          },
+          {
+            type: "call",
+            content: "제안서 발송 및 후속 콜",
+            date: "2025-11-20",
+            possibility: "40%",
+            customerResponse: "중",
+            targetRevenue: 10000000,
+            targetDate: "2월",
+            test: false,
+            quote: false,
+            approval: false,
+            contract: false,
+          },
+          {
+            type: "meeting",
+            content: "데모 시연 및 질의응답",
+            date: "2025-11-25",
+            possibility: "40%",
+            customerResponse: "중",
+            targetRevenue: 10000000,
+            targetDate: "2월",
+            test: true,
+            quote: false,
+            approval: false,
+            contract: false,
+          },
+          {
+            type: "call",
+            content: "견적 요청 및 검토 진행",
+            date: "2025-12-01",
+            possibility: "90%",
+            customerResponse: "상",
+            targetRevenue: 10000000,
+            targetDate: "1월",
+            test: true,
+            quote: true,
+            approval: false,
+            contract: false,
+          },
+          {
+            type: "meeting",
+            content: "계약 조건 협의 및 내부 승인 진행",
+            date: "2025-12-10",
+            possibility: "90%",
+            customerResponse: "상",
+            targetRevenue: 10000000,
+            targetDate: "1월",
+            test: true,
+            quote: true,
+            approval: true,
+            contract: false,
+          },
+        ],
+        contentEngagements: [
+          {
+            title: "HR 테크 트렌드 2024",
+            date: "2025-11-15",
+            category: "TOFU",
+          },
+          {
+            title: "채용 플랫폼 도입 가이드",
+            date: "2025-11-20",
+            category: "MOFU",
+          },
+          {
+            title: "ATS 도입 사례집",
+            date: "2025-11-25",
+            category: "MOFU",
+          },
+          {
+            title: "가격 및 플랜 안내",
+            date: "2025-12-01",
+            category: "BOFU",
+          },
+        ],
+      };
     }
 
     console.log('[MSW] ✅ Customer found:', customer.companyName);

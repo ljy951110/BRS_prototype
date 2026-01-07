@@ -340,6 +340,83 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
         return '채용'; // 기본값
       };
 
+      // 주간별 trustHistory 생성 (mock 데이터)
+      const generateTrustHistory = (currentTrust: number, previousTrust: number) => {
+        const weeks = ['1104', '1111', '1118', '1125', '1202', '1209', '1216', '1223'];
+        const history: Record<string, { trustIndex: number; trustLevel: TrustLevelType }> = {};
+        
+        // 점진적으로 변화하는 신뢰지수 생성
+        const diff = currentTrust - previousTrust;
+        const step = diff / (weeks.length - 1);
+        
+        weeks.forEach((week, index) => {
+          const trust = Math.round(previousTrust + (step * index));
+          history[week] = {
+            trustIndex: trust,
+            trustLevel: getTrustLevel(trust),
+          };
+        });
+        
+        return history;
+      };
+
+      // 영업 액션 생성 (mock 데이터)
+      const generateSalesActions = () => {
+        const actions = [];
+        const rand = Math.random();
+        
+        // 일부 고객에게만 영업 액션 추가
+        if (rand > 0.5) {
+          actions.push({
+            type: 'call' as const,
+            content: '제품 소개 및 데모 요청',
+            date: '2024-11-15',
+            possibility: '40%' as PossibilityType,
+            customerResponse: '중',
+            targetRevenue: null,
+            targetDate: null,
+            test: false,
+            quote: false,
+            approval: false,
+            contract: false,
+          });
+        }
+        
+        if (rand > 0.7) {
+          actions.push({
+            type: 'meeting' as const,
+            content: '온라인 데모 시연 완료',
+            date: '2024-11-22',
+            possibility: '40%' as PossibilityType,
+            customerResponse: '중',
+            targetRevenue: current.targetRevenue,
+            targetDate: null,
+            test: true,
+            quote: false,
+            approval: false,
+            contract: false,
+          });
+        }
+        
+        if (rand > 0.8) {
+          actions.push({
+            type: 'call' as const,
+            content: '견적 요청 및 예산 논의',
+            date: '2024-12-05',
+            possibility: '90%' as PossibilityType,
+            customerResponse: '상',
+            targetRevenue: current.targetRevenue,
+            targetDate: current.targetMonth ? `2024-${String(current.targetMonth).padStart(2, '0')}` : null,
+            test: true,
+            quote: true,
+            approval: false,
+            contract: false,
+          });
+        }
+        
+        return actions;
+      };
+
       return {
         no: row.companyId,
         companyName: row.companyName,
@@ -349,16 +426,22 @@ function AppContent({ isDark, onToggleTheme, apiMode, onApiModeChange }: AppCont
         manager: row.manager ?? '',
         renewalDate: null,
         contractAmount: row.contractAmount ?? null,
-        hDot: false,
+        hDot: true, // 타임라인에 표시되도록 true로 설정
         trustLevel: getTrustLevel(currentTrust),
         trustIndex: currentTrust,
         changeAmount,
         changeDirection,
         rank: null,
-        trustHistory: undefined,
-        salesActions: [],
+        trustHistory: generateTrustHistory(currentTrust, previousTrust),
+        salesActions: generateSalesActions(),
         contentEngagements: [],
-        attendance: {},
+        attendance: {
+          '1107': Math.random() > 0.5,
+          '1218': Math.random() > 0.6,
+          '1209': Math.random() > 0.4,
+          '0112': false,
+          '0116': false,
+        },
         lastMBMDate: row.lastMBMDate ?? null,
         lastContactDate: row.lastContactDate ?? null,
         trustFormation: {
